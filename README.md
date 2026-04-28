@@ -16,17 +16,25 @@
 ## Quick Start
 
 ```bash
-# Option 1: Interactive CLI (recommended)
+# Create a new project (interactive)
+npx create-ai-agent my-app
+
+# Or with options
+npx create-ai-agent my-api --type backend --db postgresql --tier standard
+
+# Skip prompts with defaults
+npx create-ai-agent my-app -y
+```
+
+### Alternative Methods
+
+```bash
+# Clone and run init script
 npx degit hoangNguyenAngelhack/ai-agent-setup my-project
 cd my-project
 ./scripts/init.sh
 
-# Option 2: Node.js script
-npx degit hoangNguyenAngelhack/ai-agent-setup my-project
-cd my-project
-node scripts/create-project.js
-
-# Option 3: Manual copy
+# Copy only .claude config to existing project
 npx degit hoangNguyenAngelhack/ai-agent-setup/.claude .claude
 ```
 

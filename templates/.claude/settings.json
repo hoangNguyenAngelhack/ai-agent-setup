@@ -1,0 +1,14 @@
+{
+  "model": "claude-opus-4-5",
+  "context_window": 200000,
+  "permissions": {
+    "allow_file_read": true,
+    "allow_file_write": true,
+    "allow_shell_commands": true,
+    "allow_web_search": true
+  },
+  "rules_dir": ".claude/rules",
+  "commands_dir": ".claude/commands",
+  "skills_dir": ".claude/skills",
+  "agents_dir": ".claude/agents"
+}

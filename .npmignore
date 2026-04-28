@@ -1,0 +1,19 @@
+# Development files
+.github/
+examples/
+scripts/
+.claude/
+
+# Config files
+.editorconfig
+.gitignore
+Makefile
+CONTRIBUTING.md
+CHANGELOG.md
+
+# Git
+.git/
+
+# Misc
+*.log
+.DS_Store

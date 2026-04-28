@@ -1,0 +1,45 @@
+{
+  "name": "create-ai-agent",
+  "version": "1.0.0",
+  "description": "CLI to create production-ready projects with Claude Code AI agent configuration",
+  "author": "Hoang Nguyen <hoang.nguyen@angelhack.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hoangNguyenAngelhack/ai-agent-setup.git"
+  },
+  "homepage": "https://github.com/hoangNguyenAngelhack/ai-agent-setup#readme",
+  "bugs": {
+    "url": "https://github.com/hoangNguyenAngelhack/ai-agent-setup/issues"
+  },
+  "keywords": [
+    "cli",
+    "create",
+    "generator",
+    "scaffold",
+    "claude",
+    "ai-agent",
+    "typescript",
+    "express",
+    "nextjs",
+    "react",
+    "prisma",
+    "boilerplate"
+  ],
+  "bin": {
+    "create-ai-agent": "./bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "templates",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "echo \"No tests yet\"",
+    "prepublishOnly": "echo 'Ready to publish!'"
+  }
+}
