@@ -272,9 +272,7 @@ async function main() {
         stdio: 'inherit',
       });
     } else if (config.type === 'frontend') {
-      execSync('npm create vite@latest . -- --template react-ts', {
-        stdio: 'inherit',
-      });
+      createFrontendProject(config);
     } else {
       createBackendProject(config);
     }
@@ -298,7 +296,7 @@ async function main() {
     console.log(`  cd ${config.projectName}`);
     console.log('  npm install');
     console.log('  cp .env.example .env');
-    if (config.db !== 'none') {
+    if (config.db !== 'none' && config.type !== 'frontend') {
       console.log('  npm run db:migrate');
     }
     console.log('  npm run dev');
@@ -522,6 +520,265 @@ ${config.db !== 'none' ? 'npm run db:migrate\n' : ''}npm run dev
 - \`npm run build\` - Build for production
 - \`npm run test\` - Run tests
 ${config.db !== 'none' ? '- `npm run db:studio` - Open Prisma Studio\n' : ''}
+## Author
+
+${config.author} <${config.email}>
+`);
+}
+
+function createFrontendProject(config) {
+  // Create directories
+  const dirs = [
+    'src/components/ui',
+    'src/hooks',
+    'src/lib',
+    'src/pages',
+    'src/stores',
+    'src/types',
+  ];
+  dirs.forEach((dir) => fs.mkdirSync(dir, { recursive: true }));
+
+  // Package.json
+  const pkg = {
+    name: config.projectName,
+    version: '1.0.0',
+    type: 'module',
+    scripts: {
+      dev: 'vite',
+      build: 'tsc -b && vite build',
+      preview: 'vite preview',
+      lint: 'eslint src --ext .ts,.tsx',
+      test: 'vitest',
+    },
+    dependencies: {
+      'react': '^18.3.0',
+      'react-dom': '^18.3.0',
+      'react-router-dom': '^6.26.0',
+      '@tanstack/react-query': '^5.51.0',
+      'zustand': '^4.5.0',
+      'axios': '^1.7.0',
+      'clsx': '^2.1.0',
+      'tailwind-merge': '^2.4.0',
+    },
+    devDependencies: {
+      '@types/react': '^18.3.0',
+      '@types/react-dom': '^18.3.0',
+      '@vitejs/plugin-react': '^4.3.0',
+      'typescript': '^5.5.0',
+      'vite': '^5.4.0',
+      'vitest': '^2.0.0',
+      'tailwindcss': '^3.4.0',
+      'postcss': '^8.4.0',
+      'autoprefixer': '^10.4.0',
+      'eslint': '^9.0.0',
+    },
+    author: `${config.author} <${config.email}>`,
+    license: 'MIT',
+  };
+  fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+
+  // Vite config
+  fs.writeFileSync('vite.config.ts', `import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+});
+`);
+
+  // tsconfig.json
+  const tsconfig = {
+    compilerOptions: {
+      target: 'ES2020',
+      useDefineForClassFields: true,
+      lib: ['ES2020', 'DOM', 'DOM.Iterable'],
+      module: 'ESNext',
+      skipLibCheck: true,
+      moduleResolution: 'bundler',
+      allowImportingTsExtensions: true,
+      resolveJsonModule: true,
+      isolatedModules: true,
+      noEmit: true,
+      jsx: 'react-jsx',
+      strict: true,
+      noUnusedLocals: true,
+      noUnusedParameters: true,
+      noFallthroughCasesInSwitch: true,
+      baseUrl: '.',
+      paths: { '@/*': ['./src/*'] },
+    },
+    include: ['src'],
+  };
+  fs.writeFileSync('tsconfig.json', JSON.stringify(tsconfig, null, 2));
+
+  // Tailwind config
+  fs.writeFileSync('tailwind.config.js', `/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+`);
+
+  // PostCSS config
+  fs.writeFileSync('postcss.config.js', `export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+`);
+
+  // index.html
+  fs.writeFileSync('index.html', `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${config.projectName}</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+`);
+
+  // Main entry
+  fs.writeFileSync('src/main.tsx', `import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import App from './App';
+import './index.css';
+
+const queryClient = new QueryClient();
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </React.StrictMode>,
+);
+`);
+
+  // App component
+  fs.writeFileSync('src/App.tsx', `function App() {
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          ${config.projectName}
+        </h1>
+        <p className="text-gray-600">
+          Edit <code className="bg-gray-200 px-2 py-1 rounded">src/App.tsx</code> to get started
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+`);
+
+  // CSS
+  fs.writeFileSync('src/index.css', `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+`);
+
+  // API client
+  fs.writeFileSync('src/lib/api.ts', `import axios from 'axios';
+
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  timeout: 10000,
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = \`Bearer \${token}\`;
+  }
+  return config;
+});
+`);
+
+  // Utils
+  fs.writeFileSync('src/lib/utils.ts', `import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+`);
+
+  // Example store
+  fs.writeFileSync('src/stores/user-store.ts', `import { create } from 'zustand';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
+interface UserState {
+  user: User | null;
+  setUser: (user: User | null) => void;
+  logout: () => void;
+}
+
+export const useUserStore = create<UserState>((set) => ({
+  user: null,
+  setUser: (user) => set({ user }),
+  logout: () => {
+    localStorage.removeItem('token');
+    set({ user: null });
+  },
+}));
+`);
+
+  // .env.example
+  fs.writeFileSync('.env.example', `VITE_API_URL=http://localhost:3000/api
+`);
+
+  // .gitignore
+  fs.writeFileSync('.gitignore', `node_modules/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+`);
+
+  // README
+  fs.writeFileSync('README.md', `# ${config.projectName}
+
+React + Vite + TypeScript + TailwindCSS + TanStack Query + Zustand
+
+## Quick Start
+
+\`\`\`bash
+npm install
+cp .env.example .env
+npm run dev
+\`\`\`
+
+## Scripts
+
+- \`npm run dev\` - Start development server
+- \`npm run build\` - Build for production
+- \`npm run preview\` - Preview production build
+- \`npm run test\` - Run tests
+
 ## Author
 
 ${config.author} <${config.email}>
