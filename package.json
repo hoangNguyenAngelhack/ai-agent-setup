@@ -1,5 +1,5 @@
 {
-  "name": "create-ai-agent",
+  "name": "create-ai-agent-setup",
   "version": "1.0.0",
   "description": "CLI to create production-ready projects with Claude Code AI agent configuration",
   "author": "Hoang Nguyen <hoang.nguyen@angelhack.com>",
@@ -27,7 +27,7 @@
     "boilerplate"
   ],
   "bin": {
-    "create-ai-agent": "./bin/cli.js"
+    "create-ai-agent-setup": "./bin/cli.js"
   },
   "files": [
     "bin",

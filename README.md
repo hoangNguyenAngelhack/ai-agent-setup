@@ -17,13 +17,13 @@
 
 ```bash
 # Create a new project (interactive)
-npx create-ai-agent my-app
+npx create-ai-agent-setup my-app
 
 # Or with options
-npx create-ai-agent my-api --type backend --db postgresql --tier standard
+npx create-ai-agent-setup my-api --type backend --db postgresql --tier standard
 
 # Skip prompts with defaults
-npx create-ai-agent my-app -y
+npx create-ai-agent-setup my-app -y
 ```
 
 ### Alternative Methods
