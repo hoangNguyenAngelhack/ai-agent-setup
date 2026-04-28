@@ -6,6 +6,7 @@
   <p>Structured workflows, specialized agents, mandatory rules, and best practices</p>
 
   ![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
   [![Email](https://img.shields.io/badge/Email-hoang.nguyen%40angelhack.com-EA4335?logo=gmail)](mailto:hoang.nguyen@angelhack.com)
 
 </div>
@@ -113,6 +114,16 @@ This repository provides a **production-grade configuration** for Claude Code AI
 │   └── accessibility-checklist.md
 │
 └── settings.json                # Project settings
+
+examples/                        # Sample implementations
+├── backend/                     # Express + Prisma + Redis
+│   ├── user-service.ts
+│   ├── user-controller.ts
+│   └── ... (11 files)
+└── frontend/                    # React + TanStack Query + Zustand
+    ├── use-users.ts
+    ├── user-list.tsx
+    └── ... (4 files)
 ```
 
 ---
