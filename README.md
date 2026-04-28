@@ -13,6 +13,32 @@
 
 ---
 
+## Quick Start
+
+```bash
+# Option 1: Interactive CLI (recommended)
+npx degit hoangNguyenAngelhack/ai-agent-setup my-project
+cd my-project
+./scripts/init.sh
+
+# Option 2: Node.js script
+npx degit hoangNguyenAngelhack/ai-agent-setup my-project
+cd my-project
+node scripts/create-project.js
+
+# Option 3: Manual copy
+npx degit hoangNguyenAngelhack/ai-agent-setup/.claude .claude
+```
+
+The CLI will guide you through:
+1. Project name
+2. Project type (backend / frontend / nextjs / fullstack)
+3. Rule tier (Starter / Standard / Strict)
+4. Database (PostgreSQL / MySQL / SQLite)
+5. Author info
+
+---
+
 ## Overview
 
 This repository provides a **production-grade configuration** for Claude Code AI agents. It includes:

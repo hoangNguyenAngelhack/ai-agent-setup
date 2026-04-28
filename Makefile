@@ -1,17 +1,24 @@
-.PHONY: help setup copy lint test clean
+.PHONY: help setup copy lint test clean init
 
 # Default target
 help:
 	@echo "Available commands:"
 	@echo ""
+	@echo "  make init     - Create a new project (interactive)"
 	@echo "  make setup    - Initial setup (install dependencies if any)"
 	@echo "  make copy     - Copy .claude/ to target project"
 	@echo "  make lint     - Check markdown files"
 	@echo "  make test     - Validate configuration files"
 	@echo "  make clean    - Remove generated files"
+	@echo "  make stats    - Show repository statistics"
 	@echo ""
 	@echo "Usage:"
+	@echo "  make init"
 	@echo "  make copy TARGET=/path/to/your/project"
+
+# Initialize new project
+init:
+	@./scripts/init.sh
 
 # Setup
 setup:
