@@ -1,5 +1,10 @@
 # Claude AI Agent Configuration
 
+**Maintainer:** Hoang Nguyen (hoang.nguyen@angelhack.com)  
+**Tier:** Standard
+
+> See [TIERS.md](rules/TIERS.md) for tier options: Starter | Standard | Strict
+
 ## Overview
 
 This project uses Claude AI as an intelligent development agent with structured workflows, specialized sub-agents, and mandatory coding standards.
