@@ -73,7 +73,7 @@ All rules in `.claude/rules/` are **mandatory** and must be followed:
 ### Architecture & Design
 | Rule | Description |
 |------|-------------|
-| `tech-stack.md` | Approved technologies (Next.js, PG, Redis, Prisma) |
+| `tech-stack.md` | Approved technologies (Next.js, React Native, PG, Redis, Prisma) |
 | `system-design.md` | CAP theorem, caching, scaling, queues |
 | `project-structure.md` | Layered architecture, folder organization |
 | `api-conventions.md` | REST standards, response envelopes |
@@ -102,6 +102,7 @@ Invoke the right agent for each task type:
 | Agent | When to Invoke |
 |-------|---------------|
 | 🖥️ **Frontend Developer** | Components, pages, routing, state, UI performance |
+| 📱 **Mobile Developer** | React Native, Expo, navigation, native modules |
 | 🔧 **Backend Developer** | APIs, services, DB queries, background jobs |
 | 🏗️ **Systems Architect** | Architecture decisions, ADRs, system design |
 
@@ -146,6 +147,8 @@ Quick references in `.claude/references/`:
 | `testing-patterns.md` | Test structure and anti-patterns |
 | `performance-checklist.md` | Core Web Vitals, optimization |
 | `accessibility-checklist.md` | WCAG 2.1 AA compliance |
+| `mobile-performance-checklist.md` | React Native performance, 60 FPS |
+| `mobile-release-checklist.md` | App Store / Play Store submission |
 
 ---
 

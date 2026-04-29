@@ -5,7 +5,7 @@
   <h3>Production-ready AI Agent configuration for Claude Code</h3>
   <p>Structured workflows, specialized agents, mandatory rules, and best practices</p>
 
-  ![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-1.1.0-blue?style=flat-square)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
   [![Email](https://img.shields.io/badge/Email-hoang.nguyen%40angelhack.com-EA4335?logo=gmail)](mailto:hoang.nguyen@angelhack.com)
 
@@ -21,6 +21,10 @@ npx create-ai-agent-setup my-app
 
 # Or with options
 npx create-ai-agent-setup my-api --type backend --db postgresql --tier standard
+
+# Mobile projects
+npx create-ai-agent-setup my-mobile-app --type mobile-expo
+npx create-ai-agent-setup my-mobile-app --type mobile-cli
 
 # Skip prompts with defaults
 npx create-ai-agent-setup my-app -y
@@ -40,7 +44,7 @@ npx degit hoangNguyenAngelhack/ai-agent-setup/.claude .claude
 
 The CLI will guide you through:
 1. Project name
-2. Project type (backend / frontend / nextjs / fullstack)
+2. Project type (backend / frontend / nextjs / fullstack / mobile-expo / mobile-cli)
 3. Rule tier (Starter / Standard / Strict)
 4. Database (PostgreSQL / MySQL / SQLite)
 5. Author info
@@ -52,10 +56,10 @@ The CLI will guide you through:
 This repository provides a **production-grade configuration** for Claude Code AI agents. It includes:
 
 - **Structured development workflow** (Spec → Plan → Build → Test → Review → Ship)
-- **10 specialized agents** for different development roles
+- **11 specialized agents** for different development roles
 - **13 mandatory rules** covering code quality, architecture, and operations
 - **8 slash commands** for common workflows
-- **4 reference checklists** for security, testing, performance, and accessibility
+- **6 reference checklists** for security, testing, performance, accessibility, and mobile
 
 ---
 
@@ -107,9 +111,10 @@ This repository provides a **production-grade configuration** for Claude Code AI
 │   ├── simplify.md              # /simplify — Code simplification
 │   └── fix-issue.md             # /fix-issue — Issue resolution
 │
-├── agents/                      # Specialized agents (10 total)
+├── agents/                      # Specialized agents (11 total)
 │   ├── frontend.md              # Frontend Developer
 │   ├── backend.md               # Backend Developer
+│   ├── mobile.md                # Mobile Developer (React Native)
 │   ├── systems-architect.md     # Systems Architect
 │   ├── code-reviewer.md         # Code Reviewer
 │   ├── test-engineer.md         # Test Engineer
@@ -145,7 +150,9 @@ This repository provides a **production-grade configuration** for Claude Code AI
 │   ├── security-checklist.md
 │   ├── testing-patterns.md
 │   ├── performance-checklist.md
-│   └── accessibility-checklist.md
+│   ├── accessibility-checklist.md
+│   ├── mobile-performance-checklist.md
+│   └── mobile-release-checklist.md
 │
 └── settings.json                # Project settings
 
@@ -154,10 +161,22 @@ examples/                        # Sample implementations
 │   ├── user-service.ts
 │   ├── user-controller.ts
 │   └── ... (11 files)
-└── frontend/                    # React + TanStack Query + Zustand
-    ├── use-users.ts
-    ├── user-list.tsx
-    └── ... (4 files)
+├── frontend/                    # React + TanStack Query + Zustand
+│   ├── use-users.ts
+│   ├── user-list.tsx
+│   └── ... (4 files)
+├── mobile-expo/                 # Expo + React Navigation + NativeWind
+│   ├── api.ts, auth-store.ts
+│   ├── user-list.tsx, login-screen.tsx
+│   └── ... (10 files)
+└── mobile-cli/                  # React Native CLI + NativeWind
+    ├── api.ts, auth-store.ts
+    ├── root-navigator.tsx
+    └── ... (8 files)
+
+templates/                       # Project templates
+├── mobile-expo/                 # Ready-to-use Expo template
+└── mobile-cli/                  # Ready-to-use RN CLI template
 ```
 
 ---
@@ -170,6 +189,7 @@ examples/                        # Sample implementations
 |-------|------|-------------|
 | **Frontend Developer** | Next.js, React, TypeScript, UI | Components, pages, state |
 | **Backend Developer** | Express, Prisma, Redis, BullMQ | APIs, services, jobs |
+| **Mobile Developer** | React Native, Expo, NativeWind | iOS/Android apps, navigation |
 | **Systems Architect** | Architecture, ADRs, scaling | System design decisions |
 
 ### Quality Agents
@@ -209,6 +229,10 @@ examples/                        # Sample implementations
 | **Monitoring** | Prometheus + Grafana + Pino |
 | **CI/CD** | GitHub Actions |
 | **Deploy** | Vercel + Railway/Fly.io |
+| **Mobile** | React Native 0.74+ / Expo SDK 51+ |
+| **Mobile UI** | NativeWind (Tailwind CSS) |
+| **Mobile Nav** | React Navigation / Expo Router |
+| **Mobile State** | Zustand + MMKV |
 
 ---
 

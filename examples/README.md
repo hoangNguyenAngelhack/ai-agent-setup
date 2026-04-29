@@ -27,6 +27,34 @@ Sample code demonstrating the coding standards and patterns defined in `.claude/
 | [user-list.tsx](frontend/user-list.tsx) | React component with shadcn/ui (tech-stack.md) |
 | [user-store.ts](frontend/user-store.ts) | Zustand state management (tech-stack.md) |
 
+## Mobile Examples — Expo
+
+| File | Demonstrates |
+|------|-------------|
+| [api.ts](mobile-expo/api.ts) | Axios client with auth interceptors (tech-stack.md) |
+| [auth-store.ts](mobile-expo/auth-store.ts) | Zustand + MMKV persistence (tech-stack.md) |
+| [use-users.ts](mobile-expo/use-users.ts) | TanStack Query with infinite scroll (tech-stack.md) |
+| [user-list.tsx](mobile-expo/user-list.tsx) | FlatList with expo-image (mobile-performance-checklist.md) |
+| [user-list.test.tsx](mobile-expo/user-list.test.tsx) | React Native Testing Library tests (testing.md) |
+| [root-navigator.tsx](mobile-expo/root-navigator.tsx) | Expo Router with auth flow (mobile.md) |
+| [login-screen.tsx](mobile-expo/login-screen.tsx) | Form with react-hook-form + zod (tech-stack.md) |
+| [animated-card.tsx](mobile-expo/animated-card.tsx) | Reanimated animations + skeleton (mobile-performance-checklist.md) |
+| [secure-storage.ts](mobile-expo/secure-storage.ts) | expo-secure-store utils (security.md) |
+| [ui-components.tsx](mobile-expo/ui-components.tsx) | Button, Input, Badge, Avatar (tech-stack.md) |
+
+## Mobile Examples — React Native CLI
+
+| File | Demonstrates |
+|------|-------------|
+| [api.ts](mobile-cli/api.ts) | Axios client with react-native-config (tech-stack.md) |
+| [auth-store.ts](mobile-cli/auth-store.ts) | Zustand + MMKV persistence (tech-stack.md) |
+| [use-users.ts](mobile-cli/use-users.ts) | TanStack Query with infinite scroll (tech-stack.md) |
+| [user-list.tsx](mobile-cli/user-list.tsx) | FlatList with FastImage (mobile-performance-checklist.md) |
+| [root-navigator.tsx](mobile-cli/root-navigator.tsx) | React Navigation with auth flow (mobile.md) |
+| [login-screen.tsx](mobile-cli/login-screen.tsx) | Form with react-hook-form + zod (tech-stack.md) |
+| [secure-storage.ts](mobile-cli/secure-storage.ts) | react-native-keychain utils (security.md) |
+| [app.tsx](mobile-cli/app.tsx) | App entry with providers (tech-stack.md) |
+
 ## Key Patterns
 
 ### Layered Architecture
@@ -63,4 +91,25 @@ myapp:v1:user:123:profile
     "totalPages": 5
   }
 }
+```
+
+### Mobile FlatList Pattern
+```tsx
+<FlatList
+  data={items}
+  keyExtractor={(item) => item.id}
+  renderItem={renderItem}
+  getItemLayout={getItemLayout}
+  removeClippedSubviews
+  maxToRenderPerBatch={10}
+  windowSize={5}
+/>
+```
+
+### Mobile Auth Flow
+```
+RootNavigator
+├── !authenticated → AuthStack (Login, Register)
+├── !onboarded → OnboardingScreen
+└── authenticated → MainTabs + DetailScreens
 ```

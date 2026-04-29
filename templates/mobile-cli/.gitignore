@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+
+# React Native
+.metro-health-check*
+
+# iOS
+ios/Pods/
+ios/build/
+*.xcworkspace
+!ios/*.xcworkspace/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+project.xcworkspace/
+xcuserdata/
+
+# Android
+android/app/build/
+android/.gradle/
+android/build/
+*.apk
+*.aab
+*.keystore
+!debug.keystore
+local.properties
+
+# Bundle artifacts
+*.jsbundle
+*.jsbundle.map
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+
+# TypeScript
+*.tsbuildinfo
+
+# Temporary
+*.log
+tmp/
+temp/

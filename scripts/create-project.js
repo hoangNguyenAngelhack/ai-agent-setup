@@ -47,13 +47,16 @@ async function main() {
   // Step 2: Project type
   console.log('');
   log.step('2/6', 'Project type:');
-  console.log('  1) backend    - Express + Prisma + Redis');
-  console.log('  2) frontend   - React + Vite + TanStack Query');
-  console.log('  3) nextjs     - Next.js 14 (App Router)');
-  console.log('  4) fullstack  - Monorepo (API + Web)');
-  const typeChoice = await question('→ Choose (1-4): ');
-  const types = { '1': 'backend', '2': 'frontend', '3': 'nextjs', '4': 'fullstack' };
+  console.log('  1) backend      - Express + Prisma + Redis');
+  console.log('  2) frontend     - React + Vite + TanStack Query');
+  console.log('  3) nextjs       - Next.js 14 (App Router)');
+  console.log('  4) mobile-expo  - React Native + Expo (recommended)');
+  console.log('  5) mobile-cli   - React Native CLI (bare workflow)');
+  console.log('  6) fullstack    - Monorepo (API + Web)');
+  const typeChoice = await question('→ Choose (1-6): ');
+  const types = { '1': 'backend', '2': 'frontend', '3': 'nextjs', '4': 'mobile-expo', '5': 'mobile-cli', '6': 'fullstack' };
   const projectType = types[typeChoice] || 'backend';
+  const isMobile = projectType === 'mobile-expo' || projectType === 'mobile-cli';
 
   // Step 3: Tier
   console.log('');
@@ -65,16 +68,22 @@ async function main() {
   const tiers = { '1': 'Starter', '2': 'Standard', '3': 'Strict' };
   const tier = tiers[tierChoice] || 'Standard';
 
-  // Step 4: Database
-  console.log('');
-  log.step('4/6', 'Database:');
-  console.log('  1) postgresql');
-  console.log('  2) mysql');
-  console.log('  3) sqlite');
-  console.log('  4) none');
-  const dbChoice = await question('→ Choose (1-4): ');
-  const dbs = { '1': 'postgresql', '2': 'mysql', '3': 'sqlite', '4': 'none' };
-  const database = dbs[dbChoice] || 'postgresql';
+  // Step 4: Database (skip for mobile)
+  let database = 'none';
+  if (!isMobile) {
+    console.log('');
+    log.step('4/6', 'Database:');
+    console.log('  1) postgresql');
+    console.log('  2) mysql');
+    console.log('  3) sqlite');
+    console.log('  4) none');
+    const dbChoice = await question('→ Choose (1-4): ');
+    const dbs = { '1': 'postgresql', '2': 'mysql', '3': 'sqlite', '4': 'none' };
+    database = dbs[dbChoice] || 'postgresql';
+  } else {
+    console.log('');
+    log.step('4/6', 'Database: skipped (mobile project)');
+  }
 
   // Step 5: Author
   console.log('');
@@ -116,6 +125,14 @@ async function main() {
     } else if (projectType === 'frontend') {
       log.info('Running create-vite...');
       execSync(`npm create vite@latest . -- --template react-ts`, { stdio: 'inherit' });
+    } else if (projectType === 'mobile-expo') {
+      log.info('Running create-expo-app...');
+      execSync(`npx create-expo-app@latest . --template blank-typescript`, { stdio: 'inherit' });
+      createMobileExpoProject(projectName, authorName, authorEmail);
+    } else if (projectType === 'mobile-cli') {
+      log.info('Running react-native init...');
+      execSync(`npx @react-native-community/cli init ${projectName} --template react-native-template-typescript --directory .`, { stdio: 'inherit' });
+      createMobileCLIProject(projectName, authorName, authorEmail);
     } else {
       // Backend or fullstack - manual setup
       createBackendProject(projectName, projectType, database, authorName, authorEmail);
@@ -155,9 +172,18 @@ async function main() {
     log.warn('Next steps:');
     console.log('');
     console.log(`  1. cd ${projectName}`);
-    console.log('  2. npm install');
-    console.log('  3. cp .env.example .env');
-    console.log('  4. npm run dev');
+    if (projectType === 'mobile-expo') {
+      console.log('  2. npm install');
+      console.log('  3. npx expo start');
+    } else if (projectType === 'mobile-cli') {
+      console.log('  2. npm install');
+      console.log('  3. cd ios && pod install && cd ..');
+      console.log('  4. npm run ios  # or npm run android');
+    } else {
+      console.log('  2. npm install');
+      console.log('  3. cp .env.example .env');
+      console.log('  4. npm run dev');
+    }
     console.log('');
     log.info('Happy coding!');
   } catch (error) {
@@ -378,6 +404,645 @@ npm run dev
 - \`npm run build\` - Build for production
 - \`npm run test\` - Run tests
 - \`npm run db:studio\` - Open Prisma Studio
+
+## Author
+
+${author} <${email}>
+`
+  );
+}
+
+function createMobileExpoProject(name, author, email) {
+  // Create additional directories
+  const dirs = [
+    'src/components/ui',
+    'src/lib',
+    'src/stores',
+    'src/hooks',
+    'src/constants',
+  ];
+  dirs.forEach((dir) => fs.mkdirSync(dir, { recursive: true }));
+
+  // Add dependencies to package.json
+  const pkgPath = 'package.json';
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  pkg.dependencies = {
+    ...pkg.dependencies,
+    '@react-navigation/native': '^6.1.0',
+    '@tanstack/react-query': '^5.0.0',
+    axios: '^1.6.0',
+    'expo-image': '~1.12.0',
+    'expo-router': '~3.5.0',
+    'expo-secure-store': '~13.0.0',
+    'lucide-react-native': '^0.300.0',
+    nativewind: '^4.0.0',
+    'react-hook-form': '^7.50.0',
+    'react-native-mmkv': '^2.12.0',
+    'react-native-reanimated': '~3.10.0',
+    'react-native-safe-area-context': '4.10.0',
+    'react-native-screens': '3.31.0',
+    'react-native-svg': '15.2.0',
+    zod: '^3.22.0',
+    zustand: '^4.5.0',
+    '@hookform/resolvers': '^3.3.0',
+  };
+  pkg.devDependencies = {
+    ...pkg.devDependencies,
+    '@testing-library/react-native': '^12.4.0',
+    tailwindcss: '^3.4.0',
+  };
+  pkg.main = 'expo-router/entry';
+  pkg.author = `${author} <${email}>`;
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+
+  // Update app.json
+  const appJsonPath = 'app.json';
+  const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
+  appJson.expo.scheme = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+  appJson.expo.plugins = ['expo-router', 'expo-secure-store'];
+  appJson.expo.experiments = { typedRoutes: true };
+  fs.writeFileSync(appJsonPath, JSON.stringify(appJson, null, 2));
+
+  // tailwind.config.js
+  fs.writeFileSync(
+    'tailwind.config.js',
+    `/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ['./src/**/*.{js,ts,tsx}', './app/**/*.{js,ts,tsx}'],
+  presets: [require('nativewind/preset')],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          500: '#3b82f6',
+          600: '#2563eb',
+        },
+      },
+    },
+  },
+  plugins: [],
+};
+`
+  );
+
+  // babel.config.js
+  fs.writeFileSync(
+    'babel.config.js',
+    `module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: [
+      ['babel-preset-expo', { jsxImportSource: 'nativewind' }],
+      'nativewind/babel',
+    ],
+    plugins: ['react-native-reanimated/plugin'],
+  };
+};
+`
+  );
+
+  // metro.config.js
+  fs.writeFileSync(
+    'metro.config.js',
+    `const { getDefaultConfig } = require('expo/metro-config');
+const { withNativeWind } = require('nativewind/metro');
+
+const config = getDefaultConfig(__dirname);
+
+module.exports = withNativeWind(config, { input: './src/global.css' });
+`
+  );
+
+  // eas.json
+  fs.writeFileSync(
+    'eas.json',
+    JSON.stringify(
+      {
+        cli: { version: '>= 5.0.0' },
+        build: {
+          development: { developmentClient: true, distribution: 'internal' },
+          preview: { distribution: 'internal' },
+          production: {},
+        },
+        submit: { production: {} },
+      },
+      null,
+      2
+    )
+  );
+
+  // global.css
+  fs.writeFileSync(
+    'src/global.css',
+    `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+`
+  );
+
+  // API client
+  fs.writeFileSync(
+    'src/lib/api.ts',
+    `import axios from 'axios';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+
+export const api = axios.create({
+  baseURL: API_URL,
+  timeout: 10000,
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized
+    }
+    return Promise.reject(error);
+  }
+);
+`
+  );
+
+  // Auth store
+  fs.writeFileSync(
+    'src/stores/auth-store.ts',
+    `import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { MMKV } from 'react-native-mmkv';
+
+const storage = new MMKV();
+
+const mmkvStorage = {
+  getItem: (name: string) => storage.getString(name) ?? null,
+  setItem: (name: string, value: string) => storage.set(name, value),
+  removeItem: (name: string) => storage.delete(name),
+};
+
+interface AuthState {
+  token: string | null;
+  setToken: (token: string | null) => void;
+  logout: () => void;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      setToken: (token) => set({ token }),
+      logout: () => set({ token: null }),
+    }),
+    {
+      name: 'auth-storage',
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);
+`
+  );
+
+  // Button component
+  fs.writeFileSync(
+    'src/components/ui/button.tsx',
+    `import React from 'react';
+import { Pressable, Text, ActivityIndicator, PressableProps } from 'react-native';
+
+interface ButtonProps extends PressableProps {
+  title: string;
+  loading?: boolean;
+  variant?: 'primary' | 'outline';
+}
+
+export function Button({ title, loading, variant = 'primary', disabled, ...props }: ButtonProps) {
+  const isPrimary = variant === 'primary';
+
+  return (
+    <Pressable
+      className={\`px-4 py-3 rounded-lg items-center \${
+        isPrimary ? 'bg-primary-500 active:bg-primary-600' : 'border border-primary-500'
+      } \${(disabled || loading) ? 'opacity-50' : ''}\`}
+      disabled={disabled || loading}
+      {...props}
+    >
+      {loading ? (
+        <ActivityIndicator color={isPrimary ? 'white' : '#3b82f6'} />
+      ) : (
+        <Text className={\`font-semibold \${isPrimary ? 'text-white' : 'text-primary-500'}\`}>
+          {title}
+        </Text>
+      )}
+    </Pressable>
+  );
+}
+`
+  );
+
+  // README
+  fs.writeFileSync(
+    'README.md',
+    `# ${name}
+
+React Native + Expo mobile app.
+
+## Quick Start
+
+\`\`\`bash
+npm install
+npx expo start
+\`\`\`
+
+## Scripts
+
+- \`npm start\` - Start Expo dev server
+- \`npm run ios\` - Run on iOS simulator
+- \`npm run android\` - Run on Android emulator
+- \`npm test\` - Run tests
+
+## Build for Production
+
+\`\`\`bash
+npm install -g eas-cli
+eas build --platform all
+\`\`\`
+
+## Author
+
+${author} <${email}>
+`
+  );
+}
+
+function createMobileCLIProject(name, author, email) {
+  // Create additional directories
+  const dirs = [
+    'src/screens',
+    'src/screens/auth',
+    'src/components/ui',
+    'src/navigation',
+    'src/services',
+    'src/stores',
+    'src/hooks',
+    'src/utils',
+    'src/constants',
+  ];
+  dirs.forEach((dir) => fs.mkdirSync(dir, { recursive: true }));
+
+  // Update package.json
+  const pkgPath = 'package.json';
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  pkg.dependencies = {
+    ...pkg.dependencies,
+    '@react-navigation/native': '^6.1.0',
+    '@react-navigation/native-stack': '^6.9.0',
+    '@react-navigation/bottom-tabs': '^6.5.0',
+    '@tanstack/react-query': '^5.0.0',
+    axios: '^1.6.0',
+    'react-native-screens': '^3.31.0',
+    'react-native-safe-area-context': '^4.10.0',
+    'react-native-gesture-handler': '^2.16.0',
+    'react-native-reanimated': '^3.10.0',
+    'react-native-svg': '^15.2.0',
+    'react-native-mmkv': '^2.12.0',
+    'react-native-keychain': '^8.2.0',
+    'react-native-fast-image': '^8.6.3',
+    'react-native-config': '^1.5.1',
+    nativewind: '^4.0.0',
+    'react-hook-form': '^7.50.0',
+    '@hookform/resolvers': '^3.3.0',
+    zod: '^3.22.0',
+    zustand: '^4.5.0',
+    'lucide-react-native': '^0.300.0',
+  };
+  pkg.devDependencies = {
+    ...pkg.devDependencies,
+    '@testing-library/react-native': '^12.4.0',
+    tailwindcss: '^3.4.0',
+  };
+  pkg.author = `${author} <${email}>`;
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+
+  // tailwind.config.js
+  fs.writeFileSync(
+    'tailwind.config.js',
+    `/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ['./App.{js,ts,tsx}', './src/**/*.{js,ts,tsx}'],
+  presets: [require('nativewind/preset')],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          500: '#3b82f6',
+          600: '#2563eb',
+        },
+      },
+    },
+  },
+  plugins: [],
+};
+`
+  );
+
+  // babel.config.js - update existing
+  fs.writeFileSync(
+    'babel.config.js',
+    `module.exports = {
+  presets: [
+    ['module:@react-native/babel-preset', { jsxImportSource: 'nativewind' }],
+    'nativewind/babel',
+  ],
+  plugins: ['react-native-reanimated/plugin'],
+};
+`
+  );
+
+  // .env.example
+  fs.writeFileSync(
+    '.env',
+    `API_URL=http://localhost:3000/api/v1
+`
+  );
+
+  // global.css
+  fs.writeFileSync(
+    'src/global.css',
+    `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+`
+  );
+
+  // API client
+  fs.writeFileSync(
+    'src/services/api.ts',
+    `import axios from 'axios';
+import Config from 'react-native-config';
+
+const API_URL = Config.API_URL || 'http://localhost:3000/api/v1';
+
+export const api = axios.create({
+  baseURL: API_URL,
+  timeout: 10000,
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized
+    }
+    return Promise.reject(error);
+  }
+);
+`
+  );
+
+  // Auth store
+  fs.writeFileSync(
+    'src/stores/auth-store.ts',
+    `import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { MMKV } from 'react-native-mmkv';
+
+const storage = new MMKV();
+
+const mmkvStorage = {
+  getItem: (name: string) => storage.getString(name) ?? null,
+  setItem: (name: string, value: string) => storage.set(name, value),
+  removeItem: (name: string) => storage.delete(name),
+};
+
+interface AuthState {
+  token: string | null;
+  setToken: (token: string | null) => void;
+  logout: () => void;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      token: null,
+      setToken: (token) => set({ token }),
+      logout: () => set({ token: null }),
+    }),
+    {
+      name: 'auth-storage',
+      storage: createJSONStorage(() => mmkvStorage),
+    }
+  )
+);
+`
+  );
+
+  // Navigation
+  fs.writeFileSync(
+    'src/navigation/RootNavigator.tsx',
+    `import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Home, User, Settings } from 'lucide-react-native';
+
+import HomeScreen from '../screens/HomeScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+function MainTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: '#3b82f6',
+        tabBarInactiveTintColor: '#9ca3af',
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Home color={color} size={size} /> }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ tabBarIcon: ({ color, size }) => <User color={color} size={size} /> }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Settings color={color} size={size} /> }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+export function RootNavigator() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Main" component={MainTabs} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+`
+  );
+
+  // Screens
+  fs.writeFileSync(
+    'src/screens/HomeScreen.tsx',
+    `import React from 'react';
+import { View, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+export default function HomeScreen() {
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 items-center justify-center p-4">
+        <Text className="text-2xl font-bold text-gray-900">Home</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+`
+  );
+
+  fs.writeFileSync(
+    'src/screens/ProfileScreen.tsx',
+    `import React from 'react';
+import { View, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+export default function ProfileScreen() {
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 items-center justify-center p-4">
+        <Text className="text-2xl font-bold text-gray-900">Profile</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+`
+  );
+
+  fs.writeFileSync(
+    'src/screens/SettingsScreen.tsx',
+    `import React from 'react';
+import { View, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+export default function SettingsScreen() {
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 items-center justify-center p-4">
+        <Text className="text-2xl font-bold text-gray-900">Settings</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+`
+  );
+
+  // Button component
+  fs.writeFileSync(
+    'src/components/ui/Button.tsx',
+    `import React from 'react';
+import { Pressable, Text, ActivityIndicator, PressableProps } from 'react-native';
+
+interface ButtonProps extends PressableProps {
+  title: string;
+  loading?: boolean;
+  variant?: 'primary' | 'outline';
+}
+
+export function Button({ title, loading, variant = 'primary', disabled, ...props }: ButtonProps) {
+  const isPrimary = variant === 'primary';
+
+  return (
+    <Pressable
+      className={\`px-4 py-3 rounded-lg items-center \${
+        isPrimary ? 'bg-primary-500 active:bg-primary-600' : 'border border-primary-500'
+      } \${(disabled || loading) ? 'opacity-50' : ''}\`}
+      disabled={disabled || loading}
+      {...props}
+    >
+      {loading ? (
+        <ActivityIndicator color={isPrimary ? 'white' : '#3b82f6'} />
+      ) : (
+        <Text className={\`font-semibold \${isPrimary ? 'text-white' : 'text-primary-500'}\`}>
+          {title}
+        </Text>
+      )}
+    </Pressable>
+  );
+}
+`
+  );
+
+  // Update App.tsx
+  fs.writeFileSync(
+    'App.tsx',
+    `import './src/global.css';
+import React from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RootNavigator } from './src/navigation/RootNavigator';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      retry: 2,
+    },
+  },
+});
+
+export default function App() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <RootNavigator />
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+}
+`
+  );
+
+  // README
+  fs.writeFileSync(
+    'README.md',
+    `# ${name}
+
+React Native CLI mobile app.
+
+## Quick Start
+
+\`\`\`bash
+npm install
+cd ios && pod install && cd ..
+npm run ios   # or npm run android
+\`\`\`
+
+## Scripts
+
+- \`npm run ios\` - Run on iOS simulator
+- \`npm run android\` - Run on Android emulator
+- \`npm test\` - Run tests
+
+## Build for Production
+
+\`\`\`bash
+# iOS
+cd ios && xcodebuild -workspace ${name}.xcworkspace -scheme ${name} -configuration Release
+
+# Android
+cd android && ./gradlew assembleRelease
+\`\`\`
 
 ## Author
 
