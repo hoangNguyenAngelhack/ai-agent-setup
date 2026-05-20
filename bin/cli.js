@@ -35,7 +35,8 @@ ${colors.yellow}Usage:${colors.reset}
   npx create-ai-agent [project-name] [options]
 
 ${colors.yellow}Options:${colors.reset}
-  -t, --type <type>      Project type: backend, frontend, nextjs, fullstack
+  -t, --type <type>      Project type: backend, frontend, fullstack
+  -f, --framework <fw>   Frontend framework: nextjs, vite, vanilla (requires -t frontend)
   -T, --tier <tier>      Rule tier: starter, standard, strict
   -d, --db <database>    Database: postgresql, mysql, sqlite, none
   -y, --yes              Skip prompts, use defaults
@@ -44,8 +45,10 @@ ${colors.yellow}Options:${colors.reset}
 
 ${colors.yellow}Examples:${colors.reset}
   npx create-ai-agent my-app
-  npx create-ai-agent my-api --type backend --db postgresql
-  npx create-ai-agent my-app --type nextjs --tier strict -y
+  npx create-ai-agent my-api -t backend --db postgresql
+  npx create-ai-agent my-landing -t frontend -f nextjs
+  npx create-ai-agent my-admin -t frontend -f vite
+  npx create-ai-agent my-simple -t frontend -f vanilla -y
 
 ${colors.yellow}Interactive mode:${colors.reset}
   Just run: npx create-ai-agent
@@ -58,6 +61,7 @@ function parseArgs(args) {
     type: null,
     tier: null,
     db: null,
+    framework: null,
     yes: false,
     help: false,
     version: false,
@@ -81,6 +85,9 @@ function parseArgs(args) {
       i++;
     } else if (arg === '-d' || arg === '--db') {
       result.db = next;
+      i++;
+    } else if (arg === '-f' || arg === '--framework') {
+      result.framework = next;
       i++;
     } else if (!arg.startsWith('-') && !result.projectName) {
       result.projectName = arg;
@@ -166,12 +173,27 @@ async function main() {
         console.log('');
         log.step(2, 6, 'Project type:');
         console.log('  1) backend    - Express + Prisma + Redis');
-        console.log('  2) frontend   - React + Vite + TanStack Query');
-        console.log('  3) nextjs     - Next.js 14 (App Router)');
-        console.log('  4) fullstack  - Monorepo (API + Web)');
-        const choice = await question('→ Choose (1-4) [1]: ');
-        const types = { '1': 'backend', '2': 'frontend', '3': 'nextjs', '4': 'fullstack', '': 'backend' };
+        console.log('  2) frontend   - Web application');
+        console.log('  3) fullstack  - Monorepo (API + Web)');
+        const choice = await question('→ Choose (1-3) [1]: ');
+        const types = { '1': 'backend', '2': 'frontend', '3': 'fullstack', '': 'backend' };
         config.type = types[choice] || 'backend';
+      }
+    }
+
+    // Step 2b: Frontend framework (only if type is frontend)
+    if (config.type === 'frontend' && !config.framework) {
+      if (args.yes) {
+        config.framework = 'vite';
+      } else {
+        console.log('');
+        log.step('2b', 6, 'Frontend framework:');
+        console.log('  1) Next.js  - SSR/SSG, SEO optimized');
+        console.log('  2) Vite     - React SPA, fast dev');
+        console.log('  3) Vanilla  - HTML/CSS/JS with Vite');
+        const choice = await question('→ Choose (1-3) [2]: ');
+        const frameworks = { '1': 'nextjs', '2': 'vite', '3': 'vanilla', '': 'vite' };
+        config.framework = frameworks[choice] || 'vite';
       }
     }
 
@@ -230,8 +252,13 @@ async function main() {
     log.warn('Configuration:');
     console.log(`  Project:  ${colors.green}${config.projectName}${colors.reset}`);
     console.log(`  Type:     ${colors.green}${config.type}${colors.reset}`);
+    if (config.type === 'frontend') {
+      console.log(`  Framework:${colors.green} ${config.framework}${colors.reset}`);
+    }
     console.log(`  Tier:     ${colors.green}${config.tier}${colors.reset}`);
-    console.log(`  Database: ${colors.green}${config.db}${colors.reset}`);
+    if (config.type !== 'frontend') {
+      console.log(`  Database: ${colors.green}${config.db}${colors.reset}`);
+    }
     console.log(`  Author:   ${colors.green}${config.author} <${config.email}>${colors.reset}`);
     log.warn('═══════════════════════════════════════════════════════════');
     console.log('');
@@ -265,15 +292,19 @@ async function main() {
     }
 
     // Create project structure based on type
-    log.gray(`→ Setting up ${config.type} project...`);
+    if (config.type === 'frontend') {
+      const frameworkLabel = config.framework === 'nextjs' ? 'Next.js' : config.framework === 'vanilla' ? 'Vanilla' : 'Vite';
+      log.gray(`→ Setting up ${frameworkLabel} frontend project...`);
 
-    if (config.type === 'nextjs') {
-      execSync('npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --no-git', {
-        stdio: 'inherit',
-      });
-    } else if (config.type === 'frontend') {
-      createFrontendProject(config);
+      if (config.framework === 'nextjs') {
+        createNextjsProject(config);
+      } else if (config.framework === 'vanilla') {
+        createVanillaProject(config);
+      } else {
+        createViteProject(config);
+      }
     } else {
+      log.gray(`→ Setting up ${config.type} project...`);
       createBackendProject(config);
     }
 
@@ -281,7 +312,8 @@ async function main() {
     log.gray('→ Initializing git...');
     execSync('git init -q', { stdio: 'pipe' });
     execSync('git add -A', { stdio: 'pipe' });
-    execSync(`git commit -q -m "feat: initial project setup (${config.type}, ${config.tier})"`, { stdio: 'pipe' });
+    const commitLabel = config.type === 'frontend' ? `${config.type}/${config.framework}` : config.type;
+    execSync(`git commit -q -m "feat: initial project setup (${commitLabel}, ${config.tier})"`, { stdio: 'pipe' });
 
     // Done!
     console.log('');
@@ -526,7 +558,7 @@ ${config.author} <${config.email}>
 `);
 }
 
-function createFrontendProject(config) {
+function createViteProject(config) {
   // Create directories
   const dirs = [
     'src/components/ui',
@@ -783,6 +815,196 @@ npm run dev
 
 ${config.author} <${config.email}>
 `);
+}
+
+function createNextjsProject(config) {
+  execSync('npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --no-git', {
+    stdio: 'inherit',
+  });
+
+  // README
+  fs.writeFileSync('README.md', `# ${config.projectName}
+
+Next.js 14 (App Router) + TypeScript + TailwindCSS
+
+## Quick Start
+
+\`\`\`bash
+npm install
+cp .env.example .env
+npm run dev
+\`\`\`
+
+## Scripts
+
+- \`npm run dev\` - Start development server
+- \`npm run build\` - Build for production
+- \`npm run start\` - Start production server
+- \`npm run lint\` - Run ESLint
+
+## Author
+
+${config.author} <${config.email}>
+`);
+
+  // .env.example
+  fs.writeFileSync('.env.example', `# Application
+NEXT_PUBLIC_APP_NAME=${config.projectName}
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
+`);
+}
+
+function createVanillaProject(config) {
+  // Create directories
+  const dirs = ['src', 'public'];
+  dirs.forEach((dir) => fs.mkdirSync(dir, { recursive: true }));
+
+  // Package.json
+  const pkg = {
+    name: config.projectName,
+    version: '1.0.0',
+    type: 'module',
+    scripts: {
+      dev: 'vite',
+      build: 'vite build',
+      preview: 'vite preview',
+    },
+    devDependencies: {
+      'vite': '^5.4.0',
+      'tailwindcss': '^3.4.0',
+      'postcss': '^8.4.0',
+      'autoprefixer': '^10.4.0',
+    },
+    author: `${config.author} <${config.email}>`,
+    license: 'MIT',
+  };
+  fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+
+  // Vite config
+  fs.writeFileSync('vite.config.js', `import { defineConfig } from 'vite';
+
+export default defineConfig({
+  root: '.',
+  publicDir: 'public',
+  build: {
+    outDir: 'dist',
+  },
+});
+`);
+
+  // Tailwind config
+  fs.writeFileSync('tailwind.config.js', `/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./*.html', './src/**/*.{js,ts}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+`);
+
+  // PostCSS config
+  fs.writeFileSync('postcss.config.js', `export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+`);
+
+  // index.html
+  fs.writeFileSync('index.html', `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${config.projectName}</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body class="min-h-screen bg-gray-100">
+    <div id="app" class="container mx-auto px-4 py-8">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">${config.projectName}</h1>
+      <p class="text-gray-600">Edit <code class="bg-gray-200 px-2 py-1 rounded">src/main.js</code> to get started</p>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+`);
+
+  // CSS
+  fs.writeFileSync('src/style.css', `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+`);
+
+  // Main JS
+  fs.writeFileSync('src/main.js', `// Main entry point
+console.log('Hello from ${config.projectName}!');
+
+// Example: Add interactivity
+document.addEventListener('DOMContentLoaded', () => {
+  const app = document.getElementById('app');
+  if (app) {
+    console.log('App initialized');
+  }
+});
+`);
+
+  // .env.example
+  fs.writeFileSync('.env.example', `# Application
+VITE_APP_NAME=${config.projectName}
+VITE_API_URL=http://localhost:3000/api
+`);
+
+  // .gitignore
+  fs.writeFileSync('.gitignore', `node_modules/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+`);
+
+  // README
+  const readmeContent = [
+    `# ${config.projectName}`,
+    '',
+    'Vanilla JavaScript + Vite + TailwindCSS',
+    '',
+    '## Quick Start',
+    '',
+    '```bash',
+    'npm install',
+    'cp .env.example .env',
+    'npm run dev',
+    '```',
+    '',
+    '## Scripts',
+    '',
+    '- `npm run dev` - Start development server',
+    '- `npm run build` - Build for production',
+    '- `npm run preview` - Preview production build',
+    '',
+    '## Project Structure',
+    '',
+    '```',
+    `${config.projectName}/`,
+    '├── index.html       # Entry HTML',
+    '├── src/',
+    '│   ├── main.js      # Main JavaScript',
+    '│   └── style.css    # Tailwind + custom CSS',
+    '├── public/          # Static assets',
+    '└── .claude/         # AI agent configuration',
+    '```',
+    '',
+    '## Author',
+    '',
+    `${config.author} <${config.email}>`,
+    '',
+  ].join('\n');
+  fs.writeFileSync('README.md', readmeContent);
 }
 
 main().catch((err) => {
