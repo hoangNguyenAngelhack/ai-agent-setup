@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "My App",
-    "slug": "my-app",
+    "name": "{{PROJECT_NAME}}",
+    "slug": "{{PROJECT_NAME}}",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "myapp",
+    "scheme": "{{PROJECT_NAME}}",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash.png",

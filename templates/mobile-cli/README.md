@@ -1,6 +1,10 @@
-# Mobile App Template (React Native CLI)
+# {{PROJECT_NAME}}
 
 React Native CLI template with TypeScript, NativeWind, and best practices.
+
+## Author
+
+{{AUTHOR_NAME}} <{{AUTHOR_EMAIL}}>
 
 ## Tech Stack
 

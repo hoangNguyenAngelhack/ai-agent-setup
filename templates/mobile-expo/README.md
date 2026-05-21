@@ -1,6 +1,10 @@
-# Mobile App Template
+# {{PROJECT_NAME}}
 
 React Native + Expo template with TypeScript, NativeWind, and best practices.
+
+## Author
+
+{{AUTHOR_NAME}} <{{AUTHOR_EMAIL}}>
 
 ## Tech Stack
 

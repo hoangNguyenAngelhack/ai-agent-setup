@@ -5,7 +5,16 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
+
+const TEMPLATES = {
+  backend: 'backend',
+  'frontend-vite': 'frontend-vite',
+  'frontend-nextjs': 'frontend-nextjs',
+  fullstack: 'fullstack',
+  'mobile-expo': 'mobile-expo',
+  'mobile-cli': 'mobile-cli',
+};
 
 const colors = {
   reset: '\x1b[0m',
@@ -35,8 +44,10 @@ ${colors.yellow}Usage:${colors.reset}
   npx create-ai-agent [project-name] [options]
 
 ${colors.yellow}Options:${colors.reset}
-  -t, --type <type>      Project type: backend, frontend, fullstack
-  -f, --framework <fw>   Frontend framework: nextjs, vite, vanilla (requires -t frontend)
+  -t, --type <type>      Project type: backend, frontend, fullstack, mobile
+  -f, --framework <fw>   Framework selection:
+                         • frontend: nextjs, vite
+                         • mobile: expo, cli
   -T, --tier <tier>      Rule tier: starter, standard, strict
   -d, --db <database>    Database: postgresql, mysql, sqlite, none
   -y, --yes              Skip prompts, use defaults
@@ -48,7 +59,8 @@ ${colors.yellow}Examples:${colors.reset}
   npx create-ai-agent my-api -t backend --db postgresql
   npx create-ai-agent my-landing -t frontend -f nextjs
   npx create-ai-agent my-admin -t frontend -f vite
-  npx create-ai-agent my-simple -t frontend -f vanilla -y
+  npx create-ai-agent my-mobile -t mobile -f expo
+  npx create-ai-agent my-native -t mobile -f cli
 
 ${colors.yellow}Interactive mode:${colors.reset}
   Just run: npx create-ai-agent
@@ -171,12 +183,13 @@ async function main() {
         config.type = 'backend';
       } else {
         console.log('');
-        log.step(2, 6, 'Project type:');
+        log.step(2, 7, 'Project type:');
         console.log('  1) backend    - Express + Prisma + Redis');
         console.log('  2) frontend   - Web application');
-        console.log('  3) fullstack  - Monorepo (API + Web)');
-        const choice = await question('→ Choose (1-3) [1]: ');
-        const types = { '1': 'backend', '2': 'frontend', '3': 'fullstack', '': 'backend' };
+        console.log('  3) fullstack  - Next.js + tRPC + Prisma + NextAuth');
+        console.log('  4) mobile     - React Native app');
+        const choice = await question('→ Choose (1-4) [1]: ');
+        const types = { '1': 'backend', '2': 'frontend', '3': 'fullstack', '4': 'mobile', '': 'backend' };
         config.type = types[choice] || 'backend';
       }
     }
@@ -187,13 +200,27 @@ async function main() {
         config.framework = 'vite';
       } else {
         console.log('');
-        log.step('2b', 6, 'Frontend framework:');
+        log.step('2b', 7, 'Frontend framework:');
         console.log('  1) Next.js  - SSR/SSG, SEO optimized');
         console.log('  2) Vite     - React SPA, fast dev');
-        console.log('  3) Vanilla  - HTML/CSS/JS with Vite');
-        const choice = await question('→ Choose (1-3) [2]: ');
-        const frameworks = { '1': 'nextjs', '2': 'vite', '3': 'vanilla', '': 'vite' };
-        config.framework = frameworks[choice] || 'vite';
+        const choice = await question('→ Choose (1-2) [1]: ');
+        const frameworks = { '1': 'nextjs', '2': 'vite', '': 'nextjs' };
+        config.framework = frameworks[choice] || 'nextjs';
+      }
+    }
+
+    // Step 2c: Mobile framework (only if type is mobile)
+    if (config.type === 'mobile' && !config.framework) {
+      if (args.yes) {
+        config.framework = 'expo';
+      } else {
+        console.log('');
+        log.step('2c', 7, 'Mobile framework:');
+        console.log('  1) Expo     - Managed workflow, EAS builds (recommended)');
+        console.log('  2) CLI      - Bare React Native, full native control');
+        const choice = await question('→ Choose (1-2) [1]: ');
+        const frameworks = { '1': 'expo', '2': 'cli', '': 'expo' };
+        config.framework = frameworks[choice] || 'expo';
       }
     }
 
@@ -203,7 +230,7 @@ async function main() {
         config.tier = 'standard';
       } else {
         console.log('');
-        log.step(3, 6, 'Rule tier:');
+        log.step(3, 7, 'Rule tier:');
         console.log('  1) starter   - MVP, prototypes (50% test coverage)');
         console.log('  2) standard  - Production apps (80% coverage)');
         console.log('  3) strict    - Enterprise (95% coverage)');
@@ -213,13 +240,13 @@ async function main() {
       }
     }
 
-    // Step 4: Database
-    if (!config.db) {
+    // Step 4: Database (skip for mobile/frontend)
+    if (!config.db && config.type !== 'frontend' && config.type !== 'mobile') {
       if (args.yes) {
         config.db = 'postgresql';
       } else {
         console.log('');
-        log.step(4, 6, 'Database:');
+        log.step(4, 7, 'Database:');
         console.log('  1) postgresql - Recommended');
         console.log('  2) mysql');
         console.log('  3) sqlite     - Development only');
@@ -228,6 +255,8 @@ async function main() {
         const dbs = { '1': 'postgresql', '2': 'mysql', '3': 'sqlite', '4': 'none', '': 'postgresql' };
         config.db = dbs[choice] || 'postgresql';
       }
+    } else if (config.type === 'frontend' || config.type === 'mobile') {
+      config.db = 'none';
     }
 
     // Step 5 & 6: Author info
@@ -236,11 +265,11 @@ async function main() {
       config.email = 'dev@example.com';
     } else {
       console.log('');
-      log.step(5, 6, 'Author name:');
+      log.step(5, 7, 'Author name:');
       config.author = (await question('→ [Developer]: ')) || 'Developer';
 
       console.log('');
-      log.step(6, 6, 'Author email:');
+      log.step(6, 7, 'Author email:');
       config.email = (await question('→ [dev@example.com]: ')) || 'dev@example.com';
     }
 
@@ -252,11 +281,11 @@ async function main() {
     log.warn('Configuration:');
     console.log(`  Project:  ${colors.green}${config.projectName}${colors.reset}`);
     console.log(`  Type:     ${colors.green}${config.type}${colors.reset}`);
-    if (config.type === 'frontend') {
+    if (config.type === 'frontend' || config.type === 'mobile') {
       console.log(`  Framework:${colors.green} ${config.framework}${colors.reset}`);
     }
     console.log(`  Tier:     ${colors.green}${config.tier}${colors.reset}`);
-    if (config.type !== 'frontend') {
+    if (config.type !== 'frontend' && config.type !== 'mobile') {
       console.log(`  Database: ${colors.green}${config.db}${colors.reset}`);
     }
     console.log(`  Author:   ${colors.green}${config.author} <${config.email}>${colors.reset}`);
@@ -291,28 +320,26 @@ async function main() {
       fs.writeFileSync(claudePath, content);
     }
 
-    // Create project structure based on type
+    // Determine template to use
+    let templateName;
     if (config.type === 'frontend') {
-      const frameworkLabel = config.framework === 'nextjs' ? 'Next.js' : config.framework === 'vanilla' ? 'Vanilla' : 'Vite';
-      log.gray(`→ Setting up ${frameworkLabel} frontend project...`);
-
-      if (config.framework === 'nextjs') {
-        createNextjsProject(config);
-      } else if (config.framework === 'vanilla') {
-        createVanillaProject(config);
-      } else {
-        createViteProject(config);
-      }
+      templateName = config.framework === 'nextjs' ? 'frontend-nextjs' : 'frontend-vite';
+    } else if (config.type === 'mobile') {
+      templateName = config.framework === 'expo' ? 'mobile-expo' : 'mobile-cli';
     } else {
-      log.gray(`→ Setting up ${config.type} project...`);
-      createBackendProject(config);
+      templateName = config.type; // backend, fullstack
     }
+
+    log.gray(`→ Setting up ${templateName} project from template...`);
+    copyTemplate(templateName, config);
 
     // Git init
     log.gray('→ Initializing git...');
     execSync('git init -q', { stdio: 'pipe' });
     execSync('git add -A', { stdio: 'pipe' });
-    const commitLabel = config.type === 'frontend' ? `${config.type}/${config.framework}` : config.type;
+    const commitLabel = (config.type === 'frontend' || config.type === 'mobile')
+      ? `${config.type}/${config.framework}`
+      : config.type;
     execSync(`git commit -q -m "feat: initial project setup (${commitLabel}, ${config.tier})"`, { stdio: 'pipe' });
 
     // Done!
@@ -328,12 +355,25 @@ async function main() {
     console.log(`  cd ${config.projectName}`);
     console.log('  npm install');
     console.log('  cp .env.example .env');
-    if (config.db !== 'none' && config.type !== 'frontend') {
-      console.log('  npm run db:migrate');
+
+    if (config.type === 'backend' || config.type === 'fullstack') {
+      if (config.db !== 'none') {
+        console.log('  npm run db:migrate');
+      }
+    } else if (config.type === 'mobile') {
+      if (config.framework === 'expo') {
+        console.log('  npx expo start');
+      } else {
+        console.log('  npx react-native run-ios  # or run-android');
+      }
     }
-    console.log('  npm run dev');
+
+    if (config.type !== 'mobile' || config.framework !== 'expo') {
+      console.log('  npm run dev');
+    }
+
     console.log('');
-    log.info('Happy coding! 🚀');
+    log.info('Happy coding!');
     console.log('');
 
   } catch (error) {
@@ -345,6 +385,85 @@ async function main() {
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function copyTemplate(templateName, config) {
+  const packageDir = path.dirname(__dirname);
+  const templateDir = path.join(packageDir, 'templates', templateName);
+
+  if (!fs.existsSync(templateDir)) {
+    log.warn(`Template "${templateName}" not found, using fallback...`);
+    if (config.type === 'backend' || config.type === 'fullstack') {
+      createBackendProject(config);
+    } else if (config.type === 'frontend') {
+      if (config.framework === 'nextjs') {
+        createNextjsProject(config);
+      } else {
+        createViteProject(config);
+      }
+    } else {
+      createViteProject(config);
+    }
+    return;
+  }
+
+  // Copy template files recursively
+  copyDirRecursive(templateDir, process.cwd());
+
+  // Replace placeholders in files
+  replacePlaceholders(process.cwd(), config);
+}
+
+function copyDirRecursive(src, dest) {
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      fs.mkdirSync(destPath, { recursive: true });
+      copyDirRecursive(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
+function replacePlaceholders(dir, config) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      if (entry.name !== 'node_modules' && entry.name !== '.git') {
+        replacePlaceholders(fullPath, config);
+      }
+    } else {
+      const ext = path.extname(entry.name).toLowerCase();
+      const textExts = ['.md', '.json', '.js', '.ts', '.tsx', '.jsx', '.html', '.css', '.prisma', '.yml', '.yaml', '.env', '.example', '.sh'];
+
+      if (textExts.includes(ext) || entry.name.startsWith('.') || entry.name === 'package.json') {
+        try {
+          let content = fs.readFileSync(fullPath, 'utf8');
+          const original = content;
+
+          content = content.replace(/\{\{PROJECT_NAME\}\}/g, config.projectName);
+          content = content.replace(/\{\{AUTHOR_NAME\}\}/g, config.author);
+          content = content.replace(/\{\{AUTHOR_EMAIL\}\}/g, config.email);
+          content = content.replace(/\{\{TIER\}\}/g, capitalize(config.tier));
+          content = content.replace(/\{\{DATABASE\}\}/g, config.db || 'postgresql');
+
+          if (content !== original) {
+            fs.writeFileSync(fullPath, content);
+          }
+        } catch (e) {
+          // Skip binary files or read errors
+        }
+      }
+    }
+  }
 }
 
 function createBackendProject(config) {
