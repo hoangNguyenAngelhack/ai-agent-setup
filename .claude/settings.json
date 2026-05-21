@@ -1,12 +1,75 @@
 {
-  "model": "claude-opus-4-5",
-  "context_window": 200000,
   "permissions": {
-    "allow_file_read": true,
-    "allow_file_write": true,
-    "allow_shell_commands": true,
-    "allow_web_search": true
+    "allow": [
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(mkdir *)",
+      "Bash(rm *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(touch *)",
+      "Bash(chmod *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(pnpm *)",
+      "Bash(yarn *)",
+      "Bash(bun *)",
+      "Bash(node *)",
+      "Bash(tsx *)",
+      "Bash(docker *)",
+      "Bash(docker-compose *)",
+      "Bash(adb *)",
+      "Bash(xcrun *)",
+      "Bash(xcodebuild *)",
+      "Bash(pod *)",
+      "Bash(eas *)",
+      "Bash(expo *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(lsof *)",
+      "Bash(kill *)",
+      "Bash(pkill *)",
+      "Bash(open *)",
+      "Bash(code *)",
+      "Bash(pbcopy *)",
+      "Bash(pbpaste *)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "Edit(*)",
+      "Write(*)",
+      "mcp__*"
+    ],
+    "deny": [],
+    "additionalDirectories": [
+      "/Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/.claude/rules"
+    ]
   },
+  "model": "claude-opus-4-5",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[PRE] Running: $TOOL_INPUT' >> /tmp/claude-hooks.log"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ $TOOL_EXIT_CODE -ne 0 ]; then echo '[ERROR] Command failed with exit code $TOOL_EXIT_CODE' >> /tmp/claude-hooks.log; fi"
+          }
+        ]
+      }
+    ]
+  },
+  "context_window": 200000,
   "rules_dir": ".claude/rules",
   "commands_dir": ".claude/commands",
   "skills_dir": ".claude/skills",

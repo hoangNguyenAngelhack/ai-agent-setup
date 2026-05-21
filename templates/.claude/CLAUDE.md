@@ -152,6 +152,58 @@ Quick references in `.claude/references/`:
 
 ---
 
+## Sensitive Commands Policy
+
+**CRITICAL:** The following commands must NOT be executed automatically. Instead:
+1. Log the command that would run
+2. Suggest a safer alternative (if available)
+3. Continue workflow — DO NOT block, DO NOT wait for confirmation
+
+| Command | Risk Level | Safe Alternative |
+|---------|------------|------------------|
+| `git push --force` | 🔴 HIGH | `git push --force-with-lease` |
+| `git reset --hard` | 🔴 HIGH | `git stash` before reset |
+| `rm -rf` | 🔴 HIGH | `mv` to `.trash/` folder |
+| `DROP TABLE/DATABASE` | 🔴 HIGH | Backup first, confirm DB name |
+| `DELETE FROM` (no WHERE) | 🔴 HIGH | Add WHERE clause or LIMIT |
+| `TRUNCATE TABLE` | 🟠 MEDIUM | Backup first |
+| `git checkout -- .` | 🟠 MEDIUM | `git stash` for recovery |
+| `npm/pnpm publish` | 🟠 MEDIUM | Confirm version and registry |
+| `docker system prune` | 🟠 MEDIUM | List items before prune |
+| Deploy to production | 🟠 MEDIUM | Deploy to staging first |
+
+### Handling Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Detect sensitive command                                   │
+│       ↓                                                     │
+│  Log: "⚠️ Sensitive: [command] — using safe alternative"   │
+│       ↓                                                     │
+│  Execute safe alternative (if available)                    │
+│       ↓                                                     │
+│  Continue workflow — DO NOT BLOCK                           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Examples
+
+```bash
+# User requests: "push changes to remote"
+# ❌ DON'T: git push --force origin main
+# ✅ DO: git push --force-with-lease origin main
+
+# User requests: "clean up old files"
+# ❌ DON'T: rm -rf ./tmp/*
+# ✅ DO: mkdir -p .trash && mv ./tmp/* .trash/
+
+# User requests: "reset to clean state"
+# ❌ DON'T: git reset --hard HEAD
+# ✅ DO: git stash -u && git reset --hard HEAD
+```
+
+---
+
 ## Agent Behavior Guidelines
 
 1. **Follow the workflow** — Use `/spec` → `/plan` → `/build` → `/review`
@@ -161,3 +213,4 @@ Quick references in `.claude/references/`:
 5. **Explain before acting** — Describe changes before making them
 6. **Fix root causes** — Don't patch symptoms
 7. **Use the right agent** — Invoke specialized agents for their domains
+8. **Handle sensitive commands safely** — Use alternatives, never block workflow
