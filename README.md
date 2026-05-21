@@ -5,7 +5,7 @@
   <h3>Production-ready AI Agent configuration for Claude Code</h3>
   <p>Structured workflows, specialized agents, mandatory rules, and best practices</p>
 
-  ![Version](https://img.shields.io/badge/version-1.1.0-blue?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-1.3.0-blue?style=flat-square)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
   [![Email](https://img.shields.io/badge/Email-hoang.nguyen%40angelhack.com-EA4335?logo=gmail)](mailto:hoang.nguyen@angelhack.com)
 
@@ -19,15 +19,41 @@
 # Create a new project (interactive)
 npx create-ai-agent-setup my-app
 
-# Or with options
-npx create-ai-agent-setup my-api --type backend --db postgresql --tier standard
+# Backend API (Express + Prisma + Redis)
+npx create-ai-agent-setup my-api -t backend --db postgresql
 
-# Mobile projects
-npx create-ai-agent-setup my-mobile-app --type mobile-expo
-npx create-ai-agent-setup my-mobile-app --type mobile-cli
+# Frontend - Next.js (SSR/SSG, SEO optimized)
+npx create-ai-agent-setup my-landing -t frontend -f nextjs
+
+# Frontend - Vite (React SPA, fast dev)
+npx create-ai-agent-setup my-admin -t frontend -f vite
+
+# Fullstack (Next.js + tRPC + Prisma + NextAuth)
+npx create-ai-agent-setup my-saas -t fullstack
+
+# Mobile - Expo (managed workflow, EAS builds)
+npx create-ai-agent-setup my-app -t mobile -f expo
+
+# Mobile - React Native CLI (bare workflow, full native control)
+npx create-ai-agent-setup my-app -t mobile -f cli
 
 # Skip prompts with defaults
 npx create-ai-agent-setup my-app -y
+```
+
+### CLI Options
+
+```
+Options:
+  -t, --type <type>      Project type: backend, frontend, fullstack, mobile
+  -f, --framework <fw>   Framework selection:
+                         • frontend: nextjs, vite
+                         • mobile: expo, cli
+  -T, --tier <tier>      Rule tier: starter, standard, strict
+  -d, --db <database>    Database: postgresql, mysql, sqlite, none
+  -y, --yes              Skip prompts, use defaults
+  -h, --help             Show help
+  -v, --version          Show version
 ```
 
 ### Alternative Methods
@@ -44,10 +70,11 @@ npx degit hoangNguyenAngelhack/ai-agent-setup/.claude .claude
 
 The CLI will guide you through:
 1. Project name
-2. Project type (backend / frontend / nextjs / fullstack / mobile-expo / mobile-cli)
-3. Rule tier (Starter / Standard / Strict)
-4. Database (PostgreSQL / MySQL / SQLite)
-5. Author info
+2. Project type (backend / frontend / fullstack / mobile)
+3. Framework (for frontend: nextjs/vite, for mobile: expo/cli)
+4. Rule tier (Starter / Standard / Strict)
+5. Database (for backend/fullstack only)
+6. Author info
 
 ---
 
@@ -174,9 +201,13 @@ examples/                        # Sample implementations
     ├── root-navigator.tsx
     └── ... (8 files)
 
-templates/                       # Project templates
-├── mobile-expo/                 # Ready-to-use Expo template
-└── mobile-cli/                  # Ready-to-use RN CLI template
+templates/                       # Project templates (used by CLI)
+├── backend/                     # Express + Prisma + Redis
+├── frontend-nextjs/             # Next.js 14 (App Router)
+├── frontend-vite/               # React + Vite SPA
+├── fullstack/                   # Next.js + tRPC + Prisma + NextAuth
+├── mobile-expo/                 # Expo + Expo Router + NativeWind
+└── mobile-cli/                  # React Native CLI + React Navigation
 ```
 
 ---
