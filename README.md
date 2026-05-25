@@ -6,7 +6,7 @@
   <p>Structured workflows, specialized agents, mandatory rules, and best practices</p>
 
   [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=flat-square&color=cb3837&logo=npm)](https://www.npmjs.com/package/create-ai-agent-setup)
-  ![Version](https://img.shields.io/badge/version-1.4.2-blue?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-1.5.0-blue?style=flat-square)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
   [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-Compatible-green?style=flat-square)](https://agentskills.io)
 
@@ -35,9 +35,11 @@
 npx create-ai-agent-setup my-app
 
 # With specific options
-npx create-ai-agent-setup my-api -t backend --db postgresql          # Express (default)
-npx create-ai-agent-setup my-api -t backend -f nestjs --db postgresql # NestJS
-npx create-ai-agent-setup my-landing -t frontend -f nextjs
+npx create-ai-agent-setup my-api -t backend --db postgresql            # Express (default)
+npx create-ai-agent-setup my-api -t backend -f nestjs --db postgresql  # NestJS
+npx create-ai-agent-setup my-landing -t frontend -f nextjs             # Next.js + shadcn (default)
+npx create-ai-agent-setup my-admin -t frontend -f vite -u antd         # Vite + Ant Design
+npx create-ai-agent-setup my-dashboard -t frontend -f nextjs -u chakra # Next.js + Chakra UI
 npx create-ai-agent-setup my-mobile -t mobile -f expo
 
 # With all integrations
@@ -61,10 +63,15 @@ The CLI will guide you through:
    - **backend**: express (default), nestjs
    - **frontend**: nextjs, vite
    - **mobile**: expo, cli
-4. Rule tier (Starter / Standard / Strict)
-5. Database (for backend/fullstack only)
-6. Author info
-7. CodeGraph setup (optional)
+4. UI library (frontend only):
+   - **shadcn** — Radix UI + Tailwind (recommended)
+   - **antd** — Ant Design + Tailwind (enterprise)
+   - **chakra** — Chakra UI (simple, accessible)
+   - **semantic** — Semantic UI React
+5. Rule tier (Starter / Standard / Strict)
+6. Database (for backend/fullstack only)
+7. Author info
+8. CodeGraph setup (optional)
 
 ### Method 2: Copy to Existing Project
 
@@ -90,6 +97,7 @@ cd my-project
 Options:
   -t, --type <type>      Project type: backend, frontend, fullstack, mobile
   -f, --framework <fw>   Framework: express, nestjs, nextjs, vite, expo, cli
+  -u, --ui <library>     UI library (frontend): shadcn, antd, chakra, semantic
   -T, --tier <tier>      Rule tier: starter, standard, strict
   -d, --db <database>    Database: postgresql, mysql, sqlite, none
   -c, --codegraph        Setup CodeGraph MCP server
@@ -97,6 +105,19 @@ Options:
   -h, --help             Show help
   -v, --version          Show version
 ```
+
+### UI Library Support
+
+When creating frontend projects, you can choose from 4 UI libraries:
+
+| Library | Description | Best For |
+|---------|-------------|----------|
+| **shadcn/ui** | Radix UI + Tailwind CSS | Modern apps, full control |
+| **Ant Design** | Enterprise UI + Tailwind | Admin panels, enterprise |
+| **Chakra UI** | Simple, accessible | Quick prototypes, accessibility |
+| **Semantic UI** | Classic UI framework | Traditional web apps |
+
+**Note:** Tailwind CSS comes bundled with all UI libraries. For Ant Design, the CLI automatically configures `important: true` and `preflight: false` in tailwind.config to prevent style conflicts.
 
 ---
 

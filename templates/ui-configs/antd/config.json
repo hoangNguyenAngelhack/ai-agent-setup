@@ -1,0 +1,21 @@
+{
+  "name": "antd",
+  "displayName": "Ant Design",
+  "description": "Enterprise-class UI design language and React UI library",
+  "dependencies": {
+    "antd": "^5.13.0",
+    "@ant-design/icons": "^5.2.6"
+  },
+  "devDependencies": {},
+  "files": [
+    { "src": "components/", "dest": "src/components/ui/" },
+    { "src": "theme.ts", "dest": "src/lib/antd-theme.ts" },
+    { "src": "provider.tsx", "dest": "src/components/AntdProvider.tsx" }
+  ],
+  "tailwindMerge": {
+    "important": true,
+    "corePlugins": {
+      "preflight": false
+    }
+  }
+}

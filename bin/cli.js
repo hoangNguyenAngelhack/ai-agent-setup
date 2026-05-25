@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const VERSION = '1.4.2';
+const VERSION = '1.5.0';
 
 const CODEGRAPH_INFO = {
   name: 'CodeGraph',
@@ -54,8 +54,11 @@ ${colors.yellow}Usage:${colors.reset}
 ${colors.yellow}Options:${colors.reset}
   -t, --type <type>      Project type: backend, frontend, fullstack, mobile
   -f, --framework <fw>   Framework selection:
+                         • backend: express, nestjs
                          • frontend: nextjs, vite
                          • mobile: expo, cli
+  -u, --ui <library>     UI library (frontend only):
+                         shadcn, antd, chakra, semantic
   -T, --tier <tier>      Rule tier: starter, standard, strict
   -d, --db <database>    Database: postgresql, mysql, sqlite, none
   -y, --yes              Skip prompts, use defaults
@@ -66,10 +69,11 @@ ${colors.yellow}Options:${colors.reset}
 ${colors.yellow}Examples:${colors.reset}
   npx create-ai-agent my-app
   npx create-ai-agent my-api -t backend --db postgresql
+  npx create-ai-agent my-api -t backend -f nestjs --db postgresql
   npx create-ai-agent my-landing -t frontend -f nextjs
-  npx create-ai-agent my-admin -t frontend -f vite
+  npx create-ai-agent my-admin -t frontend -f vite -u antd
+  npx create-ai-agent my-dashboard -t frontend -f nextjs -u chakra
   npx create-ai-agent my-mobile -t mobile -f expo
-  npx create-ai-agent my-native -t mobile -f cli
   npx create-ai-agent my-app --codegraph         # Include CodeGraph setup
 
 ${colors.yellow}Interactive mode:${colors.reset}
@@ -84,6 +88,7 @@ function parseArgs(args) {
     tier: null,
     db: null,
     framework: null,
+    ui: null,
     codegraph: false,
     yes: false,
     help: false,
@@ -113,6 +118,9 @@ function parseArgs(args) {
       i++;
     } else if (arg === '-f' || arg === '--framework') {
       result.framework = next;
+      i++;
+    } else if (arg === '-u' || arg === '--ui') {
+      result.ui = next;
       i++;
     } else if (!arg.startsWith('-') && !result.projectName) {
       result.projectName = arg;
@@ -172,6 +180,7 @@ async function main() {
     type: args.type,
     tier: args.tier,
     db: args.db,
+    ui: args.ui,
     codegraph: args.codegraph,
     author: null,
     email: null,
@@ -235,6 +244,23 @@ async function main() {
         const choice = await question('→ Choose (1-2) [1]: ');
         const frameworks = { '1': 'nextjs', '2': 'vite', '': 'nextjs' };
         config.framework = frameworks[choice] || 'nextjs';
+      }
+    }
+
+    // Step 2e: UI Library (only if type is frontend)
+    if (config.type === 'frontend' && !config.ui) {
+      if (args.yes) {
+        config.ui = 'shadcn';
+      } else {
+        console.log('');
+        log.step('2e', 8, 'UI Library:');
+        console.log('  1) shadcn/ui   - Radix + Tailwind (recommended)');
+        console.log('  2) Ant Design  - Enterprise + Tailwind');
+        console.log('  3) Chakra UI   - Simple, accessible');
+        console.log('  4) Semantic UI - Classic UI framework');
+        const choice = await question('→ Choose (1-4) [1]: ');
+        const uis = { '1': 'shadcn', '2': 'antd', '3': 'chakra', '4': 'semantic', '': 'shadcn' };
+        config.ui = uis[choice] || 'shadcn';
       }
     }
 
@@ -322,6 +348,9 @@ async function main() {
     if (config.type === 'frontend' || config.type === 'mobile' || config.type === 'backend') {
       console.log(`  Framework:${colors.green} ${config.framework}${colors.reset}`);
     }
+    if (config.type === 'frontend' && config.ui) {
+      console.log(`  UI:       ${colors.green}${config.ui}${colors.reset}`);
+    }
     console.log(`  Tier:     ${colors.green}${config.tier}${colors.reset}`);
     if (config.type !== 'frontend' && config.type !== 'mobile') {
       console.log(`  Database: ${colors.green}${config.db}${colors.reset}`);
@@ -376,13 +405,24 @@ async function main() {
     log.gray(`→ Setting up ${templateName} project from template...`);
     copyTemplate(templateName, config);
 
+    // Merge UI config for frontend projects
+    if (config.type === 'frontend' && config.ui) {
+      log.gray(`→ Adding ${config.ui} UI components...`);
+      mergeUIConfig(config.ui, config);
+    }
+
     // Git init
     log.gray('→ Initializing git...');
     execSync('git init -q', { stdio: 'pipe' });
     execSync('git add -A', { stdio: 'pipe' });
-    const commitLabel = (config.type === 'frontend' || config.type === 'mobile' || config.type === 'backend')
-      ? `${config.type}/${config.framework}`
-      : config.type;
+    let commitLabel;
+    if (config.type === 'frontend') {
+      commitLabel = config.ui ? `${config.type}/${config.framework}/${config.ui}` : `${config.type}/${config.framework}`;
+    } else if (config.type === 'mobile' || config.type === 'backend') {
+      commitLabel = `${config.type}/${config.framework}`;
+    } else {
+      commitLabel = config.type;
+    }
     execSync(`git commit -q -m "feat: initial project setup (${commitLabel}, ${config.tier})"`, { stdio: 'pipe' });
 
     // Setup CodeGraph if requested
@@ -1026,6 +1066,158 @@ ${config.author} <${config.email}>
 NEXT_PUBLIC_APP_NAME=${config.projectName}
 NEXT_PUBLIC_API_URL=http://localhost:3001/api
 `);
+}
+
+function mergeUIConfig(uiLibrary, config) {
+  const packageDir = path.dirname(__dirname);
+  const uiConfigDir = path.join(packageDir, 'templates', 'ui-configs', uiLibrary);
+  const configPath = path.join(uiConfigDir, 'config.json');
+
+  if (!fs.existsSync(configPath)) {
+    log.warn(`UI config for "${uiLibrary}" not found, skipping...`);
+    return;
+  }
+
+  const uiConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+  // 1. Merge dependencies into package.json
+  const pkgPath = path.join(process.cwd(), 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+
+    if (uiConfig.dependencies) {
+      pkg.dependencies = { ...pkg.dependencies, ...uiConfig.dependencies };
+    }
+    if (uiConfig.devDependencies) {
+      pkg.devDependencies = { ...pkg.devDependencies, ...uiConfig.devDependencies };
+    }
+
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+  }
+
+  // 2. Copy files according to the files array
+  if (uiConfig.files && Array.isArray(uiConfig.files)) {
+    for (const fileMapping of uiConfig.files) {
+      const srcPath = path.join(uiConfigDir, fileMapping.src);
+      const destPath = path.join(process.cwd(), fileMapping.dest);
+
+      if (!fs.existsSync(srcPath)) {
+        continue;
+      }
+
+      // Create destination directory
+      const destDir = fileMapping.src.endsWith('/') ? destPath : path.dirname(destPath);
+      fs.mkdirSync(destDir, { recursive: true });
+
+      // Copy file or directory
+      if (fs.statSync(srcPath).isDirectory()) {
+        copyDirRecursive(srcPath, destPath);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+  }
+
+  // 3. Merge tailwind config for libraries that need it (e.g., antd)
+  if (uiConfig.tailwindMerge) {
+    mergeTailwindConfig(uiConfig.tailwindMerge, config);
+  }
+
+  // 4. Replace placeholders in copied files
+  if (uiConfig.files && Array.isArray(uiConfig.files)) {
+    for (const fileMapping of uiConfig.files) {
+      const destPath = path.join(process.cwd(), fileMapping.dest);
+      if (fs.existsSync(destPath)) {
+        if (fs.statSync(destPath).isDirectory()) {
+          replacePlaceholders(destPath, config);
+        } else {
+          replacePlaceholdersInFile(destPath, config);
+        }
+      }
+    }
+  }
+}
+
+function mergeTailwindConfig(tailwindMerge, config) {
+  const tailwindConfigPaths = [
+    'tailwind.config.js',
+    'tailwind.config.ts',
+    'tailwind.config.mjs',
+  ];
+
+  let tailwindConfigPath = null;
+  for (const p of tailwindConfigPaths) {
+    const fullPath = path.join(process.cwd(), p);
+    if (fs.existsSync(fullPath)) {
+      tailwindConfigPath = fullPath;
+      break;
+    }
+  }
+
+  if (!tailwindConfigPath) {
+    return;
+  }
+
+  let content = fs.readFileSync(tailwindConfigPath, 'utf8');
+
+  // Add important: true for antd
+  if (tailwindMerge.important) {
+    // Find the export default or module.exports
+    if (content.includes('export default {')) {
+      content = content.replace(
+        'export default {',
+        'export default {\n  important: true,'
+      );
+    } else if (content.includes('module.exports = {')) {
+      content = content.replace(
+        'module.exports = {',
+        'module.exports = {\n  important: true,'
+      );
+    }
+  }
+
+  // Disable preflight for antd
+  if (tailwindMerge.corePlugins && tailwindMerge.corePlugins.preflight === false) {
+    // Add corePlugins: { preflight: false } before plugins array or at the end
+    if (content.includes('plugins: [')) {
+      content = content.replace(
+        'plugins: [',
+        'corePlugins: {\n    preflight: false,\n  },\n  plugins: ['
+      );
+    } else if (content.includes('plugins:')) {
+      content = content.replace(
+        /plugins:/,
+        'corePlugins: {\n    preflight: false,\n  },\n  plugins:'
+      );
+    }
+  }
+
+  fs.writeFileSync(tailwindConfigPath, content);
+}
+
+function replacePlaceholdersInFile(filePath, config) {
+  const ext = path.extname(filePath).toLowerCase();
+  const textExts = ['.md', '.json', '.js', '.ts', '.tsx', '.jsx', '.html', '.css', '.prisma', '.yml', '.yaml', '.env', '.example', '.sh'];
+  const fileName = path.basename(filePath);
+
+  if (textExts.includes(ext) || fileName.startsWith('.') || fileName === 'package.json') {
+    try {
+      let content = fs.readFileSync(filePath, 'utf8');
+      const original = content;
+
+      content = content.replace(/\{\{PROJECT_NAME\}\}/g, config.projectName);
+      content = content.replace(/\{\{AUTHOR_NAME\}\}/g, config.author);
+      content = content.replace(/\{\{AUTHOR_EMAIL\}\}/g, config.email);
+      content = content.replace(/\{\{TIER\}\}/g, capitalize(config.tier));
+      content = content.replace(/\{\{DATABASE\}\}/g, config.db || 'postgresql');
+
+      if (content !== original) {
+        fs.writeFileSync(filePath, content);
+      }
+    } catch (e) {
+      // Skip binary files or read errors
+    }
+  }
 }
 
 function createVanillaProject(config) {

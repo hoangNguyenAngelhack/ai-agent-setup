@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-05-25
+
+### Added
+- **UI Library Selection** for frontend projects
+  - New CLI flag `--ui` / `-u` to specify UI library
+  - Interactive prompt for UI library selection
+  - 4 UI library options: `shadcn`, `antd`, `chakra`, `semantic`
+- **UI Config Templates** (`templates/ui-configs/`)
+  - `shadcn/` — Radix UI + Tailwind CSS components (Button, Input, Card)
+  - `antd/` — Ant Design components with Tailwind integration
+  - `chakra/` — Chakra UI components with theme provider
+  - `semantic/` — Semantic UI React components
+- **Tailwind + Ant Design Compatibility**
+  - Automatic `important: true` in tailwind.config for antd
+  - Automatic `preflight: false` to prevent Tailwind resetting antd styles
+- **Component Files**: Each UI library includes Button, Input, Card components
+
+### Changed
+- CLI now shows UI library in configuration summary
+- Commit label includes UI (e.g., `frontend/nextjs/antd`, `frontend/vite/shadcn`)
+- Updated README with UI library examples
+
+### Technical Details
+- New `mergeUIConfig()` function handles:
+  - Dependency merging into package.json
+  - File copying from ui-configs to project
+  - Tailwind config modifications for antd compatibility
+
+---
+
 ## [1.4.0] - 2026-05-25
 
 ### Added

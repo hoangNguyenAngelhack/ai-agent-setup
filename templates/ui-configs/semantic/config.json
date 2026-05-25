@@ -1,0 +1,14 @@
+{
+  "name": "semantic",
+  "displayName": "Semantic UI",
+  "description": "User interface framework with human-friendly HTML",
+  "dependencies": {
+    "semantic-ui-react": "^2.1.5",
+    "semantic-ui-css": "^2.5.0"
+  },
+  "devDependencies": {},
+  "files": [
+    { "src": "components/", "dest": "src/components/ui/" },
+    { "src": "setup.ts", "dest": "src/lib/semantic-setup.ts" }
+  ]
+}
