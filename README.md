@@ -8,9 +8,23 @@
   [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=flat-square&color=cb3837&logo=npm)](https://www.npmjs.com/package/create-ai-agent-setup)
   ![Version](https://img.shields.io/badge/version-1.3.2-blue?style=flat-square)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-  [![Email](https://img.shields.io/badge/Email-hoang.nguyen%40angelhack.com-EA4335?logo=gmail)](mailto:hoang.nguyen@angelhack.com)
+  [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-Compatible-green?style=flat-square)](https://agentskills.io)
 
 </div>
+
+---
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Installation Methods](#installation-methods)
+- [Integrations](#integrations)
+  - [CodeGraph](#codegraph-integration)
+  - [Agent Skills](#agent-skills-open-standard)
+- [What's Included](#whats-included)
+- [Development Workflow](#development-workflow)
+- [Tech Stack](#approved-tech-stack)
+- [Related Projects](#related-projects)
 
 ---
 
@@ -20,57 +34,23 @@
 # Create a new project (interactive)
 npx create-ai-agent-setup my-app
 
-# Backend API (Express + Prisma + Redis)
+# With specific options
 npx create-ai-agent-setup my-api -t backend --db postgresql
-
-# Frontend - Next.js (SSR/SSG, SEO optimized)
 npx create-ai-agent-setup my-landing -t frontend -f nextjs
+npx create-ai-agent-setup my-mobile -t mobile -f expo
 
-# Frontend - Vite (React SPA, fast dev)
-npx create-ai-agent-setup my-admin -t frontend -f vite
-
-# Fullstack (Next.js + tRPC + Prisma + NextAuth)
-npx create-ai-agent-setup my-saas -t fullstack
-
-# Mobile - Expo (managed workflow, EAS builds)
-npx create-ai-agent-setup my-app -t mobile -f expo
-
-# Mobile - React Native CLI (bare workflow, full native control)
-npx create-ai-agent-setup my-app -t mobile -f cli
-
-# Skip prompts with defaults
-npx create-ai-agent-setup my-app -y
-
-# With CodeGraph (AI code exploration - 57% fewer tokens)
+# With all integrations
 npx create-ai-agent-setup my-app --codegraph
 ```
 
-### CLI Options
+---
 
-```
-Options:
-  -t, --type <type>      Project type: backend, frontend, fullstack, mobile
-  -f, --framework <fw>   Framework selection:
-                         • frontend: nextjs, vite
-                         • mobile: expo, cli
-  -T, --tier <tier>      Rule tier: starter, standard, strict
-  -d, --db <database>    Database: postgresql, mysql, sqlite, none
-  -c, --codegraph        Setup CodeGraph MCP server for AI code exploration
-  -y, --yes              Skip prompts, use defaults
-  -h, --help             Show help
-  -v, --version          Show version
-```
+## Installation Methods
 
-### Alternative Methods
+### Method 1: CLI (Recommended)
 
 ```bash
-# Clone and run init script
-npx degit hoangNguyenAngelhack/ai-agent-setup my-project
-cd my-project
-./scripts/init.sh
-
-# Copy only .claude config to existing project
-npx degit hoangNguyenAngelhack/ai-agent-setup/.claude .claude
+npx create-ai-agent-setup my-app
 ```
 
 The CLI will guide you through:
@@ -80,81 +60,187 @@ The CLI will guide you through:
 4. Rule tier (Starter / Standard / Strict)
 5. Database (for backend/fullstack only)
 6. Author info
-7. CodeGraph setup (optional - AI code exploration)
+7. CodeGraph setup (optional)
+
+### Method 2: Copy to Existing Project
+
+```bash
+# Copy .claude config only
+npx degit hoangNguyenAngelhack/ai-agent-setup/.claude .claude
+
+# Copy Agent Skills only
+npx degit hoangNguyenAngelhack/ai-agent-setup/.agents .agents
+```
+
+### Method 3: Clone Full Repository
+
+```bash
+npx degit hoangNguyenAngelhack/ai-agent-setup my-project
+cd my-project
+./scripts/init.sh
+```
+
+### CLI Options
+
+```
+Options:
+  -t, --type <type>      Project type: backend, frontend, fullstack, mobile
+  -f, --framework <fw>   Framework: nextjs, vite, expo, cli
+  -T, --tier <tier>      Rule tier: starter, standard, strict
+  -d, --db <database>    Database: postgresql, mysql, sqlite, none
+  -c, --codegraph        Setup CodeGraph MCP server
+  -y, --yes              Skip prompts, use defaults
+  -h, --help             Show help
+  -v, --version          Show version
+```
 
 ---
 
-## CodeGraph Integration
+## Integrations
 
-[CodeGraph](https://github.com/colbymchenry/codegraph) builds a semantic knowledge graph of your codebase, enabling AI agents to explore code faster and cheaper.
+### CodeGraph Integration
 
-**Benefits:**
-- **57% fewer tokens** processed
-- **35% cost reduction** on average
-- **46% faster** responses
-- **Auto-sync** with file watchers
+[CodeGraph](https://github.com/colbymchenry/codegraph) builds a semantic knowledge graph of your codebase for faster AI code exploration.
+
+#### Benefits
+
+| Metric | Improvement |
+|--------|-------------|
+| Tokens processed | **57% fewer** |
+| Cost | **35% cheaper** |
+| Response time | **46% faster** |
+| Tool calls | **71% fewer** |
+
+#### Setup
 
 ```bash
-# Include during project creation
+# During project creation
 npx create-ai-agent-setup my-app --codegraph
 
 # Or add to existing project
 npx @colbymchenry/codegraph init -i
 ```
 
-**Supported AI Agents:** Claude Code, Cursor, Codex CLI, opencode, Hermes Agent
+#### Available MCP Tools
 
-**MCP Tools provided:**
 | Tool | Purpose |
 |------|---------|
 | `codegraph_search` | Symbol lookup across codebase |
 | `codegraph_context` | Multi-symbol context in one call |
 | `codegraph_trace` | Call path tracing with bodies |
 | `codegraph_impact` | Change impact analysis |
-| `codegraph_callers` / `codegraph_callees` | Call graph navigation |
+| `codegraph_callers` | Find all callers of a symbol |
+| `codegraph_callees` | Find all callees of a symbol |
+
+#### Supported Agents
+
+Claude Code, Cursor, Codex CLI, opencode, Hermes Agent
 
 ---
 
-## Agent Skills (Open Standard)
+### Agent Skills (Open Standard)
 
-This project follows the [Agent Skills](https://agentskills.io) open standard, making it compatible with 30+ AI coding agents including Claude Code, Cursor, VS Code Copilot, OpenAI Codex, and more.
+This project follows the [Agent Skills](https://agentskills.io) open standard, compatible with **30+ AI coding agents**.
 
-### Available Skills
+#### Available Skills
 
-| Skill | Description |
-|-------|-------------|
-| `nodejs-backend` | Express, Prisma, Redis, BullMQ patterns |
-| `react-frontend` | Next.js/Vite, TailwindCSS, Zustand, TanStack Query |
-| `react-native-mobile` | Expo/RN CLI, NativeWind, React Navigation |
-| `code-review` | Five-axis code review framework |
-| `tdd` | Test-Driven Development workflow |
+| Skill | Description | Use When |
+|-------|-------------|----------|
+| [`nodejs-backend`](.agents/skills/nodejs-backend/SKILL.md) | Express, Prisma, Redis, BullMQ | Building APIs, services, jobs |
+| [`react-frontend`](.agents/skills/react-frontend/SKILL.md) | Next.js/Vite, TailwindCSS, Zustand | Creating web UI, pages, forms |
+| [`react-native-mobile`](.agents/skills/react-native-mobile/SKILL.md) | Expo/RN CLI, NativeWind | Building iOS/Android apps |
+| [`code-review`](.agents/skills/code-review/SKILL.md) | Five-axis review framework | Reviewing PRs, code quality |
+| [`tdd`](.agents/skills/tdd/SKILL.md) | RED-GREEN-REFACTOR workflow | Writing tests first |
 
-### Install Skills
+#### Install Skills
 
+**Option 1: Plugin Marketplace** (Claude Code, VS Code, Cursor)
 ```bash
-# Claude Code / VS Code
 /plugin marketplace add hoangNguyenAngelhack/ai-agent-setup
+```
 
-# Or copy directly
+**Option 2: Direct Copy**
+```bash
 npx degit hoangNguyenAngelhack/ai-agent-setup/.agents/skills .agents/skills
 ```
 
-### Related Projects
+**Option 3: Include in CLI**
+```bash
+npx create-ai-agent-setup my-app  # Skills included automatically
+```
 
-- [dotnet/skills](https://github.com/dotnet/skills) — Official .NET Agent Skills from Microsoft
-- [laravel/boost](https://github.com/laravel/boost) — Laravel Agent Skills
+#### Compatible Agents
+
+| Agent | Install Command |
+|-------|-----------------|
+| **Claude Code** | `/plugin marketplace add hoangNguyenAngelhack/ai-agent-setup` |
+| **VS Code Copilot** | Settings → Enable plugin marketplaces |
+| **Cursor** | Direct plugin installation |
+| **OpenAI Codex** | `codex skill install github:hoangNguyenAngelhack/ai-agent-setup` |
+| **Gemini CLI** | See [geminicli.com/docs](https://geminicli.com/docs/cli/skills/) |
+| **Others** | Copy `.agents/skills/` directory |
 
 ---
 
-## Overview
+## What's Included
 
-This repository provides a **production-grade configuration** for Claude Code AI agents. It includes:
+### Project Structure
 
-- **Structured development workflow** (Spec → Plan → Build → Test → Review → Ship)
-- **11 specialized agents** for different development roles
-- **13 mandatory rules** covering code quality, architecture, and operations
-- **8 slash commands** for common workflows
-- **6 reference checklists** for security, testing, performance, accessibility, and mobile
+```
+.claude/                         # Claude Code configuration
+├── CLAUDE.md                    # Main AI instructions
+├── commands/                    # 8 slash commands
+├── agents/                      # 11 specialized agents
+├── rules/                       # 13 mandatory rules
+├── skills/                      # Advanced skills
+└── references/                  # 6 checklists
+
+.agents/                         # Agent Skills (open standard)
+└── skills/
+    ├── nodejs-backend/
+    ├── react-frontend/
+    ├── react-native-mobile/
+    ├── code-review/
+    └── tdd/
+
+templates/                       # Project templates
+├── backend/                     # Express + Prisma + Redis
+├── frontend-nextjs/             # Next.js 14 (App Router)
+├── frontend-vite/               # React + Vite SPA
+├── fullstack/                   # Next.js + tRPC + Prisma
+├── mobile-expo/                 # Expo + Expo Router
+└── mobile-cli/                  # React Native CLI
+```
+
+### Specialized Agents (11 total)
+
+| Category | Agents |
+|----------|--------|
+| **Development** | Frontend, Backend, Mobile, Systems Architect |
+| **Quality** | Code Reviewer, Test Engineer, Security Auditor, QA |
+| **Product** | Project Manager, UI/UX Designer, Copywriter/SEO |
+
+### Slash Commands (8 total)
+
+| Command | Purpose |
+|---------|---------|
+| `/spec` | Create PRD with objectives and scope |
+| `/plan` | Decompose into vertical slices |
+| `/build` | Implement incrementally using TDD |
+| `/test` | Write tests with RED-GREEN-REFACTOR |
+| `/review` | Five-axis code review |
+| `/deploy` | Build, test, and deploy |
+| `/debug` | Systematic error diagnosis |
+| `/simplify` | Reduce code complexity |
+
+### Mandatory Rules (13 total)
+
+| Category | Rules |
+|----------|-------|
+| **Code Quality** | clean-code, code-style, error-handling |
+| **Architecture** | tech-stack, system-design, project-structure, api-conventions |
+| **Data** | naming-conventions, database |
+| **Operations** | security, monitoring, testing, git-workflow |
 
 ---
 
@@ -170,143 +256,25 @@ This repository provides a **production-grade configuration** for Claude Code AI
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-| Phase | Command | Description |
-|-------|---------|-------------|
-| **Define** | `/spec` | Create PRD with objectives, scope, and boundaries |
-| **Plan** | `/plan` | Decompose into vertical slices with acceptance criteria |
-| **Build** | `/build` | Implement incrementally using TDD |
-| **Verify** | `/test` | Write tests with RED-GREEN-REFACTOR |
-| **Review** | `/review` | Five-axis code review |
-| **Ship** | `/deploy` | Build, test, and deploy |
+### Key Concepts
 
-### Supporting Commands
+**Five-Axis Code Review:**
+1. Correctness — Does it work?
+2. Readability — Can others understand it?
+3. Architecture — Follows patterns?
+4. Security — Input validation? Auth?
+5. Performance — N+1? Pagination?
 
-| Command | Description |
-|---------|-------------|
-| `/debug` | Systematic error diagnosis |
-| `/simplify` | Reduce code complexity |
-| `/fix-issue` | Analyze and fix issues |
-
----
-
-## Project Structure
-
+**Test-Driven Development:**
 ```
-.claude/
-├── CLAUDE.md                    # Main AI configuration
-│
-├── commands/                    # Slash commands (8 total)
-│   ├── spec.md                  # /spec — PRD creation
-│   ├── plan.md                  # /plan — Task breakdown
-│   ├── build.md                 # /build — Incremental implementation
-│   ├── test.md                  # /test — TDD workflow
-│   ├── review.md                # /review — Code review
-│   ├── deploy.md                # /deploy — Deployment
-│   ├── debug.md                 # /debug — Error diagnosis
-│   ├── simplify.md              # /simplify — Code simplification
-│   └── fix-issue.md             # /fix-issue — Issue resolution
-│
-├── agents/                      # Specialized agents (11 total)
-│   ├── frontend.md              # Frontend Developer
-│   ├── backend.md               # Backend Developer
-│   ├── mobile.md                # Mobile Developer (React Native)
-│   ├── systems-architect.md     # Systems Architect
-│   ├── code-reviewer.md         # Code Reviewer
-│   ├── test-engineer.md         # Test Engineer
-│   ├── security-auditor.md      # Security Auditor
-│   ├── qa.md                    # QA Engineer
-│   ├── project-manager.md       # Project Manager
-│   ├── ui-ux-designer.md        # UI/UX Designer
-│   └── copywriter-seo.md        # Copywriter/SEO
-│
-├── rules/                       # Mandatory rules (13 total)
-│   ├── clean-code.md            # Clean Code principles
-│   ├── code-style.md            # Formatting & naming
-│   ├── error-handling.md        # Error patterns
-│   ├── tech-stack.md            # Approved technologies
-│   ├── system-design.md         # System design patterns
-│   ├── project-structure.md     # Folder organization
-│   ├── api-conventions.md       # REST API standards
-│   ├── naming-conventions.md    # Naming patterns
-│   ├── database.md              # Database patterns
-│   ├── security.md              # Security requirements
-│   ├── monitoring.md            # Observability
-│   ├── testing.md               # Test standards
-│   └── git-workflow.md          # Git conventions
-│
-├── skills/                      # Advanced skills
-│   ├── tdd/SKILL.md             # Test-Driven Development
-│   ├── code-review/SKILL.md     # Five-axis review
-│   ├── incremental-implementation/SKILL.md
-│   ├── deploy/SKILL.md
-│   └── security-review/SKILL.md
-│
-├── references/                  # Quick checklists
-│   ├── security-checklist.md
-│   ├── testing-patterns.md
-│   ├── performance-checklist.md
-│   ├── accessibility-checklist.md
-│   ├── mobile-performance-checklist.md
-│   └── mobile-release-checklist.md
-│
-└── settings.json                # Project settings
-
-examples/                        # Sample implementations
-├── backend/                     # Express + Prisma + Redis
-│   ├── user-service.ts
-│   ├── user-controller.ts
-│   └── ... (11 files)
-├── frontend/                    # React + TanStack Query + Zustand
-│   ├── use-users.ts
-│   ├── user-list.tsx
-│   └── ... (4 files)
-├── mobile-expo/                 # Expo + React Navigation + NativeWind
-│   ├── api.ts, auth-store.ts
-│   ├── user-list.tsx, login-screen.tsx
-│   └── ... (10 files)
-└── mobile-cli/                  # React Native CLI + NativeWind
-    ├── api.ts, auth-store.ts
-    ├── root-navigator.tsx
-    └── ... (8 files)
-
-templates/                       # Project templates (used by CLI)
-├── backend/                     # Express + Prisma + Redis
-├── frontend-nextjs/             # Next.js 14 (App Router)
-├── frontend-vite/               # React + Vite SPA
-├── fullstack/                   # Next.js + tRPC + Prisma + NextAuth
-├── mobile-expo/                 # Expo + Expo Router + NativeWind
-└── mobile-cli/                  # React Native CLI + React Navigation
+RED → GREEN → REFACTOR
 ```
 
----
-
-## Specialized Agents
-
-### Development Agents
-
-| Agent | Role | Invoke When |
-|-------|------|-------------|
-| **Frontend Developer** | Next.js, React, TypeScript, UI | Components, pages, state |
-| **Backend Developer** | Express, Prisma, Redis, BullMQ | APIs, services, jobs |
-| **Mobile Developer** | React Native, Expo, NativeWind | iOS/Android apps, navigation |
-| **Systems Architect** | Architecture, ADRs, scaling | System design decisions |
-
-### Quality Agents
-
-| Agent | Role | Invoke When |
-|-------|------|-------------|
-| **Code Reviewer** | Five-axis code review | PR reviews, quality checks |
-| **Test Engineer** | TDD, coverage, test strategy | Writing and reviewing tests |
-| **Security Auditor** | Vulnerability, threat modeling | Security reviews |
-| **QA Engineer** | Test plans, E2E, bug reports | Quality assurance |
-
-### Product Agents
-
-| Agent | Role | Invoke When |
-|-------|------|-------------|
-| **Project Manager** | Stories, sprints, planning | Project planning |
-| **UI/UX Designer** | Design system, accessibility | UX decisions |
-| **Copywriter/SEO** | Copy, meta tags, SEO | Content creation |
+**Vertical Slicing:**
+```
+✅ Task 1: User can create task (DB + API + UI)
+❌ Task 1: Create all DB models (layer-by-layer)
+```
 
 ---
 
@@ -322,145 +290,49 @@ templates/                       # Project templates (used by CLI)
 | **ORM** | Prisma |
 | **Database** | PostgreSQL |
 | **Cache** | Redis (ioredis) |
-| **Queue** | BullMQ (simple) / RabbitMQ (enterprise) |
+| **Queue** | BullMQ / RabbitMQ |
 | **Auth** | NextAuth.js / JWT + bcrypt |
 | **Testing** | Vitest + Playwright |
-| **Monitoring** | Prometheus + Grafana + Pino |
-| **CI/CD** | GitHub Actions |
-| **Deploy** | Vercel + Railway/Fly.io |
-| **Mobile** | React Native 0.74+ / Expo SDK 51+ |
+| **Mobile** | React Native / Expo |
 | **Mobile UI** | NativeWind (Tailwind CSS) |
-| **Mobile Nav** | React Navigation / Expo Router |
-| **Mobile State** | Zustand + MMKV |
 
 ---
 
-## Mandatory Rules
+## Related Projects
 
-All 13 rules in `.claude/rules/` must be followed:
+### Official Agent Skills
 
-### Code Quality
-- **clean-code.md** — Variables, functions, SOLID, async/await
-- **code-style.md** — 2-space indent, single quotes, semicolons
-- **error-handling.md** — AppError class, centralized handler
+| Project | Description |
+|---------|-------------|
+| [dotnet/skills](https://github.com/dotnet/skills) | Official .NET Agent Skills from Microsoft |
+| [laravel/boost](https://github.com/laravel/boost) | Laravel Agent Skills |
 
-### Architecture
-- **tech-stack.md** — Approved technologies only
-- **system-design.md** — CAP, caching, scaling patterns
-- **project-structure.md** — Layered architecture
-- **api-conventions.md** — REST standards, response envelopes
+### Tools & Integrations
 
-### Data & Naming
-- **naming-conventions.md** — Cache keys, DB, queues, env vars
-- **database.md** — Prisma patterns, N+1 prevention
+| Tool | Description |
+|------|-------------|
+| [CodeGraph](https://github.com/colbymchenry/codegraph) | Semantic code knowledge graph |
+| [Semble](https://github.com/MinishLab/semble) | Code search for AI agents (Python) |
 
-### Operations
-- **security.md** — **CRITICAL** — Never violate
-- **monitoring.md** — Prometheus, Grafana, alerting
-- **testing.md** — 80% coverage minimum
-- **git-workflow.md** — Conventional commits
+### Learn More
 
----
-
-## Quick Start
-
-```bash
-# Clone repository
-git clone <repo-url>
-cd ai-agent
-
-# Copy to your project
-cp -r .claude/ /path/to/your/project/
-
-# Or use as template
-```
-
-### Using Commands
-
-```bash
-# In Claude Code, use slash commands:
-/spec "User authentication feature"
-/plan
-/build
-/test
-/review
-/deploy
-```
-
-### Using Agents
-
-```
-"Act as the Frontend Developer and build the login page"
-"As Systems Architect, design the notification system"
-"Code Reviewer: review this PR for security issues"
-"Test Engineer: write tests for the payment flow"
-```
-
----
-
-## Key Concepts
-
-### Five-Axis Code Review
-
-Every code review evaluates:
-
-1. **Correctness** — Does it work? Edge cases?
-2. **Readability** — Can others understand it?
-3. **Architecture** — Follows patterns? Appropriate abstractions?
-4. **Security** — Input validation? Auth? No secrets?
-5. **Performance** — N+1? Pagination? Async?
-
-### Test-Driven Development
-
-```
-RED    → Write failing test
-GREEN  → Write minimal code to pass
-REFACTOR → Improve while green
-```
-
-### Vertical Slicing
-
-Build features end-to-end, not layer-by-layer:
-
-```
-✅ Task 1: User can create task (DB + API + UI)
-✅ Task 2: User can view tasks (DB + API + UI)
-
-❌ Task 1: Create all DB models
-❌ Task 2: Create all API routes
-```
-
----
-
-## Security
-
-**Never commit:**
-- `.env` files
-- API keys, secrets, passwords
-- `.claude/settings.local.json`
-
-**Always:**
-- Use environment variables
-- Validate all inputs
-- Hash passwords (bcrypt >= 12 rounds)
-- Parameterize queries
+- [Agent Skills Standard](https://agentskills.io) — Open format specification
+- [Claude Code Documentation](https://docs.anthropic.com/claude-code) — Official docs
 
 ---
 
 ## Contributing
 
-1. Follow the development workflow (`/spec` → `/plan` → `/build`)
+1. Follow the workflow (`/spec` → `/plan` → `/build`)
 2. Ensure all tests pass
 3. Run `/review` before submitting PR
-4. Follow conventional commit format
+4. Use conventional commit format
 
 ---
 
 ## Author
 
-**Hoang Nguyen**
-
-- Email: [hoang.nguyen@angelhack.com](mailto:hoang.nguyen@angelhack.com)
+**Hoang Nguyen** — [hoang.nguyen@angelhack.com](mailto:hoang.nguyen@angelhack.com)
 
 ---
 
