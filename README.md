@@ -6,7 +6,7 @@
   <p>Structured workflows, specialized agents, mandatory rules, and best practices</p>
 
   [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=flat-square&color=cb3837&logo=npm)](https://www.npmjs.com/package/create-ai-agent-setup)
-  ![Version](https://img.shields.io/badge/version-1.4.1-blue?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-1.4.2-blue?style=flat-square)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
   [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-Compatible-green?style=flat-square)](https://agentskills.io)
 
@@ -335,7 +335,8 @@ npx create-ai-agent-setup my-api -t backend -f nestjs
 | **Frontend (Admin)** | React + Vite |
 | **Styling** | Tailwind CSS + shadcn/ui |
 | **State** | Zustand + TanStack Query |
-| **Backend** | Express.js / NestJS + TypeScript |
+| **Backend (Express)** | Express.js + TypeScript |
+| **Backend (NestJS)** | NestJS + Prisma + Swagger |
 | **ORM** | Prisma |
 | **Database** | PostgreSQL |
 | **Cache** | Redis (ioredis) |
