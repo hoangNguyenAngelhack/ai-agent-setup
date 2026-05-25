@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-05-25
+
+### Added
+- **NestJS Backend Template** (`templates/backend-nestjs/`)
+  - Full NestJS setup with TypeScript
+  - Prisma ORM with User model and Role enum
+  - JWT authentication with Passport
+  - Role-based access control (RBAC) with `@Roles()` decorator
+  - Redis caching via `@nestjs/cache-manager`
+  - Swagger/OpenAPI documentation at `/api-docs`
+  - Global HTTP exception filter
+  - Custom decorators (`@CurrentUser`, `@Roles`)
+  - Repository pattern for data access
+  - Modular structure (auth, users modules)
+- **Backend Framework Selection** in CLI
+  - New prompt: "Backend framework: Express or NestJS?"
+  - Express remains the default for quick setup
+  - NestJS option for enterprise/DI patterns
+
+### Changed
+- CLI now shows framework in summary for backend projects
+- Commit label includes framework (e.g., `backend/nestjs`, `backend/express`)
+- Updated README with NestJS documentation
+
+---
+
 ## [1.3.5] - 2026-05-25
 
 ### Added
