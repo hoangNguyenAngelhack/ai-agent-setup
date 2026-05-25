@@ -125,12 +125,27 @@ Invoke the right agent for each task type:
 
 ## Available Skills
 
+### Agent Skills (`.agents/skills/`)
+
+Open standard skills compatible with 30+ AI agents:
+
+| Skill | Description | Impact Levels |
+|-------|-------------|---------------|
+| `nodejs-backend` | Express, Prisma, Redis, BullMQ | CRITICAL/HIGH/MEDIUM |
+| `nestjs-backend` | NestJS, TypeORM, Guards, DI | CRITICAL/HIGH/MEDIUM |
+| `react-frontend` | Next.js/Vite, TailwindCSS, Zustand | CRITICAL/HIGH/MEDIUM |
+| `react-native-mobile` | Expo/RN CLI, NativeWind | CRITICAL/HIGH/MEDIUM |
+| `code-review` | Five-axis review framework | CRITICAL/MAJOR/MINOR |
+| `tdd` | RED-GREEN-REFACTOR workflow | CRITICAL/HIGH/MEDIUM |
+
+**Compile all skills:** `node scripts/compile-skills.js` → generates `AGENTS.md`
+
+### Claude Skills (`.claude/skills/`)
+
 Specialized skills for complex operations:
 
 | Skill | Description |
 |-------|-------------|
-| `tdd` | Test-Driven Development patterns |
-| `code-review` | Five-axis review framework |
 | `incremental-implementation` | Vertical slice development |
 | `deploy` | Full deployment pipeline |
 | `security-review` | Security audit checklist |
