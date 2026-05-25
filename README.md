@@ -5,6 +5,7 @@
   <h3>Production-ready AI Agent configuration for Claude Code</h3>
   <p>Structured workflows, specialized agents, mandatory rules, and best practices</p>
 
+  [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=flat-square&color=cb3837&logo=npm)](https://www.npmjs.com/package/create-ai-agent-setup)
   ![Version](https://img.shields.io/badge/version-1.3.2-blue?style=flat-square)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
   [![Email](https://img.shields.io/badge/Email-hoang.nguyen%40angelhack.com-EA4335?logo=gmail)](mailto:hoang.nguyen@angelhack.com)
@@ -102,6 +103,15 @@ npx @colbymchenry/codegraph init -i
 ```
 
 **Supported AI Agents:** Claude Code, Cursor, Codex CLI, opencode, Hermes Agent
+
+**MCP Tools provided:**
+| Tool | Purpose |
+|------|---------|
+| `codegraph_search` | Symbol lookup across codebase |
+| `codegraph_context` | Multi-symbol context in one call |
+| `codegraph_trace` | Call path tracing with bodies |
+| `codegraph_impact` | Change impact analysis |
+| `codegraph_callers` / `codegraph_callees` | Call graph navigation |
 
 ---
 
