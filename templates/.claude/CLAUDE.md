@@ -152,6 +152,44 @@ Quick references in `.claude/references/`:
 
 ---
 
+## Recommended Tools
+
+### CodeGraph (Optional)
+
+[CodeGraph](https://github.com/colbymchenry/codegraph) builds a semantic knowledge graph of codebases, enabling faster and cheaper code exploration.
+
+**Benefits:**
+| Metric | Improvement |
+|--------|-------------|
+| Tokens processed | **57% fewer** |
+| Cost | **35% cheaper** |
+| Response time | **46% faster** |
+| Tool calls | **71% fewer** |
+
+**Setup:**
+```bash
+npx @colbymchenry/codegraph init -i
+```
+
+**MCP Tools provided:**
+| Tool | Purpose |
+|------|---------|
+| `codegraph_search` | Symbol lookup |
+| `codegraph_context` | Multi-symbol context in one call |
+| `codegraph_trace` | Call path tracing with bodies |
+| `codegraph_callers` | Find all callers of a symbol |
+| `codegraph_callees` | Find all callees of a symbol |
+| `codegraph_impact` | Change impact analysis |
+| `codegraph_explore` | Grouped source for related symbols |
+
+**When to use:**
+- Large codebases (>10k LOC)
+- Architecture exploration ("How does X reach Y?")
+- Impact analysis before refactoring
+- Understanding call flows
+
+---
+
 ## Sensitive Commands Policy
 
 **CRITICAL:** The following commands must NOT be executed automatically. Instead:
