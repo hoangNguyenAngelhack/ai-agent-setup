@@ -142,16 +142,18 @@ Claude Code, Cursor, Codex CLI, opencode, Hermes Agent
 
 This project follows the [Agent Skills](https://agentskills.io) open standard, compatible with **30+ AI coding agents**.
 
-#### Available Skills
+#### Available Skills (6 total)
 
-| Skill | Description | Use When |
-|-------|-------------|----------|
-| [`nodejs-backend`](.agents/skills/nodejs-backend/SKILL.md) | Express, Prisma, Redis, BullMQ | Building APIs, services, jobs |
-| [`nestjs-backend`](.agents/skills/nestjs-backend/SKILL.md) | NestJS, TypeORM, Guards, DI | Enterprise NestJS apps |
-| [`react-frontend`](.agents/skills/react-frontend/SKILL.md) | Next.js/Vite, TailwindCSS, Zustand | Creating web UI, pages, forms |
-| [`react-native-mobile`](.agents/skills/react-native-mobile/SKILL.md) | Expo/RN CLI, NativeWind | Building iOS/Android apps |
-| [`code-review`](.agents/skills/code-review/SKILL.md) | Five-axis review framework | Reviewing PRs, code quality |
-| [`tdd`](.agents/skills/tdd/SKILL.md) | RED-GREEN-REFACTOR workflow | Writing tests first |
+| Skill | Description | Impact Levels |
+|-------|-------------|---------------|
+| [`nodejs-backend`](.agents/skills/nodejs-backend/SKILL.md) | Express, Prisma, Redis, BullMQ | CRITICAL / HIGH / MEDIUM |
+| [`nestjs-backend`](.agents/skills/nestjs-backend/SKILL.md) | NestJS, TypeORM, Guards, DI | CRITICAL / HIGH / MEDIUM |
+| [`react-frontend`](.agents/skills/react-frontend/SKILL.md) | Next.js/Vite, TailwindCSS, Zustand | CRITICAL / HIGH / MEDIUM |
+| [`react-native-mobile`](.agents/skills/react-native-mobile/SKILL.md) | Expo/RN CLI, NativeWind | CRITICAL / HIGH / MEDIUM |
+| [`code-review`](.agents/skills/code-review/SKILL.md) | Five-axis review framework | CRITICAL / MAJOR / MINOR |
+| [`tdd`](.agents/skills/tdd/SKILL.md) | RED-GREEN-REFACTOR workflow | CRITICAL / HIGH / MEDIUM |
+
+**Impact Levels:** CRITICAL (must follow) → HIGH (should follow) → MEDIUM (recommended)
 
 #### Install Skills
 
@@ -169,6 +171,11 @@ npx degit hoangNguyenAngelhack/ai-agent-setup/.agents/skills .agents/skills
 ```bash
 git clone https://github.com/hoangNguyenAngelhack/ai-agent-setup.git
 cp -r ai-agent-setup/.agents/skills your-project/.agents/skills
+```
+
+**Compile Skills to AGENTS.md:**
+```bash
+node scripts/compile-skills.js  # Generates AGENTS.md with all skills
 ```
 
 #### Compatible Agents
@@ -202,10 +209,14 @@ Skills follow the [agentskills.io](https://agentskills.io) open standard and wor
 .agents/                         # Agent Skills (open standard)
 └── skills/
     ├── nodejs-backend/
+    ├── nestjs-backend/          # NEW
     ├── react-frontend/
     ├── react-native-mobile/
     ├── code-review/
     └── tdd/
+
+scripts/
+└── compile-skills.js            # Generate AGENTS.md from skills
 
 templates/                       # Project templates
 ├── backend/                     # Express + Prisma + Redis
