@@ -35,7 +35,8 @@
 npx create-ai-agent-setup my-app
 
 # With specific options
-npx create-ai-agent-setup my-api -t backend --db postgresql
+npx create-ai-agent-setup my-api -t backend --db postgresql          # Express (default)
+npx create-ai-agent-setup my-api -t backend -f nestjs --db postgresql # NestJS
 npx create-ai-agent-setup my-landing -t frontend -f nextjs
 npx create-ai-agent-setup my-mobile -t mobile -f expo
 
@@ -223,6 +224,7 @@ scripts/
 
 templates/                       # Project templates
 ├── backend/                     # Express + Prisma + Redis
+├── backend-nestjs/              # NestJS + Prisma + JWT + Swagger
 ├── frontend-nextjs/             # Next.js 14 (App Router)
 ├── frontend-vite/               # React + Vite SPA
 ├── fullstack/                   # Next.js + tRPC + Prisma
@@ -296,6 +298,35 @@ RED → GREEN → REFACTOR
 
 ---
 
+## Backend Templates
+
+### Express (Default)
+Lightweight and flexible, best for simple APIs and microservices.
+
+```bash
+npx create-ai-agent-setup my-api -t backend
+```
+
+**Includes:** Express, Prisma, Redis, Pino logger, JWT auth middleware
+
+### NestJS (Enterprise)
+Full-featured framework with dependency injection, decorators, and enterprise patterns.
+
+```bash
+npx create-ai-agent-setup my-api -t backend -f nestjs
+```
+
+**Includes:**
+- **Auth**: JWT + Passport, refresh tokens
+- **RBAC**: `@Roles()` decorator, RolesGuard
+- **Database**: Prisma ORM with User model
+- **Cache**: Redis via `@nestjs/cache-manager`
+- **Docs**: Swagger/OpenAPI at `/api-docs`
+- **Patterns**: Repository pattern, global exception filter
+- **Decorators**: `@CurrentUser()`, `@Roles()`
+
+---
+
 ## Approved Tech Stack
 
 | Layer | Technology |
@@ -304,7 +335,7 @@ RED → GREEN → REFACTOR
 | **Frontend (Admin)** | React + Vite |
 | **Styling** | Tailwind CSS + shadcn/ui |
 | **State** | Zustand + TanStack Query |
-| **Backend** | Express.js + TypeScript |
+| **Backend** | Express.js / NestJS + TypeScript |
 | **ORM** | Prisma |
 | **Database** | PostgreSQL |
 | **Cache** | Redis (ioredis) |
