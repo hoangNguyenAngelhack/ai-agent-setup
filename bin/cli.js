@@ -5,7 +5,14 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const VERSION = '1.1.0';
+const VERSION = '1.3.2';
+
+const CODEGRAPH_INFO = {
+  name: 'CodeGraph',
+  description: 'Semantic knowledge graph for AI agents - 57% fewer tokens, 35% cheaper',
+  url: 'https://github.com/colbymchenry/codegraph',
+  install: 'npx @colbymchenry/codegraph init -i',
+};
 
 const TEMPLATES = {
   backend: 'backend',
@@ -51,6 +58,7 @@ ${colors.yellow}Options:${colors.reset}
   -T, --tier <tier>      Rule tier: starter, standard, strict
   -d, --db <database>    Database: postgresql, mysql, sqlite, none
   -y, --yes              Skip prompts, use defaults
+  -c, --codegraph        Setup CodeGraph MCP server for AI code exploration
   -h, --help             Show this help
   -v, --version          Show version
 
@@ -61,6 +69,7 @@ ${colors.yellow}Examples:${colors.reset}
   npx create-ai-agent my-admin -t frontend -f vite
   npx create-ai-agent my-mobile -t mobile -f expo
   npx create-ai-agent my-native -t mobile -f cli
+  npx create-ai-agent my-app --codegraph         # Include CodeGraph setup
 
 ${colors.yellow}Interactive mode:${colors.reset}
   Just run: npx create-ai-agent
@@ -74,6 +83,7 @@ function parseArgs(args) {
     tier: null,
     db: null,
     framework: null,
+    codegraph: false,
     yes: false,
     help: false,
     version: false,
@@ -89,6 +99,8 @@ function parseArgs(args) {
       result.version = true;
     } else if (arg === '-y' || arg === '--yes') {
       result.yes = true;
+    } else if (arg === '-c' || arg === '--codegraph') {
+      result.codegraph = true;
     } else if (arg === '-t' || arg === '--type') {
       result.type = next;
       i++;
@@ -159,6 +171,7 @@ async function main() {
     type: args.type,
     tier: args.tier,
     db: args.db,
+    codegraph: args.codegraph,
     author: null,
     email: null,
   };
@@ -166,7 +179,7 @@ async function main() {
   try {
     // Step 1: Project name
     if (!config.projectName) {
-      log.step(1, 6, 'Project name:');
+      log.step(1, 8, 'Project name:');
       config.projectName = await question('→ ');
     }
 
@@ -183,7 +196,7 @@ async function main() {
         config.type = 'backend';
       } else {
         console.log('');
-        log.step(2, 7, 'Project type:');
+        log.step(2, 8, 'Project type:');
         console.log('  1) backend    - Express + Prisma + Redis');
         console.log('  2) frontend   - Web application');
         console.log('  3) fullstack  - Next.js + tRPC + Prisma + NextAuth');
@@ -200,7 +213,7 @@ async function main() {
         config.framework = 'vite';
       } else {
         console.log('');
-        log.step('2b', 7, 'Frontend framework:');
+        log.step('2b', 8, 'Frontend framework:');
         console.log('  1) Next.js  - SSR/SSG, SEO optimized');
         console.log('  2) Vite     - React SPA, fast dev');
         const choice = await question('→ Choose (1-2) [1]: ');
@@ -215,7 +228,7 @@ async function main() {
         config.framework = 'expo';
       } else {
         console.log('');
-        log.step('2c', 7, 'Mobile framework:');
+        log.step('2c', 8, 'Mobile framework:');
         console.log('  1) Expo     - Managed workflow, EAS builds (recommended)');
         console.log('  2) CLI      - Bare React Native, full native control');
         const choice = await question('→ Choose (1-2) [1]: ');
@@ -230,7 +243,7 @@ async function main() {
         config.tier = 'standard';
       } else {
         console.log('');
-        log.step(3, 7, 'Rule tier:');
+        log.step(3, 8, 'Rule tier:');
         console.log('  1) starter   - MVP, prototypes (50% test coverage)');
         console.log('  2) standard  - Production apps (80% coverage)');
         console.log('  3) strict    - Enterprise (95% coverage)');
@@ -246,7 +259,7 @@ async function main() {
         config.db = 'postgresql';
       } else {
         console.log('');
-        log.step(4, 7, 'Database:');
+        log.step(4, 8, 'Database:');
         console.log('  1) postgresql - Recommended');
         console.log('  2) mysql');
         console.log('  3) sqlite     - Development only');
@@ -265,12 +278,21 @@ async function main() {
       config.email = 'dev@example.com';
     } else {
       console.log('');
-      log.step(5, 7, 'Author name:');
+      log.step(5, 8, 'Author name:');
       config.author = (await question('→ [Developer]: ')) || 'Developer';
 
       console.log('');
-      log.step(6, 7, 'Author email:');
+      log.step(6, 8, 'Author email:');
       config.email = (await question('→ [dev@example.com]: ')) || 'dev@example.com';
+    }
+
+    // Step 7: CodeGraph (optional)
+    if (!config.codegraph && !args.yes) {
+      console.log('');
+      log.step(7, 8, 'Setup CodeGraph? (AI code exploration - 57% fewer tokens)');
+      console.log(`  ${colors.gray}${CODEGRAPH_INFO.url}${colors.reset}`);
+      const choice = await question('→ (y/N): ');
+      config.codegraph = choice.toLowerCase() === 'y' || choice.toLowerCase() === 'yes';
     }
 
     close();
@@ -289,6 +311,9 @@ async function main() {
       console.log(`  Database: ${colors.green}${config.db}${colors.reset}`);
     }
     console.log(`  Author:   ${colors.green}${config.author} <${config.email}>${colors.reset}`);
+    if (config.codegraph) {
+      console.log(`  CodeGraph:${colors.green} Yes${colors.reset}`);
+    }
     log.warn('═══════════════════════════════════════════════════════════');
     console.log('');
 
@@ -341,6 +366,18 @@ async function main() {
       ? `${config.type}/${config.framework}`
       : config.type;
     execSync(`git commit -q -m "feat: initial project setup (${commitLabel}, ${config.tier})"`, { stdio: 'pipe' });
+
+    // Setup CodeGraph if requested
+    if (config.codegraph) {
+      log.gray('→ Setting up CodeGraph MCP server...');
+      try {
+        execSync('npx @colbymchenry/codegraph init -i', { stdio: 'inherit' });
+        log.success('→ CodeGraph initialized successfully!');
+      } catch (e) {
+        log.warn('→ CodeGraph setup failed. You can set it up manually later:');
+        log.gray(`  npx @colbymchenry/codegraph init -i`);
+      }
+    }
 
     // Done!
     console.log('');

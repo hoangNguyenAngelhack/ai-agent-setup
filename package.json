@@ -1,6 +1,6 @@
 {
   "name": "create-ai-agent-setup",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "CLI to create production-ready projects with Claude Code AI agent configuration",
   "author": "Hoang Nguyen <hoang.nguyen@angelhack.com>",
   "license": "MIT",
@@ -28,7 +28,9 @@
     "prisma",
     "trpc",
     "mobile",
-    "boilerplate"
+    "boilerplate",
+    "codegraph",
+    "mcp"
   ],
   "bin": {
     "create-ai-agent-setup": "bin/cli.js"

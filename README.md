@@ -5,7 +5,7 @@
   <h3>Production-ready AI Agent configuration for Claude Code</h3>
   <p>Structured workflows, specialized agents, mandatory rules, and best practices</p>
 
-  ![Version](https://img.shields.io/badge/version-1.3.0-blue?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-1.3.2-blue?style=flat-square)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
   [![Email](https://img.shields.io/badge/Email-hoang.nguyen%40angelhack.com-EA4335?logo=gmail)](mailto:hoang.nguyen@angelhack.com)
 
@@ -39,6 +39,9 @@ npx create-ai-agent-setup my-app -t mobile -f cli
 
 # Skip prompts with defaults
 npx create-ai-agent-setup my-app -y
+
+# With CodeGraph (AI code exploration - 57% fewer tokens)
+npx create-ai-agent-setup my-app --codegraph
 ```
 
 ### CLI Options
@@ -51,6 +54,7 @@ Options:
                          • mobile: expo, cli
   -T, --tier <tier>      Rule tier: starter, standard, strict
   -d, --db <database>    Database: postgresql, mysql, sqlite, none
+  -c, --codegraph        Setup CodeGraph MCP server for AI code exploration
   -y, --yes              Skip prompts, use defaults
   -h, --help             Show help
   -v, --version          Show version
@@ -75,6 +79,29 @@ The CLI will guide you through:
 4. Rule tier (Starter / Standard / Strict)
 5. Database (for backend/fullstack only)
 6. Author info
+7. CodeGraph setup (optional - AI code exploration)
+
+---
+
+## CodeGraph Integration
+
+[CodeGraph](https://github.com/colbymchenry/codegraph) builds a semantic knowledge graph of your codebase, enabling AI agents to explore code faster and cheaper.
+
+**Benefits:**
+- **57% fewer tokens** processed
+- **35% cost reduction** on average
+- **46% faster** responses
+- **Auto-sync** with file watchers
+
+```bash
+# Include during project creation
+npx create-ai-agent-setup my-app --codegraph
+
+# Or add to existing project
+npx @colbymchenry/codegraph init -i
+```
+
+**Supported AI Agents:** Claude Code, Cursor, Codex CLI, opencode, Hermes Agent
 
 ---
 
