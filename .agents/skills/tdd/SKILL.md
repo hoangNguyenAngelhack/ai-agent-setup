@@ -4,7 +4,7 @@ description: Test-Driven Development workflow with RED-GREEN-REFACTOR cycle. Use
 license: MIT
 metadata:
   author: angelhack
-  version: "1.3.2"
+  version: "1.3.3"
 ---
 
 # Test-Driven Development

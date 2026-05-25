@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const VERSION = '1.3.2';
+const VERSION = '1.3.3';
 
 const CODEGRAPH_INFO = {
   name: 'CodeGraph',

@@ -4,7 +4,7 @@ description: Build React applications with Next.js or Vite, TailwindCSS, shadcn/
 license: MIT
 metadata:
   author: angelhack
-  version: "1.3.2"
+  version: "1.3.3"
 compatibility: Requires Node.js 18+ and TypeScript
 ---
 

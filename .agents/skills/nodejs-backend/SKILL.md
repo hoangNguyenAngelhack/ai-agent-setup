@@ -4,7 +4,7 @@ description: Build production-ready Node.js backend APIs with Express, Prisma, R
 license: MIT
 metadata:
   author: angelhack
-  version: "1.3.2"
+  version: "1.3.3"
 compatibility: Requires Node.js 18+, TypeScript, and optionally PostgreSQL/Redis
 ---
 

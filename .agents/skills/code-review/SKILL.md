@@ -4,7 +4,7 @@ description: Perform five-axis code reviews covering correctness, readability, a
 license: MIT
 metadata:
   author: angelhack
-  version: "1.3.2"
+  version: "1.3.3"
 ---
 
 # Five-Axis Code Review

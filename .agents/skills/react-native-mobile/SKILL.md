@@ -4,7 +4,7 @@ description: Build React Native mobile apps with Expo or React Native CLI, Nativ
 license: MIT
 metadata:
   author: angelhack
-  version: "1.3.2"
+  version: "1.3.3"
 compatibility: Requires Node.js 18+, Expo CLI or React Native CLI, iOS Simulator/Android Emulator
 ---
 

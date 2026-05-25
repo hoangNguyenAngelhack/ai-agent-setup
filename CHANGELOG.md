@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - 2026-05-25
+
+### Added
+- **Agent Skills (Open Standard)**: Added 5 skills following [agentskills.io](https://agentskills.io) standard
+  - `nodejs-backend` — Express, Prisma, Redis, BullMQ patterns
+  - `react-frontend` — Next.js/Vite, TailwindCSS, Zustand, TanStack Query
+  - `react-native-mobile` — Expo/RN CLI, NativeWind, React Navigation
+  - `code-review` — Five-axis code review framework
+  - `tdd` — Test-Driven Development workflow
+- **`.agents/skills/` Directory**: Skills compatible with 30+ AI agents
+- **Agent Skills Badge**: Added compatibility badge to README
+
+### Changed
+- **README Reorganization**: Complete restructure for better readability
+  - Added Table of Contents
+  - Grouped installation methods together
+  - Created dedicated Integrations section
+  - Added compatible agents table with install commands
+  - Added Related Projects section
+
+### Compatible Agents
+Claude Code, Cursor, VS Code Copilot, OpenAI Codex, Gemini CLI, Junie, OpenCode, OpenHands, and 20+ more
+
+---
+
 ## [1.3.2] - 2026-05-25
 
 ### Added
@@ -14,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Auto-runs `npx @colbymchenry/codegraph init -i` when enabled
 - **Documentation**: Added "Recommended Tools" section to CLAUDE.md with CodeGraph benefits and usage
 
-### Benefits of CodeGraph
+### CodeGraph Benefits
 - 57% fewer tokens processed
 - 35% cost reduction on average
 - 46% faster responses
