@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
-const VERSION = '1.3.5';
+const VERSION = '1.4.0';
 
 const CODEGRAPH_INFO = {
   name: 'CodeGraph',
@@ -16,6 +16,7 @@ const CODEGRAPH_INFO = {
 
 const TEMPLATES = {
   backend: 'backend',
+  'backend-nestjs': 'backend-nestjs',
   'frontend-vite': 'frontend-vite',
   'frontend-nextjs': 'frontend-nextjs',
   fullstack: 'fullstack',
@@ -197,7 +198,7 @@ async function main() {
       } else {
         console.log('');
         log.step(2, 8, 'Project type:');
-        console.log('  1) backend    - Express + Prisma + Redis');
+        console.log('  1) backend    - Node.js API server');
         console.log('  2) frontend   - Web application');
         console.log('  3) fullstack  - Next.js + tRPC + Prisma + NextAuth');
         console.log('  4) mobile     - React Native app');
@@ -207,13 +208,28 @@ async function main() {
       }
     }
 
-    // Step 2b: Frontend framework (only if type is frontend)
+    // Step 2b: Backend framework (only if type is backend)
+    if (config.type === 'backend' && !config.framework) {
+      if (args.yes) {
+        config.framework = 'express';
+      } else {
+        console.log('');
+        log.step('2b', 8, 'Backend framework:');
+        console.log('  1) Express  - Lightweight, flexible (default)');
+        console.log('  2) NestJS   - Enterprise, DI, decorators');
+        const choice = await question('→ Choose (1-2) [1]: ');
+        const frameworks = { '1': 'express', '2': 'nestjs', '': 'express' };
+        config.framework = frameworks[choice] || 'express';
+      }
+    }
+
+    // Step 2c: Frontend framework (only if type is frontend)
     if (config.type === 'frontend' && !config.framework) {
       if (args.yes) {
         config.framework = 'vite';
       } else {
         console.log('');
-        log.step('2b', 8, 'Frontend framework:');
+        log.step('2c', 8, 'Frontend framework:');
         console.log('  1) Next.js  - SSR/SSG, SEO optimized');
         console.log('  2) Vite     - React SPA, fast dev');
         const choice = await question('→ Choose (1-2) [1]: ');
@@ -222,13 +238,13 @@ async function main() {
       }
     }
 
-    // Step 2c: Mobile framework (only if type is mobile)
+    // Step 2d: Mobile framework (only if type is mobile)
     if (config.type === 'mobile' && !config.framework) {
       if (args.yes) {
         config.framework = 'expo';
       } else {
         console.log('');
-        log.step('2c', 8, 'Mobile framework:');
+        log.step('2d', 8, 'Mobile framework:');
         console.log('  1) Expo     - Managed workflow, EAS builds (recommended)');
         console.log('  2) CLI      - Bare React Native, full native control');
         const choice = await question('→ Choose (1-2) [1]: ');
@@ -303,7 +319,7 @@ async function main() {
     log.warn('Configuration:');
     console.log(`  Project:  ${colors.green}${config.projectName}${colors.reset}`);
     console.log(`  Type:     ${colors.green}${config.type}${colors.reset}`);
-    if (config.type === 'frontend' || config.type === 'mobile') {
+    if (config.type === 'frontend' || config.type === 'mobile' || config.type === 'backend') {
       console.log(`  Framework:${colors.green} ${config.framework}${colors.reset}`);
     }
     console.log(`  Tier:     ${colors.green}${config.tier}${colors.reset}`);
@@ -351,8 +367,10 @@ async function main() {
       templateName = config.framework === 'nextjs' ? 'frontend-nextjs' : 'frontend-vite';
     } else if (config.type === 'mobile') {
       templateName = config.framework === 'expo' ? 'mobile-expo' : 'mobile-cli';
+    } else if (config.type === 'backend') {
+      templateName = config.framework === 'nestjs' ? 'backend-nestjs' : 'backend';
     } else {
-      templateName = config.type; // backend, fullstack
+      templateName = config.type; // fullstack
     }
 
     log.gray(`→ Setting up ${templateName} project from template...`);
@@ -362,7 +380,7 @@ async function main() {
     log.gray('→ Initializing git...');
     execSync('git init -q', { stdio: 'pipe' });
     execSync('git add -A', { stdio: 'pipe' });
-    const commitLabel = (config.type === 'frontend' || config.type === 'mobile')
+    const commitLabel = (config.type === 'frontend' || config.type === 'mobile' || config.type === 'backend')
       ? `${config.type}/${config.framework}`
       : config.type;
     execSync(`git commit -q -m "feat: initial project setup (${commitLabel}, ${config.tier})"`, { stdio: 'pipe' });

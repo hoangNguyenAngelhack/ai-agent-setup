@@ -6,7 +6,7 @@
   <p>Structured workflows, specialized agents, mandatory rules, and best practices</p>
 
   [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=flat-square&color=cb3837&logo=npm)](https://www.npmjs.com/package/create-ai-agent-setup)
-  ![Version](https://img.shields.io/badge/version-1.3.5-blue?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-1.4.0-blue?style=flat-square)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
   [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-Compatible-green?style=flat-square)](https://agentskills.io)
 
@@ -56,7 +56,10 @@ npx create-ai-agent-setup my-app
 The CLI will guide you through:
 1. Project name
 2. Project type (backend / frontend / fullstack / mobile)
-3. Framework (for frontend: nextjs/vite, for mobile: expo/cli)
+3. Framework:
+   - **backend**: express (default), nestjs
+   - **frontend**: nextjs, vite
+   - **mobile**: expo, cli
 4. Rule tier (Starter / Standard / Strict)
 5. Database (for backend/fullstack only)
 6. Author info
@@ -85,7 +88,7 @@ cd my-project
 ```
 Options:
   -t, --type <type>      Project type: backend, frontend, fullstack, mobile
-  -f, --framework <fw>   Framework: nextjs, vite, expo, cli
+  -f, --framework <fw>   Framework: express, nestjs, nextjs, vite, expo, cli
   -T, --tier <tier>      Rule tier: starter, standard, strict
   -d, --db <database>    Database: postgresql, mysql, sqlite, none
   -c, --codegraph        Setup CodeGraph MCP server
