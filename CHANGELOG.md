@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2026-05-25
+
+### Added
+- **CodeGraph Integration**: Optional MCP server for semantic code exploration
+  - New CLI flag `--codegraph` / `-c` to setup during project creation
+  - Interactive prompt (step 7) asking about CodeGraph setup
+  - Auto-runs `npx @colbymchenry/codegraph init -i` when enabled
+- **Documentation**: Added "Recommended Tools" section to CLAUDE.md with CodeGraph benefits and usage
+
+### Benefits of CodeGraph
+- 57% fewer tokens processed
+- 35% cost reduction on average
+- 46% faster responses
+- 71% fewer tool calls
+
+---
+
+## [1.3.1] - 2026-05-21
+
+### Changed
+- Version bump for npm publish fix
+
+---
+
+## [1.3.0] - 2026-05-21
+
+### Added
+- **Pre-built Templates**: All project types now use pre-built templates instead of generating code inline
+- **Template Directory**: `templates/` folder with ready-to-use project structures
+
+### Changed
+- CLI now copies from `templates/` directory for faster project creation
+- Improved placeholder replacement for project configuration
+
+---
+
+## [1.2.0] - 2026-05-20
+
+### Added
+- **Project Templates**: Added `templates/` folder with pre-configured project structures
+- **Improved Permissions**: Better default permissions in settings.json
+
+---
+
 ## [1.1.0] - 2026-04-29
 
 ### Added
