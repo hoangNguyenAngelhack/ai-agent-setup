@@ -154,31 +154,34 @@ This project follows the [Agent Skills](https://agentskills.io) open standard, c
 
 #### Install Skills
 
-**Option 1: Plugin Marketplace** (Claude Code, VS Code, Cursor)
-```bash
-/plugin marketplace add hoangNguyenAngelhack/ai-agent-setup
-```
-
-**Option 2: Direct Copy**
-```bash
-npx degit hoangNguyenAngelhack/ai-agent-setup/.agents/skills .agents/skills
-```
-
-**Option 3: Include in CLI**
+**Option 1: CLI (Recommended)**
 ```bash
 npx create-ai-agent-setup my-app  # Skills included automatically
 ```
 
+**Option 2: Copy to Existing Project**
+```bash
+npx degit hoangNguyenAngelhack/ai-agent-setup/.agents/skills .agents/skills
+```
+
+**Option 3: Clone Full Repo**
+```bash
+git clone https://github.com/hoangNguyenAngelhack/ai-agent-setup.git
+cp -r ai-agent-setup/.agents/skills your-project/.agents/skills
+```
+
 #### Compatible Agents
 
-| Agent | Install Command |
-|-------|-----------------|
-| **Claude Code** | `/plugin marketplace add hoangNguyenAngelhack/ai-agent-setup` |
-| **VS Code Copilot** | Settings → Enable plugin marketplaces |
-| **Cursor** | Direct plugin installation |
-| **OpenAI Codex** | `codex skill install github:hoangNguyenAngelhack/ai-agent-setup` |
-| **Gemini CLI** | See [geminicli.com/docs](https://geminicli.com/docs/cli/skills/) |
-| **Others** | Copy `.agents/skills/` directory |
+Skills follow the [agentskills.io](https://agentskills.io) open standard and work with:
+
+- Claude Code
+- Cursor
+- VS Code Copilot
+- Windsurf
+- Cline
+- Aider
+- OpenHands
+- And 20+ more AI coding agents
 
 ---
 
