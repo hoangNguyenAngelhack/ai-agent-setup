@@ -115,6 +115,37 @@ npx @colbymchenry/codegraph init -i
 
 ---
 
+## Agent Skills (Open Standard)
+
+This project follows the [Agent Skills](https://agentskills.io) open standard, making it compatible with 30+ AI coding agents including Claude Code, Cursor, VS Code Copilot, OpenAI Codex, and more.
+
+### Available Skills
+
+| Skill | Description |
+|-------|-------------|
+| `nodejs-backend` | Express, Prisma, Redis, BullMQ patterns |
+| `react-frontend` | Next.js/Vite, TailwindCSS, Zustand, TanStack Query |
+| `react-native-mobile` | Expo/RN CLI, NativeWind, React Navigation |
+| `code-review` | Five-axis code review framework |
+| `tdd` | Test-Driven Development workflow |
+
+### Install Skills
+
+```bash
+# Claude Code / VS Code
+/plugin marketplace add hoangNguyenAngelhack/ai-agent-setup
+
+# Or copy directly
+npx degit hoangNguyenAngelhack/ai-agent-setup/.agents/skills .agents/skills
+```
+
+### Related Projects
+
+- [dotnet/skills](https://github.com/dotnet/skills) — Official .NET Agent Skills from Microsoft
+- [laravel/boost](https://github.com/laravel/boost) — Laravel Agent Skills
+
+---
+
 ## Overview
 
 This repository provides a **production-grade configuration** for Claude Code AI agents. It includes:
