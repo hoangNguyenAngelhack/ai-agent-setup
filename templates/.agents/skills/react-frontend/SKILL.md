@@ -4,7 +4,7 @@ description: Build React applications with Next.js or Vite, TailwindCSS, shadcn/
 license: MIT
 metadata:
   author: angelhack
-  version: "1.3.2"
+  version: "1.3.5"
 compatibility: Requires Node.js 18+ and TypeScript
 ---
 
@@ -12,7 +12,15 @@ compatibility: Requires Node.js 18+ and TypeScript
 
 Build modern React applications with best practices.
 
-## Framework Selection
+## Impact Levels
+
+| Level | Description |
+|-------|-------------|
+| **CRITICAL** | Must follow - security, data integrity |
+| **HIGH** | Should follow - maintainability, performance |
+| **MEDIUM** | Recommended - code quality |
+
+## Framework Selection (HIGH)
 
 | Use Case | Framework |
 |----------|-----------|
@@ -42,7 +50,7 @@ src/
 
 ## Patterns
 
-### State Management (Zustand)
+### State Management (Zustand) (HIGH)
 
 ```typescript
 import { create } from 'zustand';
@@ -65,7 +73,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 }));
 ```
 
-### Data Fetching (TanStack Query)
+### Data Fetching (TanStack Query) (HIGH)
 
 ```typescript
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -91,7 +99,7 @@ export function useCreateUser() {
 }
 ```
 
-### API Client (Axios)
+### API Client (Axios) (CRITICAL)
 
 ```typescript
 import axios from 'axios';
@@ -120,7 +128,7 @@ api.interceptors.response.use(
 );
 ```
 
-### Form Handling
+### Form Handling (HIGH)
 
 ```typescript
 import { useForm } from 'react-hook-form';
@@ -151,7 +159,7 @@ function LoginForm() {
 }
 ```
 
-### Component Pattern
+### Component Pattern (MEDIUM)
 
 ```typescript
 // Use shadcn/ui + Tailwind
@@ -183,7 +191,7 @@ export function Card({ title, children, className }: CardProps) {
 - Extract reusable logic into hooks
 - Use CSS-in-JS sparingly (prefer Tailwind)
 
-## Testing
+## Testing (HIGH)
 
 - Unit tests with Vitest + Testing Library
 - E2E tests with Playwright

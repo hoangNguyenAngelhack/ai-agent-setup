@@ -4,7 +4,7 @@ description: Build React Native mobile apps with Expo or React Native CLI, Nativ
 license: MIT
 metadata:
   author: angelhack
-  version: "1.3.2"
+  version: "1.3.5"
 compatibility: Requires Node.js 18+, Expo CLI or React Native CLI, iOS Simulator/Android Emulator
 ---
 
@@ -12,7 +12,15 @@ compatibility: Requires Node.js 18+, Expo CLI or React Native CLI, iOS Simulator
 
 Build cross-platform mobile apps with React Native.
 
-## Framework Selection
+## Impact Levels
+
+| Level | Description |
+|-------|-------------|
+| **CRITICAL** | Must follow - security, performance |
+| **HIGH** | Should follow - maintainability, UX |
+| **MEDIUM** | Recommended - code quality |
+
+## Framework Selection (HIGH)
 
 | Use Case | Framework |
 |----------|-----------|
@@ -30,7 +38,7 @@ Build cross-platform mobile apps with React Native.
 
 ## Critical Rules
 
-### 1. NO INLINE STYLES
+### 1. NO INLINE STYLES (CRITICAL)
 
 ```tsx
 // FORBIDDEN
@@ -42,7 +50,7 @@ Build cross-platform mobile apps with React Native.
 <View className="mt-2.5">
 ```
 
-### 2. Use Shared Components
+### 2. Use Shared Components (CRITICAL)
 
 ```tsx
 // CORRECT
@@ -78,7 +86,7 @@ lib/                     # API, utils
 
 ## Patterns
 
-### Navigation (Expo Router)
+### Navigation (Expo Router) (HIGH)
 
 ```tsx
 // app/_layout.tsx
@@ -112,7 +120,7 @@ export default function TabLayout() {
 }
 ```
 
-### State Management
+### State Management (HIGH)
 
 ```typescript
 // stores/auth-store.ts
@@ -167,7 +175,7 @@ api.interceptors.request.use((config) => {
 });
 ```
 
-### Secure Storage
+### Secure Storage (CRITICAL)
 
 ```typescript
 import * as SecureStore from 'expo-secure-store';
@@ -221,7 +229,7 @@ export function Button({
 }
 ```
 
-## Performance
+## Performance (HIGH)
 
 - Use `FlatList` for long lists (not ScrollView)
 - Use `useMemo` for expensive calculations

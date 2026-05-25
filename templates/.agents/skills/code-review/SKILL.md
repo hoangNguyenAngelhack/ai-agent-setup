@@ -4,16 +4,25 @@ description: Perform five-axis code reviews covering correctness, readability, a
 license: MIT
 metadata:
   author: angelhack
-  version: "1.3.2"
+  version: "1.3.5"
 ---
 
 # Five-Axis Code Review
 
 Comprehensive code review framework for production-quality code.
 
+## Impact Levels
+
+| Level | Description |
+|-------|-------------|
+| **CRITICAL** | Must fix - blocks merge |
+| **MAJOR** | Should fix - significant issue |
+| **MINOR** | Nice to fix - code quality |
+| **NIT** | Optional - style preference |
+
 ## The Five Axes
 
-### 1. Correctness
+### 1. Correctness (CRITICAL)
 
 - Does the code work as intended?
 - Are edge cases handled?
@@ -28,7 +37,7 @@ Questions to ask:
 - Is error handling comprehensive?
 ```
 
-### 2. Readability
+### 2. Readability (MAJOR)
 
 - Can others understand this code easily?
 - Are names descriptive and consistent?
@@ -43,7 +52,7 @@ Questions to ask:
 - Are comments explaining WHY, not WHAT?
 ```
 
-### 3. Architecture
+### 3. Architecture (MAJOR)
 
 - Does it follow established patterns?
 - Are abstractions appropriate?
@@ -58,7 +67,7 @@ Questions to ask:
 - Does it violate SOLID principles?
 ```
 
-### 4. Security
+### 4. Security (CRITICAL)
 
 - Is user input validated?
 - Are secrets properly handled?
@@ -73,7 +82,7 @@ Questions to ask:
 - Are SQL queries parameterized?
 ```
 
-### 5. Performance
+### 5. Performance (MAJOR)
 
 - Are there N+1 queries?
 - Is pagination used for lists?

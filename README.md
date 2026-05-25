@@ -6,7 +6,7 @@
   <p>Structured workflows, specialized agents, mandatory rules, and best practices</p>
 
   [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=flat-square&color=cb3837&logo=npm)](https://www.npmjs.com/package/create-ai-agent-setup)
-  ![Version](https://img.shields.io/badge/version-1.3.3-blue?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-1.3.5-blue?style=flat-square)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
   [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-Compatible-green?style=flat-square)](https://agentskills.io)
 
@@ -147,6 +147,7 @@ This project follows the [Agent Skills](https://agentskills.io) open standard, c
 | Skill | Description | Use When |
 |-------|-------------|----------|
 | [`nodejs-backend`](.agents/skills/nodejs-backend/SKILL.md) | Express, Prisma, Redis, BullMQ | Building APIs, services, jobs |
+| [`nestjs-backend`](.agents/skills/nestjs-backend/SKILL.md) | NestJS, TypeORM, Guards, DI | Enterprise NestJS apps |
 | [`react-frontend`](.agents/skills/react-frontend/SKILL.md) | Next.js/Vite, TailwindCSS, Zustand | Creating web UI, pages, forms |
 | [`react-native-mobile`](.agents/skills/react-native-mobile/SKILL.md) | Expo/RN CLI, NativeWind | Building iOS/Android apps |
 | [`code-review`](.agents/skills/code-review/SKILL.md) | Five-axis review framework | Reviewing PRs, code quality |

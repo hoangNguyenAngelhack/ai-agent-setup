@@ -4,13 +4,21 @@ description: Build production-ready Node.js backend APIs with Express, Prisma, R
 license: MIT
 metadata:
   author: angelhack
-  version: "1.3.3"
+  version: "1.3.5"
 compatibility: Requires Node.js 18+, TypeScript, and optionally PostgreSQL/Redis
 ---
 
 # Node.js Backend Development
 
 Build production-ready backend APIs following industry best practices.
+
+## Impact Levels
+
+| Level | Description |
+|-------|-------------|
+| **CRITICAL** | Must follow - security, data integrity |
+| **HIGH** | Should follow - maintainability, performance |
+| **MEDIUM** | Recommended - code quality |
 
 ## Tech Stack
 
@@ -38,13 +46,13 @@ src/
 
 ## Patterns
 
-### Layered Architecture
+### Layered Architecture (HIGH)
 
 ```
 Request → Routes → Middleware → Controllers → Services → Repositories → Database
 ```
 
-### Error Handling
+### Error Handling (CRITICAL)
 
 ```typescript
 // Use AppError for operational errors
@@ -76,7 +84,7 @@ if (!user) throw new AppError('User not found', 404, 'USER_NOT_FOUND');
 { "success": true, "data": [...], "pagination": { "page": 1, "total": 100 } }
 ```
 
-### Database (Prisma)
+### Database (Prisma) (HIGH)
 
 ```typescript
 // Always use transactions for multi-step operations
@@ -96,7 +104,7 @@ const user = await db.user.findUnique({
 });
 ```
 
-### Caching (Redis)
+### Caching (Redis) (HIGH)
 
 ```typescript
 async function getOrSet<T>(
@@ -113,7 +121,7 @@ async function getOrSet<T>(
 }
 ```
 
-### Queue (BullMQ)
+### Queue (BullMQ) (MEDIUM)
 
 ```typescript
 // Producer
@@ -126,7 +134,7 @@ const worker = new Worker('email', async (job) => {
 }, { connection: redis });
 ```
 
-## Security Rules
+## Security Rules (CRITICAL)
 
 - Never hardcode secrets - use environment variables
 - Hash passwords with bcrypt (12+ rounds)
@@ -135,7 +143,7 @@ const worker = new Worker('email', async (job) => {
 - Implement rate limiting on auth endpoints
 - Use Helmet.js for HTTP security headers
 
-## Testing
+## Testing (HIGH)
 
 - 80% minimum test coverage
 - Unit tests for services

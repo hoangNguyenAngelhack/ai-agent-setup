@@ -4,14 +4,22 @@ description: Test-Driven Development workflow with RED-GREEN-REFACTOR cycle. Use
 license: MIT
 metadata:
   author: angelhack
-  version: "1.3.3"
+  version: "1.3.5"
 ---
 
 # Test-Driven Development
 
 Write tests before code using the RED-GREEN-REFACTOR cycle.
 
-## The TDD Cycle
+## Impact Levels
+
+| Level | Description |
+|-------|-------------|
+| **CRITICAL** | Must follow - test coverage |
+| **HIGH** | Should follow - test quality |
+| **MEDIUM** | Recommended - patterns |
+
+## The TDD Cycle (CRITICAL)
 
 ```
 ┌─────────────────────────────────────────┐
@@ -95,7 +103,7 @@ class UserService {
 }
 ```
 
-## Test Structure
+## Test Structure (HIGH)
 
 ### AAA Pattern (Arrange-Act-Assert)
 
@@ -128,7 +136,7 @@ it('should throw NotFoundError when user does not exist', async () => {});
 it('should apply discount when coupon is valid', async () => {});
 ```
 
-## What to Test
+## What to Test (HIGH)
 
 ### Happy Path
 ```typescript
@@ -170,7 +178,7 @@ it('should accept password of exactly 8 characters', () => {
 });
 ```
 
-## Mocking
+## Mocking (MEDIUM)
 
 ### Mock Dependencies
 
@@ -218,7 +226,7 @@ it('should send welcome email after registration', async () => {
 });
 ```
 
-## Coverage Requirements
+## Coverage Requirements (CRITICAL)
 
 | Tier | Coverage |
 |------|----------|
@@ -226,7 +234,7 @@ it('should send welcome email after registration', async () => {
 | Standard | 80% |
 | Strict | 95% |
 
-## Anti-Patterns to Avoid
+## Anti-Patterns to Avoid (HIGH)
 
 ```typescript
 // DON'T: Test implementation details
