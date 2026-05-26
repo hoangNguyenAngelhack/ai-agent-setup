@@ -63,6 +63,7 @@ ${colors.yellow}Options:${colors.reset}
   -d, --db <database>    Database: postgresql, mysql, sqlite, none
   -y, --yes              Skip prompts, use defaults
   -c, --codegraph        Setup CodeGraph MCP server for AI code exploration
+  -H, --honesty          Include honesty rule (reduce AI hallucinations)
   -h, --help             Show this help
   -v, --version          Show version
 
@@ -75,6 +76,7 @@ ${colors.yellow}Examples:${colors.reset}
   npx create-ai-agent my-dashboard -t frontend -f nextjs -u chakra
   npx create-ai-agent my-mobile -t mobile -f expo
   npx create-ai-agent my-app --codegraph         # Include CodeGraph setup
+  npx create-ai-agent my-app --honesty           # Include honesty rule
 
 ${colors.yellow}Interactive mode:${colors.reset}
   Just run: npx create-ai-agent
@@ -90,6 +92,7 @@ function parseArgs(args) {
     framework: null,
     ui: null,
     codegraph: false,
+    honesty: false,
     yes: false,
     help: false,
     version: false,
@@ -107,6 +110,8 @@ function parseArgs(args) {
       result.yes = true;
     } else if (arg === '-c' || arg === '--codegraph') {
       result.codegraph = true;
+    } else if (arg === '-H' || arg === '--honesty') {
+      result.honesty = true;
     } else if (arg === '-t' || arg === '--type') {
       result.type = next;
       i++;
@@ -182,6 +187,7 @@ async function main() {
     db: args.db,
     ui: args.ui,
     codegraph: args.codegraph,
+    honesty: args.honesty,
     author: null,
     email: null,
   };
@@ -189,7 +195,7 @@ async function main() {
   try {
     // Step 1: Project name
     if (!config.projectName) {
-      log.step(1, 8, 'Project name:');
+      log.step(1, 9, 'Project name:');
       config.projectName = await question('→ ');
     }
 
@@ -206,7 +212,7 @@ async function main() {
         config.type = 'backend';
       } else {
         console.log('');
-        log.step(2, 8, 'Project type:');
+        log.step(2, 9, 'Project type:');
         console.log('  1) backend    - Node.js API server');
         console.log('  2) frontend   - Web application');
         console.log('  3) fullstack  - Next.js + tRPC + Prisma + NextAuth');
@@ -223,7 +229,7 @@ async function main() {
         config.framework = 'express';
       } else {
         console.log('');
-        log.step('2b', 8, 'Backend framework:');
+        log.step('2b', 9, 'Backend framework:');
         console.log('  1) Express  - Lightweight, flexible (default)');
         console.log('  2) NestJS   - Enterprise, DI, decorators');
         const choice = await question('→ Choose (1-2) [1]: ');
@@ -238,7 +244,7 @@ async function main() {
         config.framework = 'vite';
       } else {
         console.log('');
-        log.step('2c', 8, 'Frontend framework:');
+        log.step('2c', 9, 'Frontend framework:');
         console.log('  1) Next.js  - SSR/SSG, SEO optimized');
         console.log('  2) Vite     - React SPA, fast dev');
         const choice = await question('→ Choose (1-2) [1]: ');
@@ -253,7 +259,7 @@ async function main() {
         config.ui = 'shadcn';
       } else {
         console.log('');
-        log.step('2e', 8, 'UI Library:');
+        log.step('2e', 9, 'UI Library:');
         console.log('  1) shadcn/ui   - Radix + Tailwind (recommended)');
         console.log('  2) Ant Design  - Enterprise + Tailwind');
         console.log('  3) Chakra UI   - Simple, accessible');
@@ -270,7 +276,7 @@ async function main() {
         config.framework = 'expo';
       } else {
         console.log('');
-        log.step('2d', 8, 'Mobile framework:');
+        log.step('2d', 9, 'Mobile framework:');
         console.log('  1) Expo     - Managed workflow, EAS builds (recommended)');
         console.log('  2) CLI      - Bare React Native, full native control');
         const choice = await question('→ Choose (1-2) [1]: ');
@@ -285,7 +291,7 @@ async function main() {
         config.tier = 'standard';
       } else {
         console.log('');
-        log.step(3, 8, 'Rule tier:');
+        log.step(3, 9, 'Rule tier:');
         console.log('  1) starter   - MVP, prototypes (50% test coverage)');
         console.log('  2) standard  - Production apps (80% coverage)');
         console.log('  3) strict    - Enterprise (95% coverage)');
@@ -301,7 +307,7 @@ async function main() {
         config.db = 'postgresql';
       } else {
         console.log('');
-        log.step(4, 8, 'Database:');
+        log.step(4, 9, 'Database:');
         console.log('  1) postgresql - Recommended');
         console.log('  2) mysql');
         console.log('  3) sqlite     - Development only');
@@ -320,21 +326,30 @@ async function main() {
       config.email = 'dev@example.com';
     } else {
       console.log('');
-      log.step(5, 8, 'Author name:');
+      log.step(5, 9, 'Author name:');
       config.author = (await question('→ [Developer]: ')) || 'Developer';
 
       console.log('');
-      log.step(6, 8, 'Author email:');
+      log.step(6, 9, 'Author email:');
       config.email = (await question('→ [dev@example.com]: ')) || 'dev@example.com';
     }
 
     // Step 7: CodeGraph (optional)
     if (!config.codegraph && !args.yes) {
       console.log('');
-      log.step(7, 8, 'Setup CodeGraph? (AI code exploration - 57% fewer tokens)');
+      log.step(7, 9, 'Setup CodeGraph? (AI code exploration - 57% fewer tokens)');
       console.log(`  ${colors.gray}${CODEGRAPH_INFO.url}${colors.reset}`);
       const choice = await question('→ (y/N): ');
       config.codegraph = choice.toLowerCase() === 'y' || choice.toLowerCase() === 'yes';
+    }
+
+    // Step 8: Honesty rule (optional)
+    if (!config.honesty && !args.yes) {
+      console.log('');
+      log.step(8, 9, 'Include honesty rule? (Reduce AI hallucinations)');
+      console.log(`  ${colors.gray}Instructs Claude to acknowledge uncertainty and never fabricate sources${colors.reset}`);
+      const choice = await question('→ (y/N): ');
+      config.honesty = choice.toLowerCase() === 'y' || choice.toLowerCase() === 'yes';
     }
 
     close();
@@ -358,6 +373,9 @@ async function main() {
     console.log(`  Author:   ${colors.green}${config.author} <${config.email}>${colors.reset}`);
     if (config.codegraph) {
       console.log(`  CodeGraph:${colors.green} Yes${colors.reset}`);
+    }
+    if (config.honesty) {
+      console.log(`  Honesty:  ${colors.green}Yes${colors.reset}`);
     }
     log.warn('═══════════════════════════════════════════════════════════');
     console.log('');
@@ -388,6 +406,13 @@ async function main() {
       content = content.replace(/Hoang Nguyen \(hoang\.nguyen@angelhack\.com\)/g, `${config.author} (${config.email})`);
       content = content.replace(/Tier: Standard/g, `Tier: ${capitalize(config.tier)}`);
       fs.writeFileSync(claudePath, content);
+    }
+
+    // Remove honesty rule if not selected
+    const honestyPath = '.claude/rules/honesty.md';
+    if (!config.honesty && fs.existsSync(honestyPath)) {
+      fs.unlinkSync(honestyPath);
+      log.gray('→ Skipped honesty rule (not selected)');
     }
 
     // Determine template to use
