@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-05-26
+
+### Added
+- **Honesty Rule** — Optional rule to reduce AI hallucinations
+  - New CLI flag `--honesty` / `-H` to include honesty rule
+  - Interactive prompt (Step 8) asking user to include rule
+  - Rule instructs Claude to:
+    - Acknowledge uncertainty instead of fabricating answers
+    - Never invent sources, statistics, or quotes
+    - Flag information that may be outdated
+- **Honesty Guide** — Documentation for setting up honesty prompt
+  - `docs/guides/claude-honesty-prompt.md` (English)
+  - `docs/guides/claude-honesty-prompt-vi.md` (Vietnamese)
+
+### Changed
+- CLI now has 9 steps (added honesty rule step after CodeGraph)
+- Updated rules count from 13 to 14
+
+---
+
 ## [1.5.0] - 2026-05-25
 
 ### Added

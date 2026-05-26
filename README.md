@@ -6,7 +6,7 @@
   <p>Structured workflows, specialized agents, mandatory rules, and best practices</p>
 
   [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=flat-square&color=cb3837&logo=npm)](https://www.npmjs.com/package/create-ai-agent-setup)
-  ![Version](https://img.shields.io/badge/version-1.5.0-blue?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-1.5.1-blue?style=flat-square)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
   [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-Compatible-green?style=flat-square)](https://agentskills.io)
 
@@ -42,8 +42,9 @@ npx create-ai-agent-setup my-admin -t frontend -f vite -u antd         # Vite + 
 npx create-ai-agent-setup my-dashboard -t frontend -f nextjs -u chakra # Next.js + Chakra UI
 npx create-ai-agent-setup my-mobile -t mobile -f expo
 
-# With all integrations
-npx create-ai-agent-setup my-app --codegraph
+# With integrations
+npx create-ai-agent-setup my-app --codegraph    # AI code exploration
+npx create-ai-agent-setup my-app --honesty      # Reduce AI hallucinations
 ```
 
 ---
@@ -72,6 +73,7 @@ The CLI will guide you through:
 6. Database (for backend/fullstack only)
 7. Author info
 8. CodeGraph setup (optional)
+9. Honesty rule (optional) — reduce AI hallucinations
 
 ### Method 2: Copy to Existing Project
 
@@ -101,6 +103,7 @@ Options:
   -T, --tier <tier>      Rule tier: starter, standard, strict
   -d, --db <database>    Database: postgresql, mysql, sqlite, none
   -c, --codegraph        Setup CodeGraph MCP server
+  -H, --honesty          Include honesty rule (reduce AI hallucinations)
   -y, --yes              Skip prompts, use defaults
   -h, --help             Show help
   -v, --version          Show version
@@ -227,7 +230,7 @@ Skills follow the [agentskills.io](https://agentskills.io) open standard and wor
 ├── CLAUDE.md                    # Main AI instructions
 ├── commands/                    # 8 slash commands
 ├── agents/                      # 11 specialized agents
-├── rules/                       # 13 mandatory rules
+├── rules/                       # 14 mandatory rules
 ├── skills/                      # Advanced skills
 └── references/                  # 6 checklists
 
@@ -274,7 +277,7 @@ templates/                       # Project templates
 | `/debug` | Systematic error diagnosis |
 | `/simplify` | Reduce code complexity |
 
-### Mandatory Rules (13 total)
+### Mandatory Rules (14 total)
 
 | Category | Rules |
 |----------|-------|
@@ -282,6 +285,7 @@ templates/                       # Project templates
 | **Architecture** | tech-stack, system-design, project-structure, api-conventions |
 | **Data** | naming-conventions, database |
 | **Operations** | security, monitoring, testing, git-workflow |
+| **AI Behavior** | honesty (optional) — reduce hallucinations |
 
 ---
 
