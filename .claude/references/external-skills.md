@@ -2,6 +2,42 @@
 
 > Curated list of AI skills that enhance your development workflow. Install these skills to teach AI agents specialized knowledge.
 
+---
+
+## Deployment & Infrastructure
+
+### Vercel Skills
+
+Official AI skills from [Vercel](https://vercel.com) for deployment, React best practices, and web optimization.
+
+**Skills included:**
+| Skill | Description |
+|-------|-------------|
+| `deploy-to-vercel` | Deployment workflows, CI/CD, preview URLs |
+| `vercel-cli-with-tokens` | Vercel CLI usage with authentication |
+| `vercel-optimize` | Performance optimization on Vercel platform |
+| `react-best-practices` | React patterns and conventions |
+| `react-view-transitions` | View Transitions API with React |
+| `react-native-skills` | React Native development patterns |
+| `web-design-guidelines` | Web design principles and accessibility |
+| `composition-patterns` | Component composition patterns |
+
+**Installation:**
+
+```bash
+# Universal (auto-detects agent)
+npx skills add https://github.com/vercel-labs/agent-skills
+
+# Specific skill only
+npx skills add https://github.com/vercel-labs/agent-skills/skills/deploy-to-vercel
+```
+
+**Links:**
+- Repository: https://github.com/vercel-labs/agent-skills
+- Skills CLI: https://github.com/vercel-labs/skills
+
+---
+
 ## Animation
 
 ### GSAP Skills
