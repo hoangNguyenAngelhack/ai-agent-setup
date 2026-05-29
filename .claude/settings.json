@@ -37,11 +37,15 @@
       "WebSearch(*)",
       "Edit(*)",
       "Write(*)",
-      "mcp__*"
+      "mcp__*",
+      "Bash(cat ~/.claude/CLAUDE.md 2>/dev/null || echo \"FILE_NOT_EXISTS\")",
+      "Read(//Users/hoangnguyen/.claude/**)",
+      "Bash(cp /Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/.claude/rules/honesty.md /Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/templates/.claude/rules/honesty.md)"
     ],
     "deny": [],
     "additionalDirectories": [
-      "/Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/.claude/rules"
+      "/Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/.claude/rules",
+      "/Users/hoangnguyen/.claude"
     ]
   },
   "model": "claude-opus-4-5",
