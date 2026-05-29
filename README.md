@@ -381,11 +381,15 @@ Skills you can add to enhance your AI agent:
 
 | Project | Description |
 |---------|-------------|
-| [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | Official Vercel skills — deploy, React best practices, optimization |
-| [greensock/gsap-skills](https://github.com/greensock/gsap-skills) | Official GSAP skills — animations, ScrollTrigger, timelines |
+| [shadcn-ui/ui](https://github.com/shadcn-ui/ui) | Official shadcn/ui skills — CLI, components, theming |
+| [supabase/supabase](https://github.com/supabase/supabase) | Official Supabase skills — Studio, queries, testing |
+| [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | Official Vercel skills — deploy, React best practices |
+| [greensock/gsap-skills](https://github.com/greensock/gsap-skills) | Official GSAP skills — animations, ScrollTrigger |
 
 ```bash
 # Install external skills
+npx skills add https://github.com/shadcn-ui/ui
+npx skills add https://github.com/supabase/supabase
 npx skills add https://github.com/vercel-labs/agent-skills
 npx skills add https://github.com/greensock/gsap-skills
 ```

@@ -38,6 +38,61 @@ npx skills add https://github.com/vercel-labs/agent-skills/skills/deploy-to-verc
 
 ---
 
+## UI Components
+
+### shadcn/ui Skills
+
+Official AI skills for [shadcn/ui](https://ui.shadcn.com) — the popular component library built on Radix UI and Tailwind CSS.
+
+**Skills included:**
+| Skill | Description |
+|-------|-------------|
+| `shadcn` | CLI usage, component installation, customization, theming |
+
+**Installation:**
+
+```bash
+npx skills add https://github.com/shadcn-ui/ui
+```
+
+**Links:**
+- Repository: https://github.com/shadcn-ui/ui
+- Docs: https://ui.shadcn.com
+
+---
+
+## Backend-as-a-Service
+
+### Supabase Skills
+
+Official AI skills for [Supabase](https://supabase.com) — the open-source Firebase alternative.
+
+**Skills included:**
+| Skill | Description |
+|-------|-------------|
+| `studio-best-practices` | Supabase Studio patterns |
+| `studio-ui-patterns` | UI component patterns |
+| `studio-queries` | Database query patterns |
+| `studio-testing` | Testing strategies |
+| `studio-e2e-tests` | E2E test patterns |
+| `studio-error-handling` | Error handling patterns |
+| `studio-mock-api-tests` | Mock API testing |
+| `safe-sql-execution` | Safe SQL execution |
+| `telemetry-standards` | Telemetry best practices |
+| `vitest` | Vitest configuration |
+
+**Installation:**
+
+```bash
+npx skills add https://github.com/supabase/supabase
+```
+
+**Links:**
+- Repository: https://github.com/supabase/supabase
+- Docs: https://supabase.com/docs
+
+---
+
 ## Animation
 
 ### GSAP Skills
