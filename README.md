@@ -375,6 +375,23 @@ npx create-ai-agent-setup my-api -t backend -f nestjs
 
 ## Related Projects
 
+### External AI Skills
+
+Skills you can add to enhance your AI agent:
+
+| Project | Description |
+|---------|-------------|
+| [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | Official Vercel skills — deploy, React best practices, optimization |
+| [greensock/gsap-skills](https://github.com/greensock/gsap-skills) | Official GSAP skills — animations, ScrollTrigger, timelines |
+
+```bash
+# Install external skills
+npx skills add https://github.com/vercel-labs/agent-skills
+npx skills add https://github.com/greensock/gsap-skills
+```
+
+> See [.claude/references/external-skills.md](.claude/references/external-skills.md) for full list.
+
 ### Official Agent Skills
 
 | Project | Description |
@@ -388,6 +405,7 @@ npx create-ai-agent-setup my-api -t backend -f nestjs
 |------|-------------|
 | [CodeGraph](https://github.com/colbymchenry/codegraph) | Semantic code knowledge graph |
 | [Semble](https://github.com/MinishLab/semble) | Code search for AI agents (Python) |
+| [vercel-labs/skills](https://github.com/vercel-labs/skills) | Skills CLI — install skills to any agent |
 
 ### Learn More
 
