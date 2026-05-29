@@ -164,6 +164,7 @@ Quick references in `.claude/references/`:
 | `accessibility-checklist.md` | WCAG 2.1 AA compliance |
 | `mobile-performance-checklist.md` | React Native performance, 60 FPS |
 | `mobile-release-checklist.md` | App Store / Play Store submission |
+| `external-skills.md` | Third-party AI skills (GSAP, etc.) |
 
 ---
 
