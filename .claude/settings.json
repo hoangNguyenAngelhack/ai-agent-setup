@@ -40,34 +40,77 @@
       "mcp__*",
       "Bash(cat ~/.claude/CLAUDE.md 2>/dev/null || echo \"FILE_NOT_EXISTS\")",
       "Read(//Users/hoangnguyen/.claude/**)",
-      "Bash(cp /Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/.claude/rules/honesty.md /Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/templates/.claude/rules/honesty.md)"
+      "Bash(cp /Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/.claude/rules/honesty.md /Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/templates/.claude/rules/honesty.md)",
+      "Bash(mkdir -p .claude/hooks/PreToolUse .claude/hooks/PostToolUse .claude/hooks/Lifecycle)",
+      "Bash(mkdir -p .claude/mcp-configs)",
+      "Bash(cp -r .claude/hooks templates/.claude/)",
+      "Bash(cp -r .claude/mcp-configs templates/.claude/)",
+      "Bash(cp .claude/agents/react-build-resolver.md .claude/agents/react-native-resolver.md .claude/agents/node-build-resolver.md .claude/agents/prisma-resolver.md templates/.claude/agents/)",
+      "Bash(cp .claude/rules/typescript-patterns.md .claude/rules/python-patterns.md .claude/rules/sql-patterns.md templates/.claude/rules/)",
+      "Bash(cp .claude/CLAUDE.md templates/.claude/CLAUDE.md)",
+      "Bash(cp .claude/mcp-configs/.env.example templates/.claude/mcp-configs/)"
     ],
     "deny": [],
     "additionalDirectories": [
       "/Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/.claude/rules",
-      "/Users/hoangnguyen/.claude"
+      "/Users/hoangnguyen/.claude",
+      "/Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/.claude/hooks",
+      "/Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/.claude",
+      "/Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/.claude/agents",
+      "/Users/hoangnguyen/Desktop/labs/npm/ai-agent-setup/.claude/mcp-configs"
     ]
   },
   "model": "claude-opus-4-5",
   "hooks": {
     "PreToolUse": [
       {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/PreToolUse/security-scan.sh"
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[PRE] Running: $TOOL_INPUT' >> /tmp/claude-hooks.log"
+            "command": ".claude/hooks/PreToolUse/lint-check.sh"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "if [ $TOOL_EXIT_CODE -ne 0 ]; then echo '[ERROR] Command failed with exit code $TOOL_EXIT_CODE' >> /tmp/claude-hooks.log; fi"
+            "command": ".claude/hooks/PostToolUse/auto-format.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/PostToolUse/typescript-check.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/PostToolUse/console-log-warn.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/Lifecycle/session-summary.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/Lifecycle/cost-tracker.sh"
           }
         ]
       }

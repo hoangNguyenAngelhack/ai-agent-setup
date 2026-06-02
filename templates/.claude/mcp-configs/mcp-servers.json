@@ -1,0 +1,184 @@
+{
+  "_comments": {
+    "note": "Full MCP server collection. Copy to ~/.claude/mcp-servers.json",
+    "recommendation": "Keep under 10 MCPs enabled to preserve context window",
+    "docs": "https://modelcontextprotocol.io/"
+  },
+
+  "mcpServers": {
+    "supabase": {
+      "_description": "Supabase - PostgreSQL database, auth, storage, edge functions",
+      "_priority": "HIGH",
+      "_docs": "https://supabase.com/docs/guides/getting-started/mcp",
+      "command": "npx",
+      "args": ["-y", "@supabase/mcp-server-supabase@latest", "--supabase-url", "${SUPABASE_URL}", "--supabase-key", "${SUPABASE_SERVICE_KEY}"],
+      "env": {
+        "SUPABASE_URL": "${SUPABASE_URL}",
+        "SUPABASE_SERVICE_KEY": "${SUPABASE_SERVICE_KEY}"
+      }
+    },
+
+    "vercel": {
+      "_description": "Vercel - Deploy, preview, environment management",
+      "_priority": "HIGH",
+      "_docs": "https://vercel.com/docs/mcp",
+      "command": "npx",
+      "args": ["-y", "@vercel/mcp@latest"],
+      "env": {
+        "VERCEL_API_TOKEN": "${VERCEL_API_TOKEN}"
+      }
+    },
+
+    "playwright": {
+      "_description": "Playwright - Browser automation, E2E testing, screenshots",
+      "_priority": "HIGH",
+      "_docs": "https://github.com/anthropics/anthropic-quickstarts/tree/main/mcp-playwright",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-playwright@latest"]
+    },
+
+    "github": {
+      "_description": "GitHub - Enhanced git operations, PRs, issues, actions",
+      "_priority": "HIGH",
+      "_docs": "https://github.com/modelcontextprotocol/servers/tree/main/src/github",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+
+    "memory": {
+      "_description": "Memory - Persistent context across sessions",
+      "_priority": "MEDIUM",
+      "_docs": "https://github.com/modelcontextprotocol/servers/tree/main/src/memory",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+
+    "sentry": {
+      "_description": "Sentry - Error tracking, performance monitoring",
+      "_priority": "MEDIUM",
+      "_docs": "https://docs.sentry.io/platforms/javascript/",
+      "command": "npx",
+      "args": ["-y", "@sentry/mcp-server@latest"],
+      "env": {
+        "SENTRY_AUTH_TOKEN": "${SENTRY_AUTH_TOKEN}",
+        "SENTRY_ORG": "${SENTRY_ORG}"
+      }
+    },
+
+    "upstash": {
+      "_description": "Upstash - Serverless Redis and Kafka",
+      "_priority": "MEDIUM",
+      "_docs": "https://upstash.com/docs/redis/overall/getstarted",
+      "command": "npx",
+      "args": ["-y", "@upstash/mcp-server@latest"],
+      "env": {
+        "UPSTASH_REDIS_REST_URL": "${UPSTASH_REDIS_REST_URL}",
+        "UPSTASH_REDIS_REST_TOKEN": "${UPSTASH_REDIS_REST_TOKEN}"
+      }
+    },
+
+    "linear": {
+      "_description": "Linear - Issue tracking, project management",
+      "_priority": "MEDIUM",
+      "_docs": "https://linear.app/docs/api",
+      "command": "npx",
+      "args": ["-y", "@linear/mcp-server@latest"],
+      "env": {
+        "LINEAR_API_KEY": "${LINEAR_API_KEY}"
+      }
+    },
+
+    "cloudflare": {
+      "_description": "Cloudflare - Workers, KV, R2 storage, DNS",
+      "_priority": "MEDIUM",
+      "_docs": "https://developers.cloudflare.com/",
+      "command": "npx",
+      "args": ["-y", "@cloudflare/mcp-server@latest"],
+      "env": {
+        "CLOUDFLARE_API_TOKEN": "${CLOUDFLARE_API_TOKEN}",
+        "CLOUDFLARE_ACCOUNT_ID": "${CLOUDFLARE_ACCOUNT_ID}"
+      }
+    },
+
+    "railway": {
+      "_description": "Railway - App deployment, databases",
+      "_priority": "MEDIUM",
+      "_docs": "https://docs.railway.app/",
+      "command": "npx",
+      "args": ["-y", "@railway/mcp-server@latest"],
+      "env": {
+        "RAILWAY_API_TOKEN": "${RAILWAY_API_TOKEN}"
+      }
+    },
+
+    "stripe": {
+      "_description": "Stripe - Payment processing, subscriptions",
+      "_priority": "LOW",
+      "_docs": "https://stripe.com/docs/api",
+      "command": "npx",
+      "args": ["-y", "@stripe/mcp-server@latest"],
+      "env": {
+        "STRIPE_SECRET_KEY": "${STRIPE_SECRET_KEY}"
+      }
+    },
+
+    "resend": {
+      "_description": "Resend - Email sending",
+      "_priority": "LOW",
+      "_docs": "https://resend.com/docs/introduction",
+      "command": "npx",
+      "args": ["-y", "@resend/mcp-server@latest"],
+      "env": {
+        "RESEND_API_KEY": "${RESEND_API_KEY}"
+      }
+    },
+
+    "slack": {
+      "_description": "Slack - Team messaging, notifications",
+      "_priority": "LOW",
+      "_docs": "https://api.slack.com/",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-slack"],
+      "env": {
+        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}"
+      }
+    },
+
+    "browserbase": {
+      "_description": "Browserbase - Cloud browser automation",
+      "_priority": "LOW",
+      "_docs": "https://browserbase.com/docs",
+      "command": "npx",
+      "args": ["-y", "@browserbase/mcp-server@latest"],
+      "env": {
+        "BROWSERBASE_API_KEY": "${BROWSERBASE_API_KEY}",
+        "BROWSERBASE_PROJECT_ID": "${BROWSERBASE_PROJECT_ID}"
+      }
+    },
+
+    "firecrawl": {
+      "_description": "Firecrawl - Web scraping, crawling",
+      "_priority": "LOW",
+      "_docs": "https://firecrawl.dev/docs",
+      "command": "npx",
+      "args": ["-y", "@firecrawl/mcp-server@latest"],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+      }
+    },
+
+    "exa": {
+      "_description": "Exa - AI-powered web search",
+      "_priority": "LOW",
+      "_docs": "https://exa.ai/docs",
+      "command": "npx",
+      "args": ["-y", "@exa/mcp-server@latest"],
+      "env": {
+        "EXA_API_KEY": "${EXA_API_KEY}"
+      }
+    }
+  }
+}

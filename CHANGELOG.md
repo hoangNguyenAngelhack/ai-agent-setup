@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-06-02
+
+### Added
+- **Hooks System** — Automated checks before/after tool operations
+  - PreToolUse hooks: `security-scan.sh` (block secrets), `lint-check.sh`
+  - PostToolUse hooks: `auto-format.sh`, `typescript-check.sh`, `console-log-warn.sh`
+  - Lifecycle hooks: `session-summary.sh`, `cost-tracker.sh`
+  - `.claude/hooks/README.md` with documentation
+- **MCP Server Configs** — Pre-configured MCP servers collection
+  - `mcp-servers.json` — Full collection (16 servers)
+  - `mcp-servers.minimal.json` — Minimal set (3 servers)
+  - `.env.example` — Environment variables template
+  - Servers: Supabase, Vercel, Playwright, GitHub, Sentry, and more
+- **Build Resolver Agents** — Specialized agents for fixing build errors
+  - `react-build-resolver.md` — React/Next.js build errors
+  - `react-native-resolver.md` — Metro, iOS, Android build errors
+  - `node-build-resolver.md` — npm, TypeScript, ESM/CJS issues
+  - `prisma-resolver.md` — Migration, schema, query errors
+- **Language-Specific Rules** — Best practices for specific languages
+  - `typescript-patterns.md` — Type safety, generics, utility types
+  - `python-patterns.md` — PEP8, type hints, async patterns
+  - `sql-patterns.md` — Query optimization, N+1 prevention, indexes
+
+### Changed
+- Updated CLAUDE.md with Hooks System and MCP Configs sections
+- Updated README.md with new features documentation
+- Agent count increased from 11 to 15
+- Rule count increased from 14 to 17
+
+---
+
 ## [1.5.1] - 2026-05-26
 
 ### Added

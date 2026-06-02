@@ -92,6 +92,13 @@ All rules in `.claude/rules/` are **mandatory** and must be followed:
 | `testing.md` | Coverage thresholds, test patterns |
 | `git-workflow.md` | Branching strategy, conventional commits |
 
+### Language Patterns
+| Rule | Description |
+|------|-------------|
+| `typescript-patterns.md` | Type safety, generics, utility types |
+| `python-patterns.md` | PEP8, type hints, async patterns |
+| `sql-patterns.md` | Query optimization, N+1, indexes |
+
 ---
 
 ## Available Agents
@@ -120,6 +127,14 @@ Invoke the right agent for each task type:
 | 📋 **Project Manager** | User stories, sprint planning, status reports |
 | 🎨 **UI/UX Designer** | Design system, wireframes, accessibility |
 | ✍️ **Copywriter/SEO** | Page copy, meta tags, SEO optimization |
+
+### Build Resolver Agents
+| Agent | When to Invoke |
+|-------|---------------|
+| ⚛️ **React Build Resolver** | React/Next.js build errors, module issues |
+| 📱 **React Native Resolver** | Metro bundler, iOS/Android build errors |
+| 🟢 **Node Build Resolver** | npm errors, TypeScript, ESM/CJS issues |
+| 🔷 **Prisma Resolver** | Migration errors, schema validation, queries |
 
 ---
 
@@ -164,6 +179,7 @@ Quick references in `.claude/references/`:
 | `accessibility-checklist.md` | WCAG 2.1 AA compliance |
 | `mobile-performance-checklist.md` | React Native performance, 60 FPS |
 | `mobile-release-checklist.md` | App Store / Play Store submission |
+| `external-skills.md` | Third-party AI skills (GSAP, etc.) |
 
 ---
 
@@ -254,6 +270,43 @@ npx @colbymchenry/codegraph init -i
 # ❌ DON'T: git reset --hard HEAD
 # ✅ DO: git stash -u && git reset --hard HEAD
 ```
+
+---
+
+---
+
+## Hooks System
+
+Automated checks that run before/after tool operations:
+
+| Hook | Type | Purpose |
+|------|------|---------|
+| `security-scan` | PreToolUse | Scan for secrets before write |
+| `lint-check` | PreToolUse | Run linter before commit |
+| `auto-format` | PostToolUse | Auto-format after edit |
+| `typescript-check` | PostToolUse | Type-check TS files |
+| `console-log-warn` | PostToolUse | Warn about console.log |
+| `session-summary` | Lifecycle | Summarize session on exit |
+| `cost-tracker` | Lifecycle | Track token usage |
+
+See `.claude/hooks/README.md` for details on creating custom hooks.
+
+---
+
+## MCP Server Configs
+
+Pre-configured MCP servers for common services:
+
+| Server | Purpose | Priority |
+|--------|---------|----------|
+| Supabase | PostgreSQL, auth, storage | HIGH |
+| Vercel | Deploy & preview | HIGH |
+| Playwright | Browser automation | HIGH |
+| GitHub | Enhanced git operations | HIGH |
+| Sentry | Error tracking | MEDIUM |
+| Memory | Persistent context | MEDIUM |
+
+See `.claude/mcp-configs/README.md` for setup instructions.
 
 ---
 

@@ -1,0 +1,29 @@
+{
+  "_comments": {
+    "note": "Minimal MCP server set for most projects",
+    "recommendation": "Start with this, add more as needed"
+  },
+
+  "mcpServers": {
+    "github": {
+      "_description": "GitHub - Enhanced git operations, PRs, issues",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+
+    "memory": {
+      "_description": "Memory - Persistent context across sessions",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+
+    "playwright": {
+      "_description": "Playwright - Browser automation, screenshots",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-playwright@latest"]
+    }
+  }
+}

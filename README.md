@@ -256,13 +256,14 @@ templates/                       # Project templates
 └── mobile-cli/                  # React Native CLI
 ```
 
-### Specialized Agents (11 total)
+### Specialized Agents (15 total)
 
 | Category | Agents |
 |----------|--------|
 | **Development** | Frontend, Backend, Mobile, Systems Architect |
 | **Quality** | Code Reviewer, Test Engineer, Security Auditor, QA |
 | **Product** | Project Manager, UI/UX Designer, Copywriter/SEO |
+| **Build Resolvers** | React, React Native, Node.js, Prisma |
 
 ### Slash Commands (8 total)
 
@@ -277,7 +278,7 @@ templates/                       # Project templates
 | `/debug` | Systematic error diagnosis |
 | `/simplify` | Reduce code complexity |
 
-### Mandatory Rules (14 total)
+### Mandatory Rules (17 total)
 
 | Category | Rules |
 |----------|-------|
@@ -285,7 +286,30 @@ templates/                       # Project templates
 | **Architecture** | tech-stack, system-design, project-structure, api-conventions |
 | **Data** | naming-conventions, database |
 | **Operations** | security, monitoring, testing, git-workflow |
+| **Language Patterns** | typescript-patterns, python-patterns, sql-patterns |
 | **AI Behavior** | honesty (optional) — reduce hallucinations |
+
+### Hooks System
+
+Automated checks that run before/after operations:
+
+| Hook Type | Examples |
+|-----------|----------|
+| **PreToolUse** | security-scan (block secrets), lint-check |
+| **PostToolUse** | auto-format, typescript-check, console-log-warn |
+| **Lifecycle** | session-summary, cost-tracker |
+
+### MCP Server Configs
+
+Pre-configured MCP servers for common services:
+
+| Server | Purpose |
+|--------|---------|
+| **Supabase** | PostgreSQL, auth, storage |
+| **Vercel** | Deploy & preview |
+| **Playwright** | Browser automation |
+| **GitHub** | Enhanced git operations |
+| **Sentry** | Error tracking |
 
 ---
 

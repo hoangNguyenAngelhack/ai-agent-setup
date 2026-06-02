@@ -45,22 +45,53 @@
   "hooks": {
     "PreToolUse": [
       {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/PreToolUse/security-scan.sh"
+          }
+        ]
+      },
+      {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "echo '[PRE] Running: $TOOL_INPUT' >> /tmp/claude-hooks.log"
+            "command": ".claude/hooks/PreToolUse/lint-check.sh"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "if [ $TOOL_EXIT_CODE -ne 0 ]; then echo '[ERROR] Command failed with exit code $TOOL_EXIT_CODE' >> /tmp/claude-hooks.log; fi"
+            "command": ".claude/hooks/PostToolUse/auto-format.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/PostToolUse/typescript-check.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/PostToolUse/console-log-warn.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/Lifecycle/session-summary.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/Lifecycle/cost-tracker.sh"
           }
         ]
       }
