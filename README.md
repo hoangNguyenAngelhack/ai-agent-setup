@@ -22,6 +22,10 @@ npx create-ai-agent-setup my-app
 
 <sub>Works with Express · NestJS · Next.js · Vite · Expo · React Native</sub>
 
+<br />
+
+**English** | **[Tiếng Việt](README.vi.md)**
+
 </div>
 
 <br />
