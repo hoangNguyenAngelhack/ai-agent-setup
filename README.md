@@ -1,55 +1,177 @@
-# AI Agent Project — Production-Grade Configuration
-
 <div align="center">
 
-  <h3>Production-ready AI Agent configuration for Claude Code</h3>
-  <p>Structured workflows, specialized agents, mandatory rules, and best practices</p>
+# 🤖 AI Agent Setup
 
-  [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=flat-square&color=cb3837&logo=npm)](https://www.npmjs.com/package/create-ai-agent-setup)
-  ![Version](https://img.shields.io/badge/version-1.5.1-blue?style=flat-square)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-  [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-Compatible-green?style=flat-square)](https://agentskills.io)
+### Production-Ready Claude Code Configuration in Seconds
+
+<p>
+  <strong>15 Agents</strong> · <strong>17 Rules</strong> · <strong>8 Commands</strong> · <strong>7 Hooks</strong> · <strong>6 Skills</strong>
+</p>
+
+[![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=for-the-badge&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/create-ai-agent-setup)
+[![npm downloads](https://img.shields.io/npm/dm/create-ai-agent-setup?style=for-the-badge&logo=npm&logoColor=white&color=blue)](https://www.npmjs.com/package/create-ai-agent-setup)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![Agent Skills](https://img.shields.io/badge/Agent%20Skills-Compatible-green?style=for-the-badge)](https://agentskills.io)
+[![Node](https://img.shields.io/badge/Node-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
+
+<br />
+
+```bash
+npx create-ai-agent-setup my-app
+```
+
+<sub>Works with Express · NestJS · Next.js · Vite · Expo · React Native</sub>
 
 </div>
 
----
-
-## Table of Contents
-
-- [Quick Start](#quick-start)
-- [Installation Methods](#installation-methods)
-- [Integrations](#integrations)
-  - [CodeGraph](#codegraph-integration)
-  - [Agent Skills](#agent-skills-open-standard)
-- [What's Included](#whats-included)
-- [Development Workflow](#development-workflow)
-- [Tech Stack](#approved-tech-stack)
-- [Related Projects](#related-projects)
+<br />
 
 ---
 
-## Quick Start
+## ✨ Why Use This?
+
+| Without AI Agent Setup | With AI Agent Setup |
+|------------------------|---------------------|
+| ❌ AI makes inconsistent code | ✅ **17 mandatory rules** enforce standards |
+| ❌ No structured workflow | ✅ **8 slash commands** (`/spec` → `/deploy`) |
+| ❌ Generic AI responses | ✅ **15 specialized agents** for each domain |
+| ❌ Manual code review | ✅ **Five-axis review** (correctness, security, perf...) |
+| ❌ No quality gates | ✅ **7 hooks** auto-check before/after actions |
+| ❌ Setup from scratch | ✅ **One command** to production-ready config |
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-# Create a new project (interactive)
+# Interactive setup (recommended)
 npx create-ai-agent-setup my-app
+```
 
-# With specific options
-npx create-ai-agent-setup my-api -t backend --db postgresql            # Express (default)
-npx create-ai-agent-setup my-api -t backend -f nestjs --db postgresql  # NestJS
-npx create-ai-agent-setup my-landing -t frontend -f nextjs             # Next.js + shadcn (default)
-npx create-ai-agent-setup my-admin -t frontend -f vite -u antd         # Vite + Ant Design
-npx create-ai-agent-setup my-dashboard -t frontend -f nextjs -u chakra # Next.js + Chakra UI
-npx create-ai-agent-setup my-mobile -t mobile -f expo
+### One-Liner Examples
+
+```bash
+# Backend
+npx create-ai-agent-setup my-api -t backend                    # Express
+npx create-ai-agent-setup my-api -t backend -f nestjs          # NestJS
+
+# Frontend
+npx create-ai-agent-setup my-site -t frontend -f nextjs        # Next.js + shadcn
+npx create-ai-agent-setup my-admin -t frontend -f vite -u antd # Vite + Ant Design
+
+# Mobile
+npx create-ai-agent-setup my-app -t mobile -f expo             # Expo
 
 # With integrations
-npx create-ai-agent-setup my-app --codegraph    # AI code exploration
-npx create-ai-agent-setup my-app --honesty      # Reduce AI hallucinations
+npx create-ai-agent-setup my-app --codegraph                   # 57% fewer tokens
+npx create-ai-agent-setup my-app --honesty                     # Reduce hallucinations
 ```
+
+<details>
+<summary>📋 <strong>All CLI Options</strong></summary>
+
+```
+Options:
+  -t, --type <type>      Project type: backend, frontend, fullstack, mobile
+  -f, --framework <fw>   Framework: express, nestjs, nextjs, vite, expo, cli
+  -u, --ui <library>     UI library: shadcn, antd, chakra, semantic
+  -T, --tier <tier>      Rule tier: starter, standard, strict
+  -d, --db <database>    Database: postgresql, mysql, sqlite, none
+  -c, --codegraph        Setup CodeGraph MCP server
+  -H, --honesty          Include honesty rule (reduce hallucinations)
+  -y, --yes              Skip prompts, use defaults
+```
+
+</details>
 
 ---
 
-## Installation Methods
+## 📦 What's Included
+
+<table>
+<tr>
+<td width="50%">
+
+### 🎯 Slash Commands (8)
+
+| Command | Purpose |
+|---------|---------|
+| `/spec` | Create PRD with scope |
+| `/plan` | Break into vertical slices |
+| `/build` | TDD implementation |
+| `/test` | RED-GREEN-REFACTOR |
+| `/review` | Five-axis code review |
+| `/deploy` | Build & ship |
+| `/debug` | Root cause analysis |
+| `/simplify` | Reduce complexity |
+
+</td>
+<td width="50%">
+
+### 🤖 Specialized Agents (15)
+
+| Category | Agents |
+|----------|--------|
+| **Dev** | Frontend, Backend, Mobile, Architect |
+| **Quality** | Reviewer, Tester, Security, QA |
+| **Product** | PM, Designer, Copywriter |
+| **Resolvers** | React, RN, Node, Prisma |
+
+</td>
+</tr>
+<tr>
+<td>
+
+### 📏 Mandatory Rules (17)
+
+- **Code**: clean-code, code-style, error-handling
+- **Arch**: tech-stack, system-design, api-conventions
+- **Data**: naming-conventions, database
+- **Ops**: security, monitoring, testing, git-workflow
+- **Lang**: typescript, python, sql patterns
+
+</td>
+<td>
+
+### 🪝 Hooks System (7)
+
+| Type | Hooks |
+|------|-------|
+| **Pre** | security-scan, lint-check |
+| **Post** | auto-format, ts-check, console-warn |
+| **Life** | session-summary, cost-tracker |
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🔄 Development Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   📝 /spec  →  📋 /plan  →  🔨 /build  →  🧪 /test  →  👀 /review  │
+│                                                                     │
+│    Define      Plan       Build       Test       Review    → Ship   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Five-Axis Code Review
+
+| Axis | Question |
+|------|----------|
+| ✅ **Correctness** | Does it work as intended? |
+| 📖 **Readability** | Can others understand it? |
+| 🏗️ **Architecture** | Follows patterns and principles? |
+| 🔒 **Security** | Input validated? Auth checked? |
+| ⚡ **Performance** | N+1 queries? Proper pagination? |
+
+---
+
+## 🛠️ Installation Methods
 
 ### Method 1: CLI (Recommended)
 
@@ -57,23 +179,7 @@ npx create-ai-agent-setup my-app --honesty      # Reduce AI hallucinations
 npx create-ai-agent-setup my-app
 ```
 
-The CLI will guide you through:
-1. Project name
-2. Project type (backend / frontend / fullstack / mobile)
-3. Framework:
-   - **backend**: express (default), nestjs
-   - **frontend**: nextjs, vite
-   - **mobile**: expo, cli
-4. UI library (frontend only):
-   - **shadcn** — Radix UI + Tailwind (recommended)
-   - **antd** — Ant Design + Tailwind (enterprise)
-   - **chakra** — Chakra UI (simple, accessible)
-   - **semantic** — Semantic UI React
-5. Rule tier (Starter / Standard / Strict)
-6. Database (for backend/fullstack only)
-7. Author info
-8. CodeGraph setup (optional)
-9. Honesty rule (optional) — reduce AI hallucinations
+Interactive prompts guide you through project type, framework, UI library, and integrations.
 
 ### Method 2: Copy to Existing Project
 
@@ -89,219 +195,31 @@ npx degit hoangNguyenAngelhack/ai-agent-setup/.agents .agents
 
 ```bash
 npx degit hoangNguyenAngelhack/ai-agent-setup my-project
-cd my-project
-./scripts/init.sh
+cd my-project && ./scripts/init.sh
 ```
-
-### CLI Options
-
-```
-Options:
-  -t, --type <type>      Project type: backend, frontend, fullstack, mobile
-  -f, --framework <fw>   Framework: express, nestjs, nextjs, vite, expo, cli
-  -u, --ui <library>     UI library (frontend): shadcn, antd, chakra, semantic
-  -T, --tier <tier>      Rule tier: starter, standard, strict
-  -d, --db <database>    Database: postgresql, mysql, sqlite, none
-  -c, --codegraph        Setup CodeGraph MCP server
-  -H, --honesty          Include honesty rule (reduce AI hallucinations)
-  -y, --yes              Skip prompts, use defaults
-  -h, --help             Show help
-  -v, --version          Show version
-```
-
-### UI Library Support
-
-When creating frontend projects, you can choose from 4 UI libraries:
-
-| Library | Description | Best For |
-|---------|-------------|----------|
-| **shadcn/ui** | Radix UI + Tailwind CSS | Modern apps, full control |
-| **Ant Design** | Enterprise UI + Tailwind | Admin panels, enterprise |
-| **Chakra UI** | Simple, accessible | Quick prototypes, accessibility |
-| **Semantic UI** | Classic UI framework | Traditional web apps |
-
-**Note:** Tailwind CSS comes bundled with all UI libraries. For Ant Design, the CLI automatically configures `important: true` and `preflight: false` in tailwind.config to prevent style conflicts.
 
 ---
 
-## Integrations
+## 🔌 Integrations
 
-### CodeGraph Integration
+### CodeGraph — 57% Fewer Tokens
 
-[CodeGraph](https://github.com/colbymchenry/codegraph) builds a semantic knowledge graph of your codebase for faster AI code exploration.
-
-#### Benefits
+[CodeGraph](https://github.com/colbymchenry/codegraph) builds a semantic knowledge graph for faster AI exploration.
 
 | Metric | Improvement |
 |--------|-------------|
-| Tokens processed | **57% fewer** |
+| Tokens | **57% fewer** |
 | Cost | **35% cheaper** |
-| Response time | **46% faster** |
+| Speed | **46% faster** |
 | Tool calls | **71% fewer** |
 
-#### Setup
-
 ```bash
-# During project creation
 npx create-ai-agent-setup my-app --codegraph
-
-# Or add to existing project
-npx @colbymchenry/codegraph init -i
 ```
-
-#### Available MCP Tools
-
-| Tool | Purpose |
-|------|---------|
-| `codegraph_search` | Symbol lookup across codebase |
-| `codegraph_context` | Multi-symbol context in one call |
-| `codegraph_trace` | Call path tracing with bodies |
-| `codegraph_impact` | Change impact analysis |
-| `codegraph_callers` | Find all callers of a symbol |
-| `codegraph_callees` | Find all callees of a symbol |
-
-#### Supported Agents
-
-Claude Code, Cursor, Codex CLI, opencode, Hermes Agent
-
----
-
-### Agent Skills (Open Standard)
-
-This project follows the [Agent Skills](https://agentskills.io) open standard, compatible with **30+ AI coding agents**.
-
-#### Available Skills (6 total)
-
-| Skill | Description | Impact Levels |
-|-------|-------------|---------------|
-| [`nodejs-backend`](.agents/skills/nodejs-backend/SKILL.md) | Express, Prisma, Redis, BullMQ | CRITICAL / HIGH / MEDIUM |
-| [`nestjs-backend`](.agents/skills/nestjs-backend/SKILL.md) | NestJS, TypeORM, Guards, DI | CRITICAL / HIGH / MEDIUM |
-| [`react-frontend`](.agents/skills/react-frontend/SKILL.md) | Next.js/Vite, TailwindCSS, Zustand | CRITICAL / HIGH / MEDIUM |
-| [`react-native-mobile`](.agents/skills/react-native-mobile/SKILL.md) | Expo/RN CLI, NativeWind | CRITICAL / HIGH / MEDIUM |
-| [`code-review`](.agents/skills/code-review/SKILL.md) | Five-axis review framework | CRITICAL / MAJOR / MINOR |
-| [`tdd`](.agents/skills/tdd/SKILL.md) | RED-GREEN-REFACTOR workflow | CRITICAL / HIGH / MEDIUM |
-
-**Impact Levels:** CRITICAL (must follow) → HIGH (should follow) → MEDIUM (recommended)
-
-#### Install Skills
-
-**Option 1: CLI (Recommended)**
-```bash
-npx create-ai-agent-setup my-app  # Skills included automatically
-```
-
-**Option 2: Copy to Existing Project**
-```bash
-npx degit hoangNguyenAngelhack/ai-agent-setup/.agents/skills .agents/skills
-```
-
-**Option 3: Clone Full Repo**
-```bash
-git clone https://github.com/hoangNguyenAngelhack/ai-agent-setup.git
-cp -r ai-agent-setup/.agents/skills your-project/.agents/skills
-```
-
-**Compile Skills to AGENTS.md:**
-```bash
-node scripts/compile-skills.js  # Generates AGENTS.md with all skills
-```
-
-#### Compatible Agents
-
-Skills follow the [agentskills.io](https://agentskills.io) open standard and work with:
-
-- Claude Code
-- Cursor
-- VS Code Copilot
-- Windsurf
-- Cline
-- Aider
-- OpenHands
-- And 20+ more AI coding agents
-
----
-
-## What's Included
-
-### Project Structure
-
-```
-.claude/                         # Claude Code configuration
-├── CLAUDE.md                    # Main AI instructions
-├── commands/                    # 8 slash commands
-├── agents/                      # 11 specialized agents
-├── rules/                       # 14 mandatory rules
-├── skills/                      # Advanced skills
-└── references/                  # 6 checklists
-
-.agents/                         # Agent Skills (open standard)
-└── skills/
-    ├── nodejs-backend/
-    ├── nestjs-backend/          # NEW
-    ├── react-frontend/
-    ├── react-native-mobile/
-    ├── code-review/
-    └── tdd/
-
-scripts/
-└── compile-skills.js            # Generate AGENTS.md from skills
-
-templates/                       # Project templates
-├── backend/                     # Express + Prisma + Redis
-├── backend-nestjs/              # NestJS + Prisma + JWT + Swagger
-├── frontend-nextjs/             # Next.js 14 (App Router)
-├── frontend-vite/               # React + Vite SPA
-├── fullstack/                   # Next.js + tRPC + Prisma
-├── mobile-expo/                 # Expo + Expo Router
-└── mobile-cli/                  # React Native CLI
-```
-
-### Specialized Agents (15 total)
-
-| Category | Agents |
-|----------|--------|
-| **Development** | Frontend, Backend, Mobile, Systems Architect |
-| **Quality** | Code Reviewer, Test Engineer, Security Auditor, QA |
-| **Product** | Project Manager, UI/UX Designer, Copywriter/SEO |
-| **Build Resolvers** | React, React Native, Node.js, Prisma |
-
-### Slash Commands (8 total)
-
-| Command | Purpose |
-|---------|---------|
-| `/spec` | Create PRD with objectives and scope |
-| `/plan` | Decompose into vertical slices |
-| `/build` | Implement incrementally using TDD |
-| `/test` | Write tests with RED-GREEN-REFACTOR |
-| `/review` | Five-axis code review |
-| `/deploy` | Build, test, and deploy |
-| `/debug` | Systematic error diagnosis |
-| `/simplify` | Reduce code complexity |
-
-### Mandatory Rules (17 total)
-
-| Category | Rules |
-|----------|-------|
-| **Code Quality** | clean-code, code-style, error-handling |
-| **Architecture** | tech-stack, system-design, project-structure, api-conventions |
-| **Data** | naming-conventions, database |
-| **Operations** | security, monitoring, testing, git-workflow |
-| **Language Patterns** | typescript-patterns, python-patterns, sql-patterns |
-| **AI Behavior** | honesty (optional) — reduce hallucinations |
-
-### Hooks System
-
-Automated checks that run before/after operations:
-
-| Hook Type | Examples |
-|-----------|----------|
-| **PreToolUse** | security-scan (block secrets), lint-check |
-| **PostToolUse** | auto-format, typescript-check, console-log-warn |
-| **Lifecycle** | session-summary, cost-tracker |
 
 ### MCP Server Configs
 
-Pre-configured MCP servers for common services:
+Pre-configured servers for common services:
 
 | Server | Purpose |
 |--------|---------|
@@ -313,136 +231,63 @@ Pre-configured MCP servers for common services:
 
 ---
 
-## Development Workflow
+## 🎨 UI Library Support
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                                                                  │
-│   /spec  →  /plan  →  /build  →  /test  →  /review  →  /deploy  │
-│                                                                  │
-│   Define    Plan     Build     Verify    Review      Ship        │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
-```
+| Library | Description | Best For |
+|---------|-------------|----------|
+| **shadcn/ui** | Radix + Tailwind | Modern apps, full control |
+| **Ant Design** | Enterprise UI | Admin panels |
+| **Chakra UI** | Simple, accessible | Quick prototypes |
+| **Semantic UI** | Classic framework | Traditional apps |
 
-### Key Concepts
-
-**Five-Axis Code Review:**
-1. Correctness — Does it work?
-2. Readability — Can others understand it?
-3. Architecture — Follows patterns?
-4. Security — Input validation? Auth?
-5. Performance — N+1? Pagination?
-
-**Test-Driven Development:**
-```
-RED → GREEN → REFACTOR
-```
-
-**Vertical Slicing:**
-```
-✅ Task 1: User can create task (DB + API + UI)
-❌ Task 1: Create all DB models (layer-by-layer)
+```bash
+npx create-ai-agent-setup my-app -t frontend -f nextjs -u chakra
 ```
 
 ---
 
-## Backend Templates
+## 📱 Agent Skills (Open Standard)
 
-### Express (Default)
-Lightweight and flexible, best for simple APIs and microservices.
+Compatible with **30+ AI coding agents** via [agentskills.io](https://agentskills.io):
 
-```bash
-npx create-ai-agent-setup my-api -t backend
-```
+| Skill | Stack |
+|-------|-------|
+| `nodejs-backend` | Express, Prisma, Redis, BullMQ |
+| `nestjs-backend` | NestJS, TypeORM, Guards, DI |
+| `react-frontend` | Next.js/Vite, Tailwind, Zustand |
+| `react-native-mobile` | Expo/RN CLI, NativeWind |
+| `code-review` | Five-axis review framework |
+| `tdd` | RED-GREEN-REFACTOR workflow |
 
-**Includes:** Express, Prisma, Redis, Pino logger, JWT auth middleware
-
-### NestJS (Enterprise)
-Full-featured framework with dependency injection, decorators, and enterprise patterns.
-
-```bash
-npx create-ai-agent-setup my-api -t backend -f nestjs
-```
-
-**Includes:**
-- **Auth**: JWT + Passport, refresh tokens
-- **RBAC**: `@Roles()` decorator, RolesGuard
-- **Database**: Prisma ORM with User model
-- **Cache**: Redis via `@nestjs/cache-manager`
-- **Docs**: Swagger/OpenAPI at `/api-docs`
-- **Patterns**: Repository pattern, global exception filter
-- **Decorators**: `@CurrentUser()`, `@Roles()`
+**Works with:** Claude Code, Cursor, VS Code Copilot, Windsurf, Cline, Aider, OpenHands...
 
 ---
 
-## Approved Tech Stack
+## 💻 Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend (SEO)** | Next.js 14 (App Router) |
-| **Frontend (Admin)** | React + Vite |
-| **Styling** | Tailwind CSS + shadcn/ui |
-| **State** | Zustand + TanStack Query |
-| **Backend (Express)** | Express.js + TypeScript |
-| **Backend (NestJS)** | NestJS + Prisma + Swagger |
-| **ORM** | Prisma |
-| **Database** | PostgreSQL |
-| **Cache** | Redis (ioredis) |
-| **Queue** | BullMQ / RabbitMQ |
-| **Auth** | NextAuth.js / JWT + bcrypt |
-| **Testing** | Vitest + Playwright |
-| **Mobile** | React Native / Expo |
-| **Mobile UI** | NativeWind (Tailwind CSS) |
+| **Frontend** | Next.js 14 · React + Vite · Tailwind + shadcn |
+| **Backend** | Express · NestJS · Prisma · Redis |
+| **Mobile** | Expo · React Native · NativeWind |
+| **Database** | PostgreSQL · Redis |
+| **Testing** | Vitest · Playwright |
+| **Auth** | NextAuth.js · JWT + bcrypt |
 
 ---
 
-## Related Projects
-
-### External AI Skills
-
-Skills you can add to enhance your AI agent:
+## 🔗 Related Projects
 
 | Project | Description |
 |---------|-------------|
-| [shadcn-ui/ui](https://github.com/shadcn-ui/ui) | Official shadcn/ui skills — CLI, components, theming |
-| [supabase/supabase](https://github.com/supabase/supabase) | Official Supabase skills — Studio, queries, testing |
-| [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) | Official Vercel skills — deploy, React best practices |
-| [greensock/gsap-skills](https://github.com/greensock/gsap-skills) | Official GSAP skills — animations, ScrollTrigger |
-
-```bash
-# Install external skills
-npx skills add https://github.com/shadcn-ui/ui
-npx skills add https://github.com/supabase/supabase
-npx skills add https://github.com/vercel-labs/agent-skills
-npx skills add https://github.com/greensock/gsap-skills
-```
-
-> See [.claude/references/external-skills.md](.claude/references/external-skills.md) for full list.
-
-### Official Agent Skills
-
-| Project | Description |
-|---------|-------------|
-| [dotnet/skills](https://github.com/dotnet/skills) | Official .NET Agent Skills from Microsoft |
-| [laravel/boost](https://github.com/laravel/boost) | Laravel Agent Skills |
-
-### Tools & Integrations
-
-| Tool | Description |
-|------|-------------|
 | [CodeGraph](https://github.com/colbymchenry/codegraph) | Semantic code knowledge graph |
-| [Semble](https://github.com/MinishLab/semble) | Code search for AI agents (Python) |
-| [vercel-labs/skills](https://github.com/vercel-labs/skills) | Skills CLI — install skills to any agent |
-
-### Learn More
-
-- [Agent Skills Standard](https://agentskills.io) — Open format specification
-- [Claude Code Documentation](https://docs.anthropic.com/claude-code) — Official docs
+| [Agent Skills](https://agentskills.io) | Open standard for AI agents |
+| [shadcn/ui](https://github.com/shadcn-ui/ui) | Official shadcn/ui skills |
+| [Supabase](https://github.com/supabase/supabase) | Official Supabase skills |
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 1. Follow the workflow (`/spec` → `/plan` → `/build`)
 2. Ensure all tests pass
@@ -451,12 +296,10 @@ npx skills add https://github.com/greensock/gsap-skills
 
 ---
 
-## Author
-
-**Hoang Nguyen** — [hoang.nguyen@angelhack.com](mailto:hoang.nguyen@angelhack.com)
-
----
-
 <div align="center">
-  <sub>Made with ❤️ by Hoang Nguyen</sub>
+
+**Made with ❤️ by [Hoang Nguyen](mailto:hoang.nguyen@angelhack.com)**
+
+<sub>⭐ Star this repo if you find it helpful!</sub>
+
 </div>
