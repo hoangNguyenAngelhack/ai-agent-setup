@@ -164,6 +164,7 @@ Specialized skills for complex operations:
 | `incremental-implementation` | Vertical slice development |
 | `deploy` | Full deployment pipeline |
 | `security-review` | Security audit checklist |
+| `data-transform` | **CRITICAL** — Data conversion, validation, cleaning with zero data loss |
 
 ---
 
