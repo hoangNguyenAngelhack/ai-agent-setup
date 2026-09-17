@@ -5,7 +5,7 @@
 ### Cấu hình Claude Code Production-Ready trong Vài Giây
 
 <p>
-  <strong>15 Agent</strong> · <strong>17 Rule</strong> · <strong>8 Command</strong> · <strong>7 Hook</strong> · <strong>6 Skill</strong>
+  <strong>15 Agent</strong> · <strong>17 Rule</strong> · <strong>8 Command</strong> · <strong>7 Hook</strong> · <strong>7 Skill</strong>
 </p>
 
 [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=for-the-badge&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/create-ai-agent-setup)
@@ -262,6 +262,7 @@ Tương thích với **30+ AI coding agent** qua [agentskills.io](https://agents
 | `react-native-mobile` | Expo/RN CLI, NativeWind |
 | `code-review` | Framework review 5 trục |
 | `tdd` | Quy trình RED-GREEN-REFACTOR |
+| `data-transform` | Chuyển đổi CSV, JSON, Excel, XML không mất dữ liệu |
 
 **Hoạt động với:** Claude Code, Cursor, VS Code Copilot, Windsurf, Cline, Aider, OpenHands...
 

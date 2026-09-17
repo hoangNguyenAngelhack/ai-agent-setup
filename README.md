@@ -5,7 +5,7 @@
 ### Production-Ready Claude Code Configuration in Seconds
 
 <p>
-  <strong>15 Agents</strong> · <strong>17 Rules</strong> · <strong>8 Commands</strong> · <strong>7 Hooks</strong> · <strong>6 Skills</strong>
+  <strong>15 Agents</strong> · <strong>17 Rules</strong> · <strong>8 Commands</strong> · <strong>7 Hooks</strong> · <strong>7 Skills</strong>
 </p>
 
 [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=for-the-badge&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/create-ai-agent-setup)
@@ -262,6 +262,7 @@ Compatible with **30+ AI coding agents** via [agentskills.io](https://agentskill
 | `react-native-mobile` | Expo/RN CLI, NativeWind |
 | `code-review` | Five-axis review framework |
 | `tdd` | RED-GREEN-REFACTOR workflow |
+| `data-transform` | CSV, JSON, Excel, XML conversion with zero data loss |
 
 **Works with:** Claude Code, Cursor, VS Code Copilot, Windsurf, Cline, Aider, OpenHands...
 
