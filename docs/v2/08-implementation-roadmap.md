@@ -161,11 +161,11 @@ and Codex both support plugins; this is not a marketplace, see OQ-06).
 
 ## 9. Implementation status
 
-Branch `feature/v2-foundation`, pushed with PR #1 (not merged). CI is green on Linux, macOS and Windows with Node 20/22/24. Updated 2026-11-24 (sixth batch).
+Branch `feature/v2-foundation`, merged into `main` (PR #1, PR #2). CI is green on Linux, macOS and Windows with Node 20/22/24. Updated 2026-11-24 (sixth batch).
 
 | Item | Status | Evidence |
 |---|---|---|
-| W2.0-01 Test foundation + CI + V1 characterization | Done (CI not yet run remotely) | `vitest.config.mts`, `.github/workflows/ci.yml`; `tests/characterization/` (9 snapshot cases CH-1–CH-9, plus CH-10 and defect assertions for F-02, F-04, F-05, F-06, F-10) |
+| W2.0-01 Test foundation + CI + V1 characterization | Done (CI green on GitHub since PR #1) | `vitest.config.mts`, `.github/workflows/ci.yml`; `tests/characterization/` (9 snapshot cases CH-1–CH-9, plus CH-10 and defect assertions for F-02, F-04, F-05, F-06, F-10) |
 | W2.0-02 Core skeleton, contracts, dependency rule check | Done: contracts, dependency and host-format rule checks; Core modules present: project-detection, policy, context | `src/core/`, `tests/architecture/dependency-rules.test.ts` |
 | W2.0-03 Versioned schemas | Done | `catalog/schemas/*.schema.json` (envelope, 8 kinds, gate-result, manifest); `tests/contract/` |
 | W2.0-04 Registry loader + `catalog validate` | Done | `src/registry/`, `src/cli/catalog-validate.ts`, `npm run catalog:validate`; `tests/unit/` |
@@ -185,7 +185,7 @@ Branch `feature/v2-foundation`, pushed with PR #1 (not merged). CI is green on L
 
 ### 9.1 V2.1 status
 
-Branch `feature/v2.1-orchestration`, not yet pushed. Updated 2026-11-24.
+Branches `feature/v2.1-orchestration` and `feature/v2.1-intelligence`, merged into `main` (PR #3, PR #4). Updated 2026-11-24.
 
 | Item | Status | Evidence |
 |---|---|---|
@@ -209,7 +209,11 @@ positives, assessment accuracy 1.0 — consistency evidence, not real-world accu
 
 ### 9.2 V2.2 status
 
-Branch `feature/v2.2-quality-gates`, not yet pushed. Updated 2026-11-24.
+Branch `feature/v2.2-quality-gates` (`9bbd4cb`, `9146618`, `900473c`), pushed 2026-11-24. GitHub CI
+run 45360246078 on `900473c`: **9/9 jobs green** (Linux, macOS, Windows × Node 20/22/24), including
+lint and coverage. The first run (45359428923, on `9146618`) failed the three Windows jobs: `cmd.exe`
+exits with 1, not 9009, when a gate's program is missing, so the gate said FAIL instead of
+NOT_VERIFIED; fixed in `900473c`. Updated 2026-11-24.
 
 | Item | Status | Evidence |
 |---|---|---|
