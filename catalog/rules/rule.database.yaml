@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.database
+name: Database rules
+description: ORM usage, connection pooling, transactions, migrations and naming.
+version: 1.6.1
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.database.md
+scope:
+  paths:
+    - "**/prisma/**"
+    - "**/migrations/**"
+    - "**/repositories/**"
+    - "**/db/**"
+enforcement: advisory

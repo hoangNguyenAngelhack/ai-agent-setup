@@ -1,0 +1,43 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: docs-devex
+name: Documentation & Developer Experience
+description: Technical, API and architecture docs, onboarding, release notes and developer workflow.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+  - fs.write:**/*.md
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 11
+purpose: Improve engineering knowledge, documentation and developer productivity.
+roles:
+  - Technical Writer
+  - Documentation Engineer
+  - Developer Experience Engineer
+  - API Documentation Specialist
+  - Developer Advocate
+  - Knowledge Manager
+  - Release Documentation Specialist
+capabilities:
+  - docs-devex.technical-documentation
+  - docs-devex.api-documentation
+  - docs-devex.architecture-documentation
+  - docs-devex.developer-onboarding
+  - docs-devex.knowledge-management
+  - docs-devex.changelog-generation
+  - docs-devex.release-notes
+  - docs-devex.documentation-validation
+  - docs-devex.developer-workflow-optimization
+depthLevel: L0

@@ -1,0 +1,29 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Tool
+id: tool.codegraph
+name: CodeGraph
+description: Third-party semantic code graph and MCP server; claimed benefits are unverified in this
+  repository (F-28).
+version: 1.6.1
+category: integration-automation
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - cmd:codegraph
+  - net.fetch
+inputSchema: null
+outputSchema: null
+validation: null
+type: command
+command: npx @colbymchenry/codegraph init -i
+platforms:
+  - darwin
+  - linux
+  - win32
+network: true

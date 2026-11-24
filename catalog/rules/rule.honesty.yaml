@@ -1,0 +1,24 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.honesty
+name: Honesty and epistemic humility
+description: State uncertainty, never fabricate sources or numbers, and separate facts from inference.
+version: 1.6.1
+category: docs-devex
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.honesty.md
+scope:
+  always: true
+enforcement: advisory

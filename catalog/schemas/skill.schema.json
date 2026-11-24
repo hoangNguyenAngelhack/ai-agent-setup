@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:catalog:v1:skill",
+  "title": "Skill",
+  "description": "Reusable knowledge, instructions and procedures, loaded on demand. See docs/v2/05 §6.3.",
+  "type": "object",
+  "allOf": [{ "$ref": "urn:ai-agent-setup:catalog:v1:envelope" }],
+  "required": ["body", "triggers", "resources", "disableImplicit"],
+  "properties": {
+    "kind": { "const": "Skill" },
+    "id": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/skillId" },
+    "body": { "type": ["string", "null"], "minLength": 1 },
+    "triggers": { "type": "string", "minLength": 10 },
+    "resources": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "disableImplicit": { "type": "boolean" }
+  },
+  "unevaluatedProperties": false
+}

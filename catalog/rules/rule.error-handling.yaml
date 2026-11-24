@@ -1,0 +1,24 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.error-handling
+name: Error handling
+description: Typed operational errors, a central handler and no silently swallowed errors.
+version: 1.6.1
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.error-handling.md
+scope:
+  always: true
+enforcement: advisory

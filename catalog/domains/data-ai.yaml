@@ -1,0 +1,48 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: data-ai
+name: Data Engineering & AI/ML
+description: Data platforms, pipelines, quality, analytics, ML and LLM applications.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 6
+purpose: Build data platforms, analytics and intelligent applications.
+roles:
+  - Data Engineer
+  - Analytics Engineer
+  - Data Architect
+  - Database Administrator
+  - Data Scientist
+  - ML Engineer
+  - AI Engineer
+  - LLM Engineer
+  - MLOps Engineer
+capabilities:
+  - data-ai.data-modeling
+  - data-ai.etl-elt
+  - data-ai.data-pipelines
+  - data-ai.data-quality
+  - data-ai.data-governance
+  - data-ai.analytics
+  - data-ai.machine-learning
+  - data-ai.model-evaluation
+  - data-ai.llm-integration
+  - data-ai.rag
+  - data-ai.vector-search
+  - data-ai.mlops
+depthLevel: L0

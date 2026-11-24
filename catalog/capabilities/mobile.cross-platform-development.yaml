@@ -1,0 +1,31 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: mobile.cross-platform-development
+name: Cross-platform development
+description: Build features with cross-platform frameworks such as React Native or Flutter.
+version: 0.1.0
+category: mobile
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: mobile
+skills:
+  - skill.react-native-mobile
+  - skill.build-resolve-react-native
+rules: []
+defaultAgents:
+  - agent.implementer
+riskLevel: medium
+costHint: medium

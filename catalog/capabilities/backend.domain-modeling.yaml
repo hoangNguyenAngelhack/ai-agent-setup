@@ -1,0 +1,31 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: backend.domain-modeling
+name: Domain modeling
+description: Model entities, aggregates and invariants of the business domain.
+version: 0.1.0
+category: backend
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: backend
+skills:
+  - skill.nodejs-backend
+  - skill.nestjs-backend
+rules: []
+defaultAgents:
+  - agent.implementer
+riskLevel: medium
+costHint: medium

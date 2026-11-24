@@ -1,0 +1,44 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: architecture-leadership
+name: Architecture & Technical Leadership
+description: Architecture design and evaluation, decisions, reviews, standards and debt.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 10
+purpose: Guide technical decisions and maintain architectural integrity.
+roles:
+  - Solution Architect
+  - Software Architect
+  - Enterprise Architect
+  - Technical Lead
+  - Engineering Manager
+  - Staff Engineer
+  - Principal Engineer
+  - Code Reviewer
+capabilities:
+  - architecture-leadership.architecture-design
+  - architecture-leadership.architecture-evaluation
+  - architecture-leadership.adr-management
+  - architecture-leadership.technical-decision-making
+  - architecture-leadership.code-review
+  - architecture-leadership.technical-debt-management
+  - architecture-leadership.system-design
+  - architecture-leadership.engineering-standards
+  - architecture-leadership.mentoring
+  - architecture-leadership.cross-domain-coordination
+depthLevel: L0

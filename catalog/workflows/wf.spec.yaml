@@ -1,0 +1,31 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Workflow
+id: wf.spec
+name: Spec
+description: Write a PRD with objectives, scope and boundaries before any code.
+version: 1.6.1
+category: product-business
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+inputSchema: null
+outputSchema: null
+validation: null
+entry: spec
+domains:
+  - product-business
+steps:
+  - id: write-spec
+    capability: product-business.product-documentation
+    agent: agent.analyst
+    gates: []
+    approval: required
+body: wf.spec.md

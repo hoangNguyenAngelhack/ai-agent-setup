@@ -1,0 +1,41 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: integration-automation
+name: Integration & Automation
+description: API and MCP integrations, workflow automation and internal tools.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 12
+purpose: Connect systems, tools and engineering workflows.
+roles:
+  - Integration Engineer
+  - Workflow Engineer
+  - Automation Engineer
+  - MCP Specialist
+  - Internal Tools Engineer
+  - Platform Integration Engineer
+capabilities:
+  - integration-automation.api-integrations
+  - integration-automation.mcp-integrations
+  - integration-automation.workflow-automation
+  - integration-automation.event-driven-integrations
+  - integration-automation.tool-orchestration
+  - integration-automation.internal-developer-tools
+  - integration-automation.external-service-integration
+  - integration-automation.automation-reliability
+depthLevel: L0

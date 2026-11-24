@@ -1,0 +1,27 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: security-compliance.security-incident-analysis
+name: Security incident analysis
+description: Analyse security incidents and determine root cause and impact.
+version: 0.1.0
+category: security-compliance
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+domain: security-compliance
+skills: []
+rules: []
+defaultAgents:
+  - agent.security-auditor
+riskLevel: high
+costHint: medium

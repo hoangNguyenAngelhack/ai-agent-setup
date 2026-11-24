@@ -1,0 +1,32 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: backend.api-design
+name: API design
+description: Design resource-oriented APIs with versioning, errors and pagination.
+version: 0.1.0
+category: backend
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: backend
+skills:
+  - skill.nodejs-backend
+  - skill.nestjs-backend
+rules:
+  - rule.api-conventions
+defaultAgents:
+  - agent.implementer
+riskLevel: medium
+costHint: medium

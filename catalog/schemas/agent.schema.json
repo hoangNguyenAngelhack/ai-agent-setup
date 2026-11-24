@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:catalog:v1:agent",
+  "title": "Agent",
+  "description": "A reusable execution role specialized through skills (ADR-004). See docs/v2/05 §6.3, §6.6.",
+  "type": "object",
+  "allOf": [{ "$ref": "urn:ai-agent-setup:catalog:v1:envelope" }],
+  "required": ["purpose", "capabilities", "skills", "tools", "modelHint", "body", "aliasOf"],
+  "properties": {
+    "kind": { "const": "Agent" },
+    "id": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/agentId" },
+    "category": { "const": "agent" },
+    "purpose": { "type": "string", "minLength": 10 },
+    "capabilities": { "type": "array", "items": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/entityId" }, "uniqueItems": true },
+    "skills": { "type": "array", "items": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/entityId" }, "uniqueItems": true },
+    "tools": {
+      "type": "object",
+      "required": ["allow", "deny"],
+      "additionalProperties": false,
+      "properties": {
+        "allow": { "type": "array", "items": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/permissionIntent" }, "uniqueItems": true },
+        "deny": { "type": "array", "items": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/permissionIntent" }, "uniqueItems": true }
+      }
+    },
+    "modelHint": { "enum": ["fast", "balanced", "deep"] },
+    "body": { "type": ["string", "null"], "minLength": 1 },
+    "aliasOf": { "oneOf": [{ "type": "null" }, { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/agentId" }] }
+  },
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,26 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Workflow
+id: wf.build
+name: Build
+description: Implement tasks incrementally using TDD and vertical slices.
+version: 1.6.1
+category: workflow
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+entry: build
+domains: []
+steps: []
+body: wf.build.md

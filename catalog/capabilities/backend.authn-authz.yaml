@@ -1,0 +1,31 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: backend.authn-authz
+name: Authentication and authorization
+description: Implement identity, sessions, tokens and access control checks.
+version: 0.1.0
+category: backend
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: backend
+skills:
+  - skill.nodejs-backend
+  - skill.nestjs-backend
+rules: []
+defaultAgents:
+  - agent.implementer
+riskLevel: high
+costHint: medium

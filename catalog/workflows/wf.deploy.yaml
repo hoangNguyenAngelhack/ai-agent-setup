@@ -1,0 +1,39 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Workflow
+id: wf.deploy
+name: Deploy
+description: Build, test and deploy to a target environment with approval.
+version: 1.6.1
+category: devops-sre
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+entry: deploy
+domains:
+  - devops-sre
+steps:
+  - id: verify
+    capability: devops-sre.ci-cd
+    agent: agent.operator
+    gates:
+      - gate.build
+      - gate.unit-tests
+    approval: none
+  - id: release
+    capability: devops-sre.deployment-strategies
+    agent: agent.operator
+    gates: []
+    approval: required
+body: wf.deploy.md

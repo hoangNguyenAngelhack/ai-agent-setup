@@ -1,0 +1,24 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.code-style
+name: Code style
+description: Formatting, naming and import ordering conventions for JavaScript and TypeScript.
+version: 1.6.1
+category: architecture-leadership
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.code-style.md
+scope:
+  always: true
+enforcement: advisory

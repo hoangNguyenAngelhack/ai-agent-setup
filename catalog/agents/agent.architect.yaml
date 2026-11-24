@@ -1,0 +1,44 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Agent
+id: agent.architect
+name: Architect
+description: Designs and evaluates architecture, records decisions and coordinates across domains.
+version: 0.1.0
+category: agent
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions: &a1
+  - fs.read
+  - fs.write:docs/**
+inputSchema: null
+outputSchema: null
+validation: null
+purpose: Designs and evaluates architecture, records decisions and coordinates across domains.
+capabilities:
+  - architecture-leadership.adr-management
+  - architecture-leadership.architecture-design
+  - architecture-leadership.architecture-evaluation
+  - architecture-leadership.cross-domain-coordination
+  - architecture-leadership.engineering-standards
+  - architecture-leadership.mentoring
+  - architecture-leadership.system-design
+  - architecture-leadership.technical-decision-making
+  - backend.distributed-systems
+  - backend.service-architecture
+  - data-ai.data-governance
+  - data-ai.data-modeling
+  - frontend.application-architecture
+  - mobile.mobile-architecture
+skills: []
+tools:
+  allow: *a1
+  deny: []
+modelHint: deep
+body: null
+aliasOf: null

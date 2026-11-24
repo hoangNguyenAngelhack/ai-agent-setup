@@ -1,0 +1,33 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Workflow
+id: wf.test
+name: Test
+description: Write tests with TDD patterns; tests are proof of correctness.
+version: 1.6.1
+category: quality
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+entry: test
+domains:
+  - quality
+steps:
+  - id: write-tests
+    capability: quality.test-automation
+    agent: agent.tester
+    gates:
+      - gate.unit-tests
+    approval: none
+body: wf.test.md

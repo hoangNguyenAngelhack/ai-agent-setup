@@ -1,0 +1,29 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: docs-devex.developer-onboarding
+name: Developer onboarding
+description: Create onboarding paths that get engineers productive quickly.
+version: 0.1.0
+category: docs-devex
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+  - fs.write:**/*.md
+inputSchema: null
+outputSchema: null
+validation: null
+domain: docs-devex
+skills: []
+rules: []
+defaultAgents:
+  - agent.writer
+riskLevel: low
+costHint: low

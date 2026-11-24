@@ -1,0 +1,27 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.sql-patterns
+name: SQL patterns
+description: Indexes, N+1 prevention, pagination, transactions and safe query patterns.
+version: 1.6.1
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.sql-patterns.md
+scope:
+  paths:
+    - "**/*.sql"
+    - "**/prisma/**"
+    - "**/migrations/**"
+enforcement: advisory

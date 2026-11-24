@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.build-resolve-react
+name: React build resolution
+description: "Use when a React or Next.js build or dev server fails: module resolution, TypeScript,
+  bundler, hydration or SSR errors."
+version: 1.6.1
+category: frontend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.build-resolve-react.md
+triggers: "Use when a React or Next.js build or dev server fails: module resolution, TypeScript,
+  bundler, hydration or SSR errors."
+resources: []
+disableImplicit: false

@@ -1,0 +1,34 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Agent
+id: agent.code-reviewer
+name: Code Reviewer
+description: V1 compatibility alias of agent.reviewer. Senior Staff Engineer perspective for
+  five-axis code review.
+version: 1.6.1
+category: agent
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions: &a1
+  - fs.read
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+purpose: Senior Staff Engineer perspective for five-axis code review
+capabilities: []
+skills:
+  - skill.code-review
+tools:
+  allow: *a1
+  deny:
+    - fs.write
+    - vcs.push
+modelHint: deep
+body: agent.code-reviewer.md
+aliasOf: agent.reviewer

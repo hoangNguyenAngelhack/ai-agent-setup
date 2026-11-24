@@ -1,0 +1,25 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.security-review
+name: security-review
+description: Skill to perform a thorough security audit of the codebase
+version: 1.6.1
+category: security-compliance
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.security-review.md
+triggers: Skill to perform a thorough security audit of the codebase
+resources:
+  - ../references/security-checklist.md
+disableImplicit: false

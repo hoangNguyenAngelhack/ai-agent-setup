@@ -1,0 +1,43 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: mobile
+name: Mobile Engineering
+description: Native and cross-platform apps, offline, notifications, performance and release.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 5
+purpose: Build and maintain mobile applications.
+roles:
+  - iOS Engineer
+  - Android Engineer
+  - React Native Engineer
+  - Flutter Engineer
+  - Mobile Architect
+  - Mobile QA Engineer
+capabilities:
+  - mobile.native-development
+  - mobile.cross-platform-development
+  - mobile.mobile-architecture
+  - mobile.navigation-state
+  - mobile.offline-first
+  - mobile.push-notifications
+  - mobile.deep-linking
+  - mobile.mobile-performance
+  - mobile.mobile-security
+  - mobile.app-distribution
+depthLevel: L0

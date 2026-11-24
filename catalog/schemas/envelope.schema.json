@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:catalog:v1:envelope",
+  "title": "Catalog entry envelope (catalog.ai-agent-setup/v1)",
+  "description": "Fields shared by every catalog entity. See docs/v2/05 §6.2.",
+  "type": "object",
+  "required": [
+    "apiVersion", "kind", "id", "name", "description", "version", "category", "status",
+    "dependencies", "requiredContext", "supportedAdapters", "requiredPermissions",
+    "inputSchema", "outputSchema", "validation"
+  ],
+  "properties": {
+    "apiVersion": { "const": "catalog.ai-agent-setup/v1" },
+    "kind": { "enum": ["Domain", "Capability", "Agent", "Skill", "Rule", "Workflow", "Tool", "Profile"] },
+    "id": { "$ref": "#/$defs/entityId" },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 10 },
+    "version": { "$ref": "#/$defs/semver" },
+    "category": { "$ref": "#/$defs/slug" },
+    "status": { "enum": ["draft", "experimental", "stable", "deprecated", "removed"] },
+    "dependencies": { "type": "array", "items": { "$ref": "#/$defs/entityId" }, "uniqueItems": true },
+    "requiredContext": {
+      "type": "object",
+      "required": ["projectSignals", "files"],
+      "additionalProperties": false,
+      "properties": {
+        "projectSignals": { "type": "array", "items": { "$ref": "#/$defs/slug" }, "uniqueItems": true },
+        "files": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+      }
+    },
+    "supportedAdapters": {
+      "type": "object",
+      "required": ["claude-code", "codex"],
+      "additionalProperties": false,
+      "properties": {
+        "claude-code": { "$ref": "#/$defs/adapterSupport" },
+        "codex": { "$ref": "#/$defs/adapterSupport" }
+      }
+    },
+    "unsupportedReasons": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claude-code": { "type": "string", "minLength": 1 },
+        "codex": { "type": "string", "minLength": 1 }
+      }
+    },
+    "requiredPermissions": { "type": "array", "items": { "$ref": "#/$defs/permissionIntent" }, "uniqueItems": true },
+    "inputSchema": { "type": ["object", "null"] },
+    "outputSchema": { "type": ["object", "null"] },
+    "validation": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["gates"],
+          "additionalProperties": false,
+          "properties": {
+            "gates": { "type": "array", "items": { "$ref": "#/$defs/gateId" }, "uniqueItems": true },
+            "reviewChecklist": { "type": ["string", "null"] }
+          }
+        }
+      ]
+    },
+    "owners": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "deprecation": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["since", "replacedBy", "removalIn"],
+          "additionalProperties": false,
+          "properties": {
+            "since": { "$ref": "#/$defs/semver" },
+            "replacedBy": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/entityId" }] },
+            "removalIn": { "$ref": "#/$defs/semver" }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "entityId": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z0-9]+(-[a-z0-9]+)*)*$" },
+    "domainId": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "capabilityId": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*\\.[a-z0-9]+(-[a-z0-9]+)*$" },
+    "agentId": { "type": "string", "pattern": "^agent\\.[a-z0-9]+(-[a-z0-9]+)*$" },
+    "skillId": { "type": "string", "pattern": "^skill\\.[a-z0-9]+(-[a-z0-9]+)*$" },
+    "ruleId": { "type": "string", "pattern": "^rule\\.[a-z0-9]+(-[a-z0-9]+)*$" },
+    "workflowId": { "type": "string", "pattern": "^wf\\.[a-z0-9]+(-[a-z0-9]+)*$" },
+    "toolId": { "type": "string", "pattern": "^tool\\.[a-z0-9]+(-[a-z0-9]+)*$" },
+    "profileId": { "type": "string", "pattern": "^profile\\.[a-z0-9]+(-[a-z0-9]+)*$" },
+    "gateId": { "type": "string", "pattern": "^gate\\.[a-z0-9]+(-[a-z0-9]+)*$" },
+    "semver": { "type": "string", "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-[0-9A-Za-z.-]+)?$" },
+    "adapterSupport": { "enum": ["native", "emulated", "unsupported"] },
+    "permissionIntent": {
+      "type": "string",
+      "pattern": "^(fs\\.read|fs\\.write|cmd|cmd\\.pattern|net\\.fetch|mcp|vcs\\.commit|vcs\\.push|pkg\\.install|pkg\\.publish)(:.+)?$"
+    },
+    "idList": { "type": "array", "uniqueItems": true }
+  }
+}

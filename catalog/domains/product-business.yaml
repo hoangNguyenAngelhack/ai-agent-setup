@@ -1,0 +1,44 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: product-business
+name: Product & Business
+description: Product discovery, requirements, backlog and release planning.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 1
+purpose: Translate business objectives into clear, actionable product requirements.
+roles:
+  - Product Manager
+  - Product Owner
+  - Business Analyst
+  - Business Architect
+  - Domain Expert
+  - Project Manager
+  - Requirement Analyst
+  - Product Operations
+capabilities:
+  - product-business.product-discovery
+  - product-business.requirement-analysis
+  - product-business.user-story-creation
+  - product-business.acceptance-criteria
+  - product-business.backlog-management
+  - product-business.scope-definition
+  - product-business.business-process-analysis
+  - product-business.stakeholder-analysis
+  - product-business.product-documentation
+  - product-business.release-planning
+depthLevel: L0

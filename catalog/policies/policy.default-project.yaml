@@ -1,0 +1,19 @@
+# Default project policy (rank 3, docs/v2/05 §7.4). Projects may copy and tighten it in
+# .ai-agent-setup/project.yaml; it can never loosen policy.safety.
+schema: policy/v1
+id: policy.default-project
+layer: project
+description: Default project-level restrictions applied by the starter, standard and strict profiles.
+rules:
+  - id: project.remote-script-execution
+    description: Piping a downloaded script into a shell needs explicit approval.
+    effect: ask
+    match:
+      commandRegex:
+        - "\\b(curl|wget)\\b[^|]*\\|\\s*(sudo\\s+)?(ba|z|da)?sh\\b"
+  - id: project.privileged-containers
+    description: Running privileged containers needs explicit approval.
+    effect: ask
+    match:
+      commands:
+        - "docker run * --privileged *"

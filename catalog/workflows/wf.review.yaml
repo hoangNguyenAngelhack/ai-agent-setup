@@ -1,0 +1,30 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Workflow
+id: wf.review
+name: Review
+description: Five-axis review of files or a pull request.
+version: 1.6.1
+category: architecture-leadership
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+entry: review
+domains:
+  - architecture-leadership
+steps:
+  - id: review
+    capability: architecture-leadership.code-review
+    agent: agent.reviewer
+    gates: []
+    approval: none
+body: wf.review.md

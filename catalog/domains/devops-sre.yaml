@@ -1,0 +1,46 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: devops-sre
+name: DevOps, Cloud & SRE
+description: Delivery pipelines, infrastructure, observability, incidents and cost.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 7
+purpose: Deliver reliable infrastructure and software delivery systems.
+roles:
+  - DevOps Engineer
+  - Platform Engineer
+  - Cloud Architect
+  - Site Reliability Engineer
+  - Infrastructure Engineer
+  - Release Engineer
+  - FinOps Engineer
+capabilities:
+  - devops-sre.ci-cd
+  - devops-sre.infrastructure-as-code
+  - devops-sre.containerization
+  - devops-sre.kubernetes
+  - devops-sre.cloud-infrastructure
+  - devops-sre.deployment-strategies
+  - devops-sre.monitoring
+  - devops-sre.logging-tracing
+  - devops-sre.incident-response
+  - devops-sre.disaster-recovery
+  - devops-sre.reliability-engineering
+  - devops-sre.cost-optimization
+depthLevel: L0

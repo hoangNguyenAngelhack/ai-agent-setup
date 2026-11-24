@@ -1,0 +1,30 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.nodejs-backend
+name: nodejs-backend
+description: Build production-ready Node.js backend APIs with Express, Prisma, Redis, and BullMQ.
+  Use when creating REST APIs, database models, services, middleware, background jobs, or
+  server-side logic.
+version: 1.6.1
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.nodejs-backend.md
+triggers: Build production-ready Node.js backend APIs with Express, Prisma, Redis, and BullMQ. Use
+  when creating REST APIs, database models, services, middleware, background jobs, or server-side
+  logic.
+resources: []
+disableImplicit: false

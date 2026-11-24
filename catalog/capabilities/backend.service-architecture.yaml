@@ -1,0 +1,33 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: backend.service-architecture
+name: Service architecture
+description: Decide service boundaries, layering and communication styles.
+version: 0.1.0
+category: backend
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: backend
+skills:
+  - skill.nodejs-backend
+  - skill.nestjs-backend
+  - skill.build-resolve-node
+rules:
+  - rule.project-structure
+defaultAgents:
+  - agent.architect
+riskLevel: medium
+costHint: high

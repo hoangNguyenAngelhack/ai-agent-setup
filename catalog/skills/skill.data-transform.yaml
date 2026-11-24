@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.data-transform
+name: Data Transformation & Analysis
+description: Master skill for parsing, validating, converting, and analyzing data between formats
+  with zero data loss and production-grade safety
+version: 1.6.1
+category: data-ai
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.data-transform.md
+triggers: Master skill for parsing, validating, converting, and analyzing data between formats with
+  zero data loss and production-grade safety
+resources: []
+disableImplicit: false

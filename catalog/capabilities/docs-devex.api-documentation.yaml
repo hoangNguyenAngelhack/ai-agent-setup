@@ -1,0 +1,29 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: docs-devex.api-documentation
+name: API documentation
+description: Document APIs with schemas, examples and error codes.
+version: 0.1.0
+category: docs-devex
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+  - fs.write:**/*.md
+inputSchema: null
+outputSchema: null
+validation: null
+domain: docs-devex
+skills: []
+rules: []
+defaultAgents:
+  - agent.writer
+riskLevel: low
+costHint: low

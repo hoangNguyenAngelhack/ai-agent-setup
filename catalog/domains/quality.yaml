@@ -1,0 +1,46 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: quality
+name: Quality Engineering
+description: Test strategy, automation, performance testing and quality reporting.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 8
+purpose: Ensure software quality through systematic verification.
+roles:
+  - QA Engineer
+  - Manual Tester
+  - Automation Tester
+  - SDET
+  - API Tester
+  - Performance Tester
+  - Test Architect
+  - Accessibility Tester
+capabilities:
+  - quality.test-strategy
+  - quality.test-planning
+  - quality.functional-testing
+  - quality.integration-testing
+  - quality.e2e-testing
+  - quality.api-testing
+  - quality.performance-testing
+  - quality.regression-testing
+  - quality.test-automation
+  - quality.test-data-management
+  - quality.quality-reporting
+depthLevel: L0

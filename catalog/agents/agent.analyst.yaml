@@ -1,0 +1,40 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Agent
+id: agent.analyst
+name: Analyst
+description: Turns goals into requirements, stories, acceptance criteria and plans.
+version: 0.1.0
+category: agent
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions: &a1
+  - fs.read
+  - fs.write:docs/**
+inputSchema: null
+outputSchema: null
+validation: null
+purpose: Turns goals into requirements, stories, acceptance criteria and plans.
+capabilities:
+  - product-business.acceptance-criteria
+  - product-business.backlog-management
+  - product-business.business-process-analysis
+  - product-business.product-discovery
+  - product-business.product-documentation
+  - product-business.release-planning
+  - product-business.requirement-analysis
+  - product-business.scope-definition
+  - product-business.stakeholder-analysis
+  - product-business.user-story-creation
+skills: []
+tools:
+  allow: *a1
+  deny: []
+modelHint: deep
+body: null
+aliasOf: null

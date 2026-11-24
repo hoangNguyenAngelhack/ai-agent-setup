@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.testing
+name: Testing standards
+description: Testing pyramid, coverage thresholds, test layout and naming.
+version: 1.6.1
+category: quality
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.testing.md
+scope:
+  paths:
+    - "**/*.test.*"
+    - "**/*.spec.*"
+    - "**/tests/**"
+    - "**/__tests__/**"
+enforcement: advisory

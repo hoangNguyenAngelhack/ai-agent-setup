@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.build-resolve-react-native
+name: React Native build resolution
+description: "Use when a React Native build fails: Metro bundler, iOS (Xcode, CocoaPods) or Android
+  (Gradle) errors."
+version: 1.6.1
+category: mobile
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.build-resolve-react-native.md
+triggers: "Use when a React Native build fails: Metro bundler, iOS (Xcode, CocoaPods) or Android
+  (Gradle) errors."
+resources: []
+disableImplicit: false

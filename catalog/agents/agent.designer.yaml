@@ -1,0 +1,41 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Agent
+id: agent.designer
+name: Designer
+description: Designs flows, information architecture, UI specifications and reviews accessibility.
+version: 0.1.0
+category: agent
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions: &a1
+  - fs.read
+  - fs.write:docs/**
+  - fs.write:design/**
+inputSchema: null
+outputSchema: null
+validation: null
+purpose: Designs flows, information architecture, UI specifications and reviews accessibility.
+capabilities:
+  - design-ux.accessibility-evaluation
+  - design-ux.design-system-definition
+  - design-ux.design-token-management
+  - design-ux.information-architecture
+  - design-ux.interaction-design
+  - design-ux.ui-design
+  - design-ux.usability-review
+  - design-ux.user-journey-mapping
+  - design-ux.ux-research
+  - design-ux.wireframing
+skills: []
+tools:
+  allow: *a1
+  deny: []
+modelHint: balanced
+body: null
+aliasOf: null

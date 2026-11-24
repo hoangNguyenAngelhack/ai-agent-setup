@@ -1,0 +1,32 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.react-frontend
+name: react-frontend
+description: Build React applications with Next.js or Vite, TailwindCSS, shadcn/ui, Zustand, and
+  TanStack Query. Use when creating web UI components, pages, forms, state management, or data
+  fetching.
+version: 1.6.1
+category: frontend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.react-frontend.md
+triggers: Build React applications with Next.js or Vite, TailwindCSS, shadcn/ui, Zustand, and
+  TanStack Query. Use when creating web UI components, pages, forms, state management, or data
+  fetching.
+resources:
+  - ../references/performance-checklist.md
+  - ../references/accessibility-checklist.md
+disableImplicit: false

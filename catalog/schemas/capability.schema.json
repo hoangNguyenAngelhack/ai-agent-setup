@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:catalog:v1:capability",
+  "title": "Capability",
+  "description": "A specific, verifiable ability within a domain. See docs/v2/05 §6.3.",
+  "type": "object",
+  "allOf": [{ "$ref": "urn:ai-agent-setup:catalog:v1:envelope" }],
+  "required": ["domain", "skills", "rules", "defaultAgents", "riskLevel", "costHint"],
+  "properties": {
+    "kind": { "const": "Capability" },
+    "id": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/capabilityId" },
+    "domain": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/domainId" },
+    "skills": { "type": "array", "items": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/entityId" }, "uniqueItems": true },
+    "rules": { "type": "array", "items": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/entityId" }, "uniqueItems": true },
+    "defaultAgents": { "type": "array", "items": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/entityId" }, "uniqueItems": true },
+    "riskLevel": { "enum": ["low", "medium", "high"] },
+    "costHint": { "enum": ["low", "medium", "high"] }
+  },
+  "unevaluatedProperties": false
+}

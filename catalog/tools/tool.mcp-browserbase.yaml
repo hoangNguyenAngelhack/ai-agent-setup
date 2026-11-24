@@ -1,0 +1,34 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Tool
+id: tool.mcp-browserbase
+name: browserbase MCP server
+description: Browserbase - Cloud browser automation
+version: 1.6.1
+category: integration-automation
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - mcp:browserbase
+inputSchema: null
+outputSchema: null
+validation: null
+type: mcp
+mcp:
+  command: npx
+  args:
+    - -y
+    - "@browserbase/mcp-server@latest"
+  env:
+    BROWSERBASE_API_KEY: ${BROWSERBASE_API_KEY}
+    BROWSERBASE_PROJECT_ID: ${BROWSERBASE_PROJECT_ID}
+platforms:
+  - darwin
+  - linux
+  - win32
+network: true

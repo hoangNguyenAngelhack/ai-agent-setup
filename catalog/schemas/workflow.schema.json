@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:catalog:v1:workflow",
+  "title": "Workflow",
+  "description": "A sequence of steps, decisions and gates that may span domains; `body` holds the human-readable procedure. See docs/v2/05 \u00a76.3.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "urn:ai-agent-setup:catalog:v1:envelope"
+    }
+  ],
+  "required": [
+    "entry",
+    "domains",
+    "steps",
+    "body"
+  ],
+  "properties": {
+    "kind": {
+      "const": "Workflow"
+    },
+    "id": {
+      "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/workflowId"
+    },
+    "entry": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/slug"
+        }
+      ]
+    },
+    "domains": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/entityId"
+      },
+      "uniqueItems": true
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "capability",
+          "agent",
+          "gates",
+          "approval"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/slug"
+          },
+          "capability": {
+            "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/entityId"
+          },
+          "agent": {
+            "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/entityId"
+          },
+          "gates": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/gateId"
+            },
+            "uniqueItems": true
+          },
+          "approval": {
+            "enum": [
+              "none",
+              "optional",
+              "required"
+            ]
+          }
+        }
+      }
+    },
+    "body": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    }
+  },
+  "unevaluatedProperties": false
+}

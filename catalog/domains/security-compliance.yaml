@@ -1,0 +1,43 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: security-compliance
+name: Security & Compliance
+description: Threat modelling, secure coding, vulnerability and privacy assessment, compliance.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 9
+purpose: Ensure security, privacy and compliance throughout the software lifecycle.
+roles:
+  - Application Security Engineer
+  - Security Architect
+  - DevSecOps Engineer
+  - Penetration Tester
+  - Privacy Engineer
+  - Compliance Specialist
+  - Threat Modeling Specialist
+capabilities:
+  - security-compliance.threat-modeling
+  - security-compliance.secure-coding
+  - security-compliance.vulnerability-assessment
+  - security-compliance.dependency-security
+  - security-compliance.authentication-security
+  - security-compliance.authorization-review
+  - security-compliance.secrets-management
+  - security-compliance.privacy-assessment
+  - security-compliance.compliance-mapping
+  - security-compliance.security-testing
+  - security-compliance.security-incident-analysis
+depthLevel: L0

@@ -1,0 +1,46 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: backend
+name: Backend Engineering
+description: APIs, domain models, data, auth, messaging and service reliability.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 4
+purpose: Build reliable application services and business systems.
+roles:
+  - Backend Engineer
+  - Java Engineer
+  - Node.js Engineer
+  - Python Engineer
+  - Go Engineer
+  - .NET Engineer
+  - API Engineer
+  - Database Engineer
+  - Distributed Systems Engineer
+capabilities:
+  - backend.api-design
+  - backend.domain-modeling
+  - backend.service-architecture
+  - backend.authn-authz
+  - backend.database-design
+  - backend.caching
+  - backend.messaging
+  - backend.transactions
+  - backend.distributed-systems
+  - backend.reliability-scalability
+depthLevel: L0
