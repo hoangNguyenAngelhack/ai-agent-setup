@@ -27,6 +27,11 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   propose domains, agents, skills, gates and an estimated cost, with an explanation record.
   Manual selections only narrow the plan; conflicts are reported. Routing is measured on a
   140-task development set with `npm run eval:routing`.
+- `impact` (V2.1 preview): Project Intelligence and Impact Analysis. Changed files (given, uncommitted
+  or since a git ref) are mapped to modules, areas, capabilities, risk, related tests and CODEOWNERS
+  owners. `plan --files`, `--changed` and `--since` use the result: risk follows touched areas,
+  path-scoped rules load only for matching files, and steps are ordered by execution phase with
+  dependencies.
 - Test suite (unit, contract, golden, installer, end-to-end, V1 characterization) and CI on Linux,
   macOS and Windows with Node 20, 22 and 24.
 

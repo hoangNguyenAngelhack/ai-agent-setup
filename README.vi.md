@@ -58,6 +58,7 @@ node bin/cli.js rollback ../my-project      # hoàn tác lần cài gần nhất
 | `catalog validate [thư mục]` | Kiểm tra catalog (schema, tham chiếu, policy, ngân sách context) |
 | `plan "<task>"` *(bản xem trước V2.1)* | Đề xuất kế hoạch: domain, agent, skill, gate và chi phí ước lượng, kèm giải thích; `--mode`, `--domain`, `--agent`, `--exclude-agent`, `--allow-tools`, `--budget`, `--approve-at`, `--json` |
 | `explain <plan-id>` | Xem lại kế hoạch đã lưu và phần giải thích |
+| `impact [file...]` *(bản xem trước V2.1)* | File thay đổi chạm vào đâu: module, vùng code, rủi ro, test liên quan, chủ sở hữu theo CODEOWNERS; không truyền file thì đọc thay đổi chưa commit trong git, `--since <ref>` để so với một ref. `plan --files`, `--changed`, `--since` dùng cùng phân tích này |
 
 Tuỳ chọn của `create` giữ nguyên V1: `-t` (`backend`, `frontend`, `fullstack`, `mobile`), `-f`
 (backend: `express`, `nestjs` · frontend: `nextjs`, `vite` · mobile: `expo`, `cli`), `-u` (chỉ

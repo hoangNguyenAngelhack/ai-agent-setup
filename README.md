@@ -58,6 +58,7 @@ node bin/cli.js rollback ../my-project      # undo the last install
 | `catalog validate [dir]` | Validate a catalog (schemas, references, policies, context budget) |
 | `plan "<task>"` *(V2.1 preview)* | Propose a plan: domains, agents, skills, gates and estimated cost, with an explanation; `--mode`, `--domain`, `--agent`, `--exclude-agent`, `--allow-tools`, `--budget`, `--approve-at`, `--json` |
 | `explain <plan-id>` | Show a saved plan with its explanation |
+| `impact [files...]` *(V2.1 preview)* | What changed files touch: modules, areas, risk, related tests, CODEOWNERS owners; without files it reads uncommitted git changes, `--since <ref>` diffs against a ref. `plan --files`, `--changed` and `--since` use the same analysis |
 
 ### Create options (same as V1)
 
