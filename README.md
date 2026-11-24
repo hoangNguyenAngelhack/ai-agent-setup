@@ -133,8 +133,7 @@ is on the roadmap.
   only after you approve them with `/hooks`.
 - **V1 projects** keep their existing `.claude/settings.json` allow rules, including `Bash(rm *)`;
   `setup` warns about them but does not delete your configuration.
-- **Node.js:** CI tests Node 20, 22 and 24. `package.json` still declares `>=18`, which is untested
-  (open question OQ-07).
+- **Node.js:** 20 or later (`engines.node >=20`), the versions CI tests (20, 22 and 24).
 - `--db mysql` / `sqlite` switch the Prisma provider; migrating each template's schema on those
   databases has not been verified.
 - **Runtime state protection** blocks agent writes to `.ai-agent-setup/` through the hosts' tools, and

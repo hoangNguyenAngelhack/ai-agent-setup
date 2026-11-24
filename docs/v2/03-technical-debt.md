@@ -49,7 +49,7 @@ migration itself introduces.
 | TD-18 | Dead code (`createVanillaProject`) and fallback generators that duplicate templates | Low | F-12 | Maintenance load. | Removed during the V2.0 CLI rewrite. |
 | TD-19 | Opinionated global tech stack (`tech-stack.md`) presented as mandatory | Medium | F-18 | Conflicts with the universal audience ([10 CF-03](10-architecture-decisions.md#3-conflicts-between-the-specification-and-the-repository)). | Becomes an optional "stack profile" rule set selected by project detection. |
 | TD-20 | Code is CommonJS JavaScript, while the shipped rules mandate TypeScript | Low | F-01 | Inconsistency; no types for a growing core. | Proposed ADR-011 ([10](10-architecture-decisions.md)); not approved. |
-| TD-21 | `engines.node >=18`, although Node 18 is past upstream end of life | Low | F-01 | Supporting an unmaintained runtime. Node release dates should be re-checked at implementation time. | Open question OQ-07 ([10](10-architecture-decisions.md#5-open-questions)). |
+| TD-21 | `engines.node >=18`, although Node 18 is past upstream end of life | Low | F-01 | Supporting an unmaintained runtime. Node release dates should be re-checked at implementation time. | **Resolved 2026-11-25:** `engines.node >=20`, the lowest version CI tests (OQ-07, [10](10-architecture-decisions.md#5-open-questions)). |
 
 ## 3. Migration risks
 

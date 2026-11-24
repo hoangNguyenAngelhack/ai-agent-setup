@@ -446,7 +446,7 @@ None of these reopens an approved decision. Each one has a proposed resolution.
 | OQ-04 | Is the 9-agent canonical set ([05 §6.6](05-architecture-specification.md#66-canonical-agent-set-proposed)) right, for example whether to split `implementer` by platform? | Routing, migration aliases | Maintainer + review |
 | OQ-05 | Who authors new content for D02, D06, D07, D11 and D12 to reach L2, and what review standard applies? | Depth targets ([08 §6](08-implementation-roadmap.md#6-domain-depth-by-phase)) | Maintainer |
 | OQ-06 | Should V2 also be distributed as a Claude Code or Codex plugin (host packaging, not a marketplace)? Is this in or out of scope for V2? | Distribution | Maintainer |
-| OQ-07 | Minimum Node.js version (V1 says ≥ 18, which is past upstream end of life; check current LTS dates at implementation) | CI matrix, users | Maintainer |
+| OQ-07 | ~~Minimum Node.js version (V1 says ≥ 18, which is past upstream end of life; check current LTS dates at implementation)~~ **Resolved 2026-11-25 by the maintainer: Node ≥ 20**, the lowest version CI tests; `engines.node` is `>=20.0.0` and `release:check` keeps the two equal. | CI matrix, users | Maintainer |
 | OQ-08 | Support window for 1.x after V2.0 GA, and whether the V1.x patch track ([08 §2](08-implementation-roadmap.md#2-v1x-maintenance-track-proposed)) is approved | Users on 1.x | Maintainer |
 | OQ-09 | Organization policy file location and format (path flag, environment variable, or managed host settings) | Enterprise | Maintainer |
 | OQ-11 | ~~Should sensitive keywords always add a review step?~~ **Resolved 2026-11-24 by ADR-014 (accepted): no, review follows actual impact.** | — | Product Owner |
