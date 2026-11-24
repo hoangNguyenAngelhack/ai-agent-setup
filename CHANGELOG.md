@@ -11,6 +11,12 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
 
 ### Added
+- Regression detection on the evaluation set (W2.2-06): `benchmarks/eval/baseline.json` records every
+  case's checks and metrics; `npm run eval:regressions` reports REGRESSED (a passing check now fails,
+  or a metric got worse; sensitive-impact regressions are a veto), STALE (the set changed) or PASS,
+  and runs in CI; `npm run eval:baseline` records the baseline again. Seeded faults in the classifier
+  and router are detected on exactly the cases they break. Benchmark-run regression rate waits for
+  W2.2-02 and W2.2-03.
 - Token usage per accepted outcome (W2.2-04): `run deliver` reads the token usage each host prints
   in its own stream (Claude Code: per message, each message id counted once; Codex: per turn) and
   keeps it as a `host-usage` file signed with the transcript; `report` adds tokens per host and per

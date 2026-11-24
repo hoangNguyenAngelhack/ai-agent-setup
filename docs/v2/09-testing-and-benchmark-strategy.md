@@ -140,6 +140,12 @@ At every toolkit minor release:
 Labels are created by two reviewers. Disagreements are resolved and recorded. The set is versioned in
 `benchmarks/eval/` and is never used for tuning without a held-out split.
 
+**Regression detection (W2.2-06, implemented for the routing and sensitive-impact sets).** Every case
+check and metric is compared with a baseline committed in `benchmarks/eval/baseline.json`: a check
+that passed and now fails, or a worse metric, is REGRESSED; a changed set is STALE (unchanged cases
+compared, metrics not); regressions of the sensitive-impact set are a veto. The benchmark suite of §5
+will use the same comparison once it exists (W2.2-02, W2.2-03).
+
 ## 5. Benchmark methodology (V2.2)
 
 ### 5.1 Arms
