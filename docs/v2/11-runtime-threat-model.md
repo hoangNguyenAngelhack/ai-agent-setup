@@ -3,8 +3,8 @@
 | Field | Value |
 |---|---|
 | Scope | `.ai-agent-setup/` run artifacts, plan approvals, events, gate evidence, the policy hook |
-| Decisions | [ADR-016](10-architecture-decisions.md#adr-016-local-integrity-of-run-artifacts), accepted by the Product Owner on 2026-11-24 |
-| Status | Implemented. **PARTIAL:** not a security boundary against code running under the same OS account (§5) |
+| Decisions | [ADR-016](10-architecture-decisions.md#adr-016-local-integrity-of-run-artifacts), accepted by the Product Owner on 2026-11-24; [ADR-017](10-architecture-decisions.md#adr-017-runtime-isolation-w22-09), proposed |
+| Status | ADR-016 implemented. **PARTIAL:** not a security boundary against code running under the same OS account (§5). Runtime Isolation (ADR-017, proposed, §6) adds a kernel sandbox on macOS with `--isolation restricted` |
 | Date | 2026-11-24 |
 
 ## 1. Assets
@@ -71,8 +71,8 @@ trusted more than before) or VIOLATED. Any violation keeps the run from SUCCEEDE
 
 ## 5. Residual risks (why this is PARTIAL)
 
-1. **Same OS account.** Code the agent runs under the user's account can read the key file and
-   write anything; the policy hook only sees host tool calls and command text. Signatures then stop
+1. **Same OS account.** Without `--isolation restricted` (macOS, §6), code the agent runs under the
+   user's account can read the key file and write anything; the policy hook only sees host tool calls and command text. Signatures then stop
    only tampering that does not also read the key. Closing this needs an OS-level boundary that is
    not available locally without user action: a separate OS user for the agent, a sandbox that
    hides the key directory (for example a Codex sandbox or a container), or a key in an OS keychain
@@ -95,16 +95,42 @@ trusted more than before) or VIOLATED. Any violation keeps the run from SUCCEEDE
 | A host that gives the agent a real terminal lets it type an approval | Assumption 3 broken | Verification with the real CLIs; Runtime Isolation for the approval channel |
 | The agent edits gate commands in project files it may change (package.json scripts) | Gate commands are project code; no-op commands are NOT_VERIFIED, but a script that lies is not detected | Review of gate commands; out of scope for ADR-016 |
 
-## 6. Upgrading to a real boundary (Runtime Isolation, W2.2-09)
+## 6. Runtime Isolation (W2.2-09, ADR-017)
 
-Residual risk 1 closes only when the agent cannot reach the key directory or the toolkit's state with
-its own code. Conditions for each option:
+### 6.1 Four boundaries
+
+| Boundary | Stops | Does not stop |
+|---|---|---|
+| **Integrity** (ADR-016) | Changes to run artifacts by anything that does not hold the key | Code that reads the key under the same account |
+| **Runtime isolation** (`--isolation restricted`, macOS) | The agent's processes reading the key, credentials, other projects and the home directory; writing outside the workspace or into `.ai-agent-setup/`; running dropped programs from temporary areas; signalling or inspecting the user's other processes; network (deny-all); Apple Events, `open`, clipboard | Anything §6.3 lists |
+| **Host trust boundary** | The agent producing approvals, verdicts (RUN_COMPLETED, gate results) or signatures: only the toolkit outside the sandbox signs, and it accepts step reports only, through the inbox | A host that gives the agent the user's real terminal (approval typed by the agent: ADR-016 assumption 3) |
+| **OS trust boundary** | Everything between different OS users | Not in use: profile `isolated` needs an OS user created by an administrator, so it refuses |
+
+### 6.2 Scenarios of §5a with `restricted`
+
+| Scenario | Without isolation | With `restricted` (macOS) | Test |
+|---|---|---|---|
+| Script reads the key and signs forged events | Succeeds | Read refused by the kernel (EPERM); `run event` goes to the inbox, which refuses approvals and verdicts | security tests 1, 9 |
+| Shell builds the key path at run time | Succeeds | Refused whatever the command text | 1, 7 |
+| Agent deletes the key directory or `integrity.json` | Succeeds | Refused (key directory closed; `.ai-agent-setup/` not writable) | 1, 10 |
+| Agent types an approval in a real terminal | Possible if the host gives a TTY | Still possible in principle: approvals need the user's terminal; NOT_VERIFIED with the real hosts | — |
+| Agent edits gate commands in project files | Succeeds | Still succeeds (workspace is writable by design) | — |
+
+### 6.3 What remains unprotected
+
+Same OS user (no identity separation); system locations outside the home and temporary directories
+are readable; the workspace is writable and executable; network allow-all by default and no domain
+allowlist; keychain items reachable through the security daemon (NOT_VERIFIED); an adversarial fast
+double fork that clears its environment can outlive the run, confined; kernel or Seatbelt bugs;
+`sandbox-exec` is deprecated by Apple; real Claude Code and Codex not verified under the sandbox;
+Linux and Windows have no provider. Details and the per-test results:
+[ADR-017](10-architecture-decisions.md#adr-017-runtime-isolation-w22-09),
+[12](12-runtime-isolation-security-report.md).
+
+### 6.4 Remaining options for a full boundary
 
 | Option | Required for it to count | Platform notes |
 |---|---|---|
-| Separate OS user for the agent | Key directory and run state readable only by the user's account; the agent's account has write access only to the working tree; approvals only from the user's account | Works on macOS, Linux, Windows; needs account setup by the user |
-| Container or VM | Key directory not mounted; `.ai-agent-setup/` mounted read-only or not at all; network limited to what the task needs; the toolkit (orchestrator) runs outside | Needs a container runtime; never a default dependency |
-| Host sandbox (for example Codex `workspace-write` with the key directory outside the writable roots) | The sandbox prevents reads outside the workspace, not only writes; verified on the real CLI | Depends on each host's sandbox semantics; must be verified per host |
-
-None of these is configured by the toolkit today; each changes how the user's hosts run and needs the
-user's decision.
+| Separate OS user for the agent (profile `isolated`) | Key directory and run state readable only by the user's account; the agent's account has write access only to the working tree; approvals only from the user's account | macOS, Linux, Windows; needs an administrator and the user's permission; not done by the toolkit |
+| Container or VM | Key directory not mounted; `.ai-agent-setup/` read-only or absent; network limited; the orchestrator outside | Needs a container runtime; never a default dependency |
+| Linux / Windows kernel sandboxes | bubblewrap or Landlock; AppContainer or restricted token + Job Object | Not implemented; must be verified on each OS |

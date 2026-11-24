@@ -21,27 +21,29 @@ export function keyDirectory(): string {
 /** macOS and Windows file systems are case-insensitive by default. */
 const CASE_INSENSITIVE = process.platform === 'darwin' || process.platform === 'win32';
 
+/** Absolute path with symlinks resolved through its deepest existing ancestor, case kept. */
+export function realPathLoose(path: string): string {
+  let current = resolve(path);
+  const rest: string[] = [];
+  for (;;) {
+    try {
+      return join(realpathSync.native(current), ...rest);
+    } catch {
+      const parent = dirname(current);
+      if (parent === current) return resolve(path);
+      rest.unshift(basename(current));
+      current = parent;
+    }
+  }
+}
+
 /**
  * Absolute path with symlinks resolved through its deepest existing ancestor (so `/var/x` and
  * `/private/var/x` agree on macOS even when `x` does not exist yet), forward slashes, case-folded
  * where the OS is.
  */
 export function canonicalPath(path: string): string {
-  let current = resolve(path);
-  const rest: string[] = [];
-  let full = current;
-  for (;;) {
-    try {
-      full = join(realpathSync.native(current), ...rest);
-      break;
-    } catch {
-      const parent = dirname(current);
-      if (parent === current) break;
-      rest.unshift(basename(current));
-      current = parent;
-    }
-  }
-  const normal = full.split('\\').join('/').replace(/\/+$/, '');
+  const normal = realPathLoose(path).split('\\').join('/').replace(/\/+$/, '');
   return CASE_INSENSITIVE ? normal.toLowerCase() : normal;
 }
 

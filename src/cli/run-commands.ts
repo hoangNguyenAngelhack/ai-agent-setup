@@ -4,6 +4,9 @@ import { approveRun, createRun, deliverRun, loadRun, recordEvent, reportRun, ver
 import { renderGateReport } from '../quality';
 import { single, UsageError, type ParsedArgs } from './args';
 import type { Ask } from './create-config';
+import { buildIsolationPolicy, INBOX_ENV, queueInboxRequest, resolveExecutable } from '../app/isolation';
+import { policyProblems, type IsolationProfile, type NetworkPolicy } from '../core/isolation';
+import { capabilitiesFor, platformMatrix } from '../isolation';
 
 interface IO {
   cwd: string;
@@ -112,6 +115,15 @@ export async function commandRun(args: ParsedArgs, io: IO): Promise<number> {
       return 0;
     }
     case 'event': {
+      // Inside an isolated launch the agent cannot read the key: the request goes to the
+      // orchestrator's inbox, which validates and signs it (W2.2-09).
+      const inbox = process.env[INBOX_ENV];
+      if (inbox) {
+        const { source: _source, ...request } = eventInput(args);
+        queueInboxRequest(inbox, { runId: id, ...request });
+        io.write('Queued for the orchestrator.\n');
+        return 0;
+      }
       const state = recordEvent(project, id, eventInput(args));
       const anomaly = state.anomalies.at(-1);
       io.write(anomaly && anomaly.eventId === state.processed.at(-1) ? `Recorded but not applied: ${anomaly.reason}\n` : 'Recorded.\n');
@@ -152,9 +164,10 @@ export async function commandRun(args: ParsedArgs, io: IO): Promise<number> {
     case 'deliver': {
       const host = single(args, 'host');
       if (!host) throw new UsageError('run deliver needs --host claude-code|codex');
-      loadRun(project, id);
       const seconds = single(args, 'timeout');
+      const isolation = isolationOption(args);
       if (seconds !== undefined && !/^\d+$/.test(seconds)) throw new UsageError('--timeout must be a number of seconds');
+      loadRun(project, id);
       const controller = new AbortController();
       const onInterrupt = () => controller.abort();
       process.once('SIGINT', onInterrupt);
@@ -165,6 +178,7 @@ export async function commandRun(args: ParsedArgs, io: IO): Promise<number> {
           signal: controller.signal,
           ...(seconds !== undefined ? { timeoutMs: Number(seconds) * 1000 } : {}),
           ...(text(args, 'event-command') ? { eventCommand: text(args, 'event-command')! } : {}),
+          ...(isolation ? { isolation } : {}),
         });
       } finally {
         process.removeListener('SIGINT', onInterrupt);
@@ -174,10 +188,65 @@ export async function commandRun(args: ParsedArgs, io: IO): Promise<number> {
         io.write(`${outcome.status}: ${outcome.reason}\n$ ${outcome.invocation.executable} ${outcome.invocation.args.map((arg) => (arg.includes('\n') ? '<prompt>' : arg)).join(' ')}\n`);
         for (const item of outcome.invocation.unsupported) io.write(`  unsupported: ${item}\n`);
         if (outcome.transcript) io.write(`  transcript: ${outcome.transcript}\n`);
+        if (outcome.isolation) {
+          const applied = outcome.isolation;
+          io.write(`  isolation: requested ${applied.requested}, applied ${applied.applied} (${applied.provider} on ${applied.platform}, network ${applied.network})\n`);
+          io.write(`    enforced: ${applied.enforced.join(', ')}\n`);
+          for (const item of applied.notEnforced) io.write(`    not enforced: ${item.control} (${item.reason})\n`);
+          for (const item of applied.refused) io.write(`    refused agent request: ${item.reason}\n`);
+        } else io.write('  isolation: none (the agent ran as a normal process of this user)\n');
       }
       return outcome.status === 'NOT_VERIFIED' || outcome.status === 'CANCELLED' ? 2 : 0;
     }
     default:
       throw new UsageError(`Unknown run action "${action}"`);
   }
+}
+
+const PROFILES: readonly IsolationProfile[] = ['none', 'restricted', 'isolated'];
+
+function networkOption(args: ParsedArgs): NetworkPolicy | undefined {
+  const value = single(args, 'network');
+  if (value === undefined) return undefined;
+  if (value === 'allow') return { mode: 'allow-all' };
+  if (value === 'deny') return { mode: 'deny-all' };
+  if (value.startsWith('allow:')) return { mode: 'allowlist', hosts: value.slice('allow:'.length).split('+').filter(Boolean) };
+  throw new UsageError('--network must be allow, deny or allow:<host>+<host>');
+}
+
+function isolationOption(args: ParsedArgs): { profile: IsolationProfile; network?: NetworkPolicy; passEnv?: string[] } | undefined {
+  const profile = single(args, 'isolation');
+  if (profile === undefined) {
+    if (single(args, 'network') !== undefined || args.values.has('pass-env')) throw new UsageError('--network and --pass-env need --isolation restricted or isolated');
+    return undefined;
+  }
+  if (!(PROFILES as readonly string[]).includes(profile)) throw new UsageError(`--isolation must be one of ${PROFILES.join(', ')}`);
+  const network = networkOption(args);
+  // Extra variable names the agent may see (values are taken from this environment, never printed).
+  const passEnv = args.values.get('pass-env');
+  return { profile: profile as IsolationProfile, ...(network ? { network } : {}), ...(passEnv?.length ? { passEnv } : {}) };
+}
+
+/** `isolation check`: platform matrix, provider capabilities and whether a profile can start here (exit 2 if not). */
+export function commandIsolation(args: ParsedArgs, io: IO): number {
+  const [action] = args.positionals;
+  if (action !== 'check') throw new UsageError('Usage: isolation check [--isolation none|restricted|isolated] [--network allow|deny] [--host claude-code|codex] [--json]');
+  const profile = (single(args, 'isolation') ?? 'restricted') as IsolationProfile;
+  if (!(PROFILES as readonly string[]).includes(profile)) throw new UsageError(`--isolation must be one of ${PROFILES.join(', ')}`);
+  const host = single(args, 'host') ?? 'claude-code';
+  const network = networkOption(args) ?? { mode: 'allow-all' };
+  const capabilities = capabilitiesFor(profile);
+  const executable = resolveExecutable(host === 'codex' ? 'codex' : 'claude') ?? process.execPath;
+  const policy = buildIsolationPolicy(root(args, io), { profile, network, host, executable });
+  const problems = policyProblems(policy, capabilities);
+  if (args.switches.has('json')) {
+    json(io, { profile, network, platforms: platformMatrix(), capabilities, problems });
+    return problems.length ? 2 : 0;
+  }
+  io.write('Platforms:\n');
+  for (const row of platformMatrix()) io.write(`  ${row.platform.padEnd(8)} ${row.status.padEnd(13)} restricted: ${row.restricted}\n${' '.repeat(25)}isolated: ${row.isolated}\n`);
+  io.write(`Requested: profile ${profile}, network ${network.mode}; provider ${capabilities.provider} on ${capabilities.platform}\n`);
+  for (const [control, capability] of Object.entries(capabilities.controls)) io.write(`  ${control.padEnd(20)} ${capability.status.padEnd(12)} ${capability.reason}\n`);
+  io.write(problems.length ? `Cannot start with this profile (nothing would run):\n${problems.map((item) => `  - ${item}`).join('\n')}\n` : `Profile ${profile} can be enforced here.\n`);
+  return problems.length ? 2 : 0;
 }

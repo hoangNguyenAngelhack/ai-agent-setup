@@ -22,6 +22,8 @@ import {
   type RunResult,
 } from '../core/execution';
 import { SchemaValidator } from '../registry';
+import type { IsolationProfile, NetworkPolicy, PreparedLaunch } from '../core/isolation';
+import { ProcessTree, RUN_MARK_ENV } from '../isolation';
 import { killTree } from '../quality';
 import { redactText, redactValue } from '../shared/redact';
 import {
@@ -41,6 +43,7 @@ import {
   type ProjectKey,
 } from './integrity';
 import { runQualityGates } from './gates';
+import { INBOX_ENV, inboxEvent, prepareIsolatedLaunch, readInbox, resolveExecutable } from './isolation';
 import { readPlan } from './plan';
 import { assertRunId, newRunId, projectIdentity, readJsonLines, RUNS_DIR, runDir, writeJson } from './run-files';
 
@@ -382,6 +385,22 @@ export interface DeliveryOutcome {
   signals: number;
   /** Project-relative path of the redacted host transcript kept as evidence, if the host ran. */
   transcript: string | null;
+  /** Isolation actually applied (W2.2-09); absent for profile none. */
+  isolation?: DeliveryIsolation;
+}
+
+export interface DeliveryIsolation {
+  requested: IsolationProfile;
+  applied: IsolationProfile;
+  provider: string;
+  platform: string;
+  network: NetworkPolicy['mode'];
+  enforced: string[];
+  notEnforced: Array<{ control: string; reason: string }>;
+  /** Project-relative path of the signed isolation report. */
+  report: string;
+  /** Inbox requests the orchestrator refused (wrong type, run or shape). */
+  refused: Array<{ request: string; reason: string }>;
 }
 
 export interface DeliveryOptions {
@@ -390,6 +409,8 @@ export interface DeliveryOptions {
   /** Stops the host after this long (default one hour). */
   timeoutMs?: number;
   signal?: AbortSignal;
+  /** Runtime isolation (W2.2-09). Absent or profile none: today's behaviour, nothing claimed. */
+  isolation?: { profile: IsolationProfile; network?: NetworkPolicy; allowRead?: string[]; allowWrite?: string[]; passEnv?: string[]; home?: string };
 }
 
 const DEFAULT_DELIVERY_TIMEOUT_MS = 60 * 60 * 1000;
@@ -413,13 +434,80 @@ export async function deliverRun(root: string, runId: string, host: string, opti
   if (options.dryRun) return outcome('DRY_RUN', 'not executed');
   if (!hostAvailable(delivery.executable)) return outcome('NOT_VERIFIED', `${delivery.executable} is not on PATH; install and sign in to ${host}, then deliver again`);
 
+  // W2.2-09: resolve, detect and validate isolation before anything starts (fail closed).
+  const { profile = 'none', network = { mode: 'allow-all' }, ...access } = options.isolation ?? {};
+  const launch = profile === 'none' ? null : prepareIsolatedLaunch(root, { profile, network, host, executable: resolveExecutable(delivery.executable)!, ...access }, invocation.args);
+  try {
+    return await runHost(root, runId, host, delivery, invocation, options, launch, outcome);
+  } finally {
+    launch?.cleanup();
+  }
+}
+
+/** Refused inbox requests kept in the delivery outcome; the agent controls how many it sends. */
+const MAX_REFUSED = 100;
+
+async function runHost(
+  root: string,
+  runId: string,
+  host: string,
+  delivery: HostDelivery,
+  invocation: Invocation,
+  options: DeliveryOptions,
+  launch: PreparedLaunch | null,
+  outcome: (status: DeliveryOutcome['status'], reason: string, signals?: number, transcript?: string | null) => DeliveryOutcome,
+): Promise<DeliveryOutcome> {
   const transcriptPath = `${RUNS_DIR}/${runId}/evidence/host-${host}-${Date.now()}.jsonl`;
   mkdirSync(join(root, RUNS_DIR, runId, 'evidence'), { recursive: true });
   writeFileSync(join(root, transcriptPath), '');
   const transcriptChecksum = (): Record<string, string> => ({ [transcriptPath]: sha256File(join(root, transcriptPath))! });
-  recordEvent(root, runId, { type: 'RUN_STARTED', source: 'orchestrator' });
+  let isolation: DeliveryIsolation | undefined;
+  const startEvidence: Record<string, string> = {};
+  if (launch) {
+    const report = `${RUNS_DIR}/${runId}/evidence/isolation-${Date.now()}.json`;
+    const { requested, applied, provider, platform, enforced, notEnforced } = launch;
+    const summary = { requested, applied, provider, platform, network: options.isolation?.network?.mode ?? 'allow-all', enforced, notEnforced };
+    // The report names what is enforced and what is not; environment values are never written.
+    writeJson(join(root, report), { ...summary, environment: Object.keys(launch.env).sort() });
+    startEvidence[report] = sha256File(join(root, report))!;
+    isolation = { ...summary, report, refused: [] };
+  }
+  recordEvent(root, runId, { type: 'RUN_STARTED', source: 'orchestrator' }, new Date(), startEvidence);
 
-  const child = spawn(invocation.executable, invocation.args, { cwd: root, stdio: ['ignore', 'pipe', 'inherit'], detached: process.platform !== 'win32' });
+  // Requests the sandboxed agent queued in its inbox: validated here, signed by the orchestrator.
+  const inbox = launch?.env[INBOX_ENV];
+  let inboxOffset = 0;
+  const drainInbox = () => {
+    if (!inbox) return;
+    const read = readInbox(inbox, inboxOffset);
+    inboxOffset = read.offset;
+    for (const line of read.lines) {
+      const checked = inboxEvent(runId, line);
+      let refusal = 'refused' in checked ? checked.refused : null;
+      if ('event' in checked) {
+        try {
+          recordEvent(root, runId, checked.event);
+        } catch (error) {
+          refusal = `not recorded: ${(error as Error).message}`;
+        }
+      }
+      if (refusal && isolation!.refused.length < MAX_REFUSED) isolation!.refused.push({ request: redactText(line).text.slice(0, 200), reason: refusal });
+    }
+  };
+
+  const command = launch?.command ?? invocation.executable;
+  const args = launch?.args ?? invocation.args;
+  const env = launch?.env ?? process.env;
+  const child = spawn(command, args, { cwd: root, env, stdio: ['ignore', 'pipe', 'inherit'], detached: process.platform !== 'win32' });
+  // Isolated launches: every descendant is tracked so none outlives the run, even outside the group.
+  const tree = launch && child.pid !== undefined ? new ProcessTree(child.pid, launch.env[RUN_MARK_ENV] ?? null) : null;
+  tree?.scan();
+  const poller = launch
+    ? setInterval(() => {
+        drainInbox();
+        tree?.scan();
+      }, 100)
+    : null;
   let signals = 0;
   let terminal: HostSignal | null = null;
   createInterface({ input: child.stdout }).on('line', (line) => {
@@ -433,6 +521,7 @@ export async function deliverRun(root: string, runId: string, host: string, opti
   const stop = (why: 'timeout' | 'cancelled') => {
     if (stopped || child.pid === undefined || child.exitCode !== null) return;
     stopped = why;
+    tree?.stop();
     killTree(child.pid, 'SIGTERM');
   };
   const timeoutMs = options.timeoutMs ?? DEFAULT_DELIVERY_TIMEOUT_MS;
@@ -446,22 +535,27 @@ export async function deliverRun(root: string, runId: string, host: string, opti
   });
   clearTimeout(timer);
   options.signal?.removeEventListener('abort', onAbort);
+  if (poller) clearInterval(poller);
+  // The host is gone; whatever it left running in the sandbox is stopped too.
+  tree?.stop();
+  drainInbox();
+  const withIsolation = (result: DeliveryOutcome): DeliveryOutcome => (isolation ? { ...result, isolation } : result);
 
   if (spawnError) {
     recordEvent(root, runId, { type: 'RUN_FAILED', source: 'orchestrator', reason: `could not start ${delivery.executable}: ${spawnError}` });
-    return outcome('NOT_VERIFIED', `could not start ${delivery.executable}: ${spawnError}`, signals);
+    return withIsolation(outcome('NOT_VERIFIED', `could not start ${delivery.executable}: ${spawnError}`, signals));
   }
   if (stopped === 'cancelled') {
     recordEvent(root, runId, { type: 'RUN_CANCELLED', source: 'user', reason: `delivery to ${host} cancelled by the user` }, new Date(), transcriptChecksum());
-    return outcome('CANCELLED', `delivery to ${host} cancelled; the host process was stopped`, signals, transcriptPath);
+    return withIsolation(outcome('CANCELLED', `delivery to ${host} cancelled; the host process was stopped`, signals, transcriptPath));
   }
   if (stopped === 'timeout') {
     recordEvent(root, runId, { type: 'RUN_FAILED', source: 'orchestrator', reason: `${host} did not finish within ${timeoutMs} ms` }, new Date(), transcriptChecksum());
-    return outcome('NOT_VERIFIED', `${host} timed out after ${timeoutMs} ms; the host process was stopped`, signals, transcriptPath);
+    return withIsolation(outcome('NOT_VERIFIED', `${host} timed out after ${timeoutMs} ms; the host process was stopped`, signals, transcriptPath));
   }
   const end = terminal as HostSignal | null;
   if (end?.kind === 'completed') recordEvent(root, runId, { type: 'RUN_COMPLETED', source: 'host' }, new Date(), transcriptChecksum());
   if (end?.kind === 'failed') recordEvent(root, runId, { type: 'RUN_FAILED', source: 'host', reason: end.reason }, new Date(), transcriptChecksum());
-  if (!end) return outcome('NOT_VERIFIED', `no end-of-run event in the ${host} stream (exit code ${child.exitCode}); progress unknown`, signals, transcriptPath);
-  return outcome('DELIVERED', `${host} reported ${end.kind} (exit code ${child.exitCode}); steps are verified separately`, signals, transcriptPath);
+  if (!end) return withIsolation(outcome('NOT_VERIFIED', `no end-of-run event in the ${host} stream (exit code ${child.exitCode}); progress unknown`, signals, transcriptPath));
+  return withIsolation(outcome('DELIVERED', `${host} reported ${end.kind} (exit code ${child.exitCode}); steps are verified separately`, signals, transcriptPath));
 }

@@ -57,6 +57,52 @@ switch (mode) {
     say({ type: 'item.completed', item: { text: `export GITHUB_TOKEN=ghp_${'Zq7'.repeat(12)}` } }); // secret-scan:allow synthetic fixture
     done();
     break;
+  case 'forge': {
+    // A compromised agent (W2.2-09): it tries to approve its own step, claim the run, and write
+    // the runtime state directly. The sandbox and the host-side inbox must refuse all of it.
+    const { appendFileSync } = require('node:fs');
+    const { dirname, join } = require('node:path');
+    report(`--type STEP_STARTED --step ${steps[0]}`);
+    report(`--type APPROVAL_REQUIRED --step ${steps[0]} --reason "needs a database migration"`);
+    try {
+      report(`--type APPROVAL_RESOLVED --step ${steps[0]} --approved true`);
+    } catch {
+      // Refused before it reached the inbox.
+    }
+    let direct = 'refused';
+    try {
+      appendFileSync(join(dirname(planPath), 'events.jsonl'), '{"type":"APPROVAL_RESOLVED"}\n');
+      direct = 'written';
+    } catch (error) {
+      direct = error.code;
+    }
+    say({ type: 'item.completed', item: { text: `direct write: ${direct}` } });
+    done();
+    break;
+  }
+  case 'leave-behind': {
+    // Starts a process outside its own process group and finishes (or hangs, with HANG=1).
+    const { spawn } = require('node:child_process');
+    const { writeFileSync } = require('node:fs');
+    const pidFile = process.env.FAKE_HOST_PID_FILE;
+    if (process.env.FAKE_HOST_ESCAPE) {
+      // Adversarial: a double fork whose middle process exits at once, with an empty environment
+      // (no run mark). The survivor keeps trying to read FAKE_HOST_ESCAPE and records the result.
+      const target = JSON.stringify(process.env.FAKE_HOST_ESCAPE);
+      const out = JSON.stringify(`${pidFile}.read`);
+      const survivor = `const fs=require('node:fs');setInterval(()=>{let r;try{fs.readFileSync(${target});r='read'}catch(e){r=e.code}try{fs.writeFileSync(${out},r)}catch{}},200);`;
+      const middle = `const c=require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(survivor)}],{detached:true,stdio:'ignore',env:{}});require('node:fs').writeFileSync(${JSON.stringify(pidFile)},String(c.pid));c.unref();`;
+      spawn(process.execPath, ['-e', middle], { detached: true, stdio: 'ignore', env: {} }).unref();
+    } else {
+      const child = spawn(process.execPath, ['-e', 'setInterval(()=>{},1000)'], { detached: true, stdio: 'ignore' });
+      writeFileSync(pidFile, String(child.pid));
+      child.unref();
+    }
+    report(`--type STEP_STARTED --step ${steps[0]}`);
+    if (process.env.FAKE_HOST_HANG) setInterval(() => {}, 1000);
+    else done();
+    break;
+  }
   case 'hang':
     report(`--type STEP_STARTED --step ${steps[0]}`);
     setInterval(() => {}, 1000);

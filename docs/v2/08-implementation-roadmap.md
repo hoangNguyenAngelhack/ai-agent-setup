@@ -137,6 +137,14 @@ dependency.
 7. Every forged-event and key-read scenario of [11 §5a](11-runtime-threat-model.md#5a-attack-scenarios-that-are-not-protected)
    has an automated test that fails without isolation and passes with it.
 
+**Status per criterion (2026-11-24, macOS, [12](12-runtime-isolation-security-report.md)):** 1 PASS
+(kernel EPERM, not the hook); 2 PASS; 3 PASS (inbox refuses approvals and verdicts; approvals need the
+user's terminal); 4 PASS (environment allowlist, credential paths closed); 5 PARTIAL (exec, signals,
+process tree and network deny-all enforced; no domain allowlist; adversarial double fork survives,
+confined); 6 PASS (`isolation check`, platform matrix, ADR-017 per OS); 7 PASS on macOS (each scenario
+has a control run without the sandbox). Identity separation (separate OS user) and Linux/Windows:
+UNSUPPORTED.
+
 **Exit criteria:** every quality result has evidence or is NOT_VERIFIED; benchmark conditions are
 reproducible; V1 and V2 are compared under equivalent conditions; cost is measured per accepted
 outcome; security and data-loss regressions override aggregate scores.
@@ -240,7 +248,7 @@ NOT_VERIFIED; fixed in `900473c`. Updated 2026-11-24.
 | W2.2-01 Quality Gate Engine + evidence capture | Done for local execution: registry of 14 gates covering all 11 categories, each with an explicit support status (`project-command`, `built-in`, `composite`); commands from `.ai-agent-setup/gates.json`, known scripts or stack defaults; timeout and cancellation (process tree killed); missing command, missing tool (exit 127/9009), timeout, cancellation, unreadable audit output, stale or missing coverage → NOT_VERIFIED; built-in secret scan of uncommitted and untracked changes (locations only, values never stored; `secret-scan:allow` lines are counted), npm audit parse, Istanbul coverage threshold, composite deployment readiness; every record validated against `gate-record` (a record failing validation is downgraded to NOT_VERIFIED, never PASS); evidence logs redacted with sha256 checksums; records, report (JSON + Markdown) and history stored in git-ignored folders; required gates = profile + configuration (configuration can only add); a skipped required gate is NOT_VERIFIED; the overall status is PASS only when every required gate passed | `src/quality/`, `src/shared/redact.ts`, `src/app/gates.ts`, `catalog/schemas/gate-record.schema.json`; `tests/unit/quality/gate-engine.test.ts`, `tests/unit/shared/redact.test.ts`, `tests/e2e/run.test.ts` |
 | W2.2-05 Execution reports | Partial: `run status` writes `result.json` validated against the `run-result` schema (identity, profile, approval, steps with gates and evidence, counts, verification summary, anomalies) and `gates run` writes `report.json` / `report.md`. Not yet: a schema for the gate report, aggregated reports across runs | `src/core/execution/state.ts`, `src/app/runs.ts`, `catalog/schemas/run-result.schema.json` |
 | W2.2-02, -03, -04, -06, -07, -08 | Not started | — |
-| W2.2-09 Runtime Isolation | Not started (planned 2026-11-24; acceptance criteria in §5.1) | — |
+| W2.2-09 Runtime Isolation | **PARTIAL** (implemented for review, ADR-017 proposed, not committed): provider contract; macOS Seatbelt provider for `restricted` (kernel-enforced filesystem, secrets, exec, signals, network deny-all, approval boundary through a host-side inbox, process-tree kill); `isolated` (separate OS user) refused: needs an administrator and the user's permission; Linux and Windows UNSUPPORTED; `isolation check`, `run deliver --isolation/--network/--pass-env`. Security tests 1–12 PASS on macOS; adversarial fast double fork FAIL (confined); real hosts NOT_VERIFIED | `src/core/isolation/`, `src/isolation/`, `src/app/isolation.ts`; `tests/security/runtime-isolation.test.ts`; [12](12-runtime-isolation-security-report.md) |
 
 Open risks from the independent review of 2026-11-24 (not fixed: they change the trust model or the
 event semantics and need a decision):
@@ -253,7 +261,8 @@ event semantics and need a decision):
   Code read tools); approvals need an interactive terminal and the id typed back. An independent
   security review found 2 HIGH and 2 MEDIUM issues; all fixed with regression tests. **Not a boundary
   against code the agent runs under the same OS account**, which can read the key; that is
-  W2.2-09 Runtime Isolation (planned, §5.1).
+  W2.2-09 Runtime Isolation (§5.1): with `--isolation restricted` on macOS the key is closed by the
+  kernel (ADR-017, proposed); elsewhere, or without the flag, this risk is unchanged.
 - **Early step events (resolved by ADR-015, accepted 2026-11-24).** Host events for a step whose
   dependencies the host finished are accepted (host-ready) even before the orchestrator verified the
   dependencies; events that are early even at host level are kept, replayed in log order and flagged

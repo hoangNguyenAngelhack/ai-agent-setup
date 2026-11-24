@@ -1,4 +1,4 @@
-export const COMMANDS = ['create', 'setup', 'diff', 'doctor', 'rollback', 'catalog', 'plan', 'explain', 'impact', 'gates', 'run'] as const;
+export const COMMANDS = ['create', 'setup', 'diff', 'doctor', 'rollback', 'catalog', 'plan', 'explain', 'impact', 'gates', 'run', 'isolation'] as const;
 export type Command = (typeof COMMANDS)[number] | 'help' | 'version';
 
 export class UsageError extends Error {}
@@ -43,6 +43,9 @@ const VALUE_FLAGS: Record<string, string> = {
   '--by': 'by',
   '--timeout': 'timeout',
   '--event-command': 'event-command',
+  '--isolation': 'isolation',
+  '--pass-env': 'pass-env',
+  '--network': 'network',
 };
 
 const SWITCHES: Record<string, string> = {

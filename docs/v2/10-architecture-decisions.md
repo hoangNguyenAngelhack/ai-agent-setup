@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | ADR-001–008 **Accepted** (approved in [EXECUTION-SPECIFICATION §3, §13](EXECUTION-SPECIFICATION.md)). ADR-009, ADR-014, ADR-015 and ADR-016 **Accepted** by the Product Owner on 2026-11-24. ADR-010–013 **Proposed, not approved.** |
+| Status | ADR-001–008 **Accepted** (approved in [EXECUTION-SPECIFICATION §3, §13](EXECUTION-SPECIFICATION.md)). ADR-009, ADR-014, ADR-015 and ADR-016 **Accepted** by the Product Owner on 2026-11-24. ADR-010–013 and ADR-017 **Proposed, not approved** (ADR-017 is implemented for review on a branch). |
 | Date | 2026-11-23 |
 | Related | [04 Product](04-product-specification.md) · [05 Architecture](05-architecture-specification.md) · [08 Roadmap](08-implementation-roadmap.md) |
 
@@ -11,7 +11,7 @@
 This document records the approved architecture decisions, the conflicts found between the approved
 direction and the current repository, the proposed (unapproved) decisions, and the open questions.
 
-No approval is implied for anything outside ADR-001–009 and ADR-014–016.
+No approval is implied for anything outside ADR-001–009 and ADR-014–016; ADR-017 waits for the Product Owner.
 
 ## 2. Accepted decisions
 
@@ -344,6 +344,97 @@ None of these reopens an approved decision. Each one has a proposed resolution.
 | ADR-011 | **Language:** migrate `src/` to TypeScript compiled to `dist/` | Typed contracts for a growing core; consistent with the rules the product ships | Start of V2.0. **Implemented as a working assumption** on `feature/v2-foundation` (2026-11-24); reversible until merged |
 | ADR-012 | **Bundled catalog, no runtime download:** catalog shipped in the npm package; `update` changes the version explicitly | Reproducibility and offline use (TD-02) | Start of V2.0 |
 | ADR-013 | **Hooks implemented in Node.js**, not shell | Cross-platform (NFR-02); no GNU-only tools (F-20) | Start of V2.0 |
+| ADR-017 | **Runtime Isolation:** provider contract; macOS Seatbelt for `restricted`; `isolated` (separate OS user) refused until set up with permission; host-side event inbox | The first OS-enforced boundary for code the agent runs (W2.2-09); details below | Product Owner review of W2.2-09 |
+
+### ADR-017: Runtime Isolation (W2.2-09)
+
+- **Status:** Proposed and implemented for review on branch `feature/w2.2-09-runtime-isolation`,
+  2026-11-24. **Not yet accepted by the Product Owner.** Threat model: [11 §6](11-runtime-threat-model.md#6-runtime-isolation-w22-09-adr-017);
+  test report: [12](12-runtime-isolation-security-report.md); usage: [guide](../guides/runtime-isolation.md).
+- **Context:** ADR-016 detects tampering but is not a boundary against code the agent runs under the
+  user's OS account: such code can read the integrity key and sign anything. W2.2-09 needs a boundary
+  the OS enforces, without installing software, creating OS users or changing system permissions
+  (each needs the user's separate permission), and without Docker as a default dependency.
+- **Four boundaries, kept apart:**
+
+  | Boundary | What it guarantees | Where |
+  |---|---|---|
+  | Integrity (ADR-016) | Changes to run artifacts made without the key are detected | HMAC key outside the project |
+  | Runtime isolation (this ADR) | The agent's processes cannot reach what the OS sandbox closes | Kernel sandbox around the host process |
+  | Host trust boundary | Approvals, verdicts and signatures come only from the toolkit process outside the sandbox | Orchestrator + event inbox |
+  | OS trust boundary | Processes of different OS users cannot read each other's files | Separate OS user (profile `isolated`, not available) |
+
+- **Options evaluated:**
+
+  | Option | Boundary | Why chosen or not |
+  |---|---|---|
+  | Hooks / policy / prompt rules in the host | None (same process, same user) | Rejected as a boundary; kept as a guard against mistakes |
+  | Host's own sandbox (Claude Code sandbox, Codex `workspace-write`) | Host-defined | Not controllable or verifiable by the toolkit; real CLIs not installed here (NOT_VERIFIED) |
+  | Separate OS user | Real (OS identity) | The only option that meets AC1; needs an administrator to create the user and set permissions. Not done without the user's permission: profile `isolated` refuses with that reason |
+  | Container or VM | Real (namespaces / hypervisor) | Needs a runtime; Docker must not be a default dependency or installed by the toolkit |
+  | OS sandbox around the host process: macOS Seatbelt (`/usr/bin/sandbox-exec`, built in) | Real (kernel), same OS user | **Chosen for `restricted` on macOS**: no installation, no admin rights, enforced on every child |
+  | Linux bubblewrap / Landlock; Windows AppContainer / restricted token + Job Object | Real (kernel) | Right designs for those platforms; not implemented: they cannot be verified on this machine, so they refuse |
+
+- **Decision:**
+  1. A provider-independent contract in `src/core/isolation` (profile, network policy, capabilities
+     per control, policy, prepared launch) and providers in `src/isolation`. `none` keeps today's
+     behaviour and claims nothing; `restricted` and `isolated` start only when every required control
+     is `SUPPORTED`; otherwise nothing starts (fail closed). A profile is never upgraded, downgraded or
+     replaced.
+  2. `restricted` on macOS: a Seatbelt profile generated per launch. Reads closed under the home and
+     temporary directories except the workspace, the toolkit and runtime, the host executable and the
+     host's own state; writes only to the workspace (not `.ai-agent-setup/`), a per-launch scratch
+     directory and the host state; no execution from the home, temporary or scratch areas; the key
+     directory, the toolkit's configuration directory and credential locations (`.ssh`, `.aws`,
+     `.azure`, `.kube`, `.docker`, `.gnupg`, `.netrc`, `.git-credentials`, `.npmrc`, `.config/gcloud`,
+     `.config/gh`, `Library/Keychains`) closed for read, write and execution; signals and process
+     information only within the sandbox; no Apple Events, LaunchServices (`open`) or clipboard;
+     network deny-all on request. A live probe proves a deny rule is enforced before `restricted` is
+     reported as supported.
+  3. The environment is an allowlist (`PATH`, `HOME`, `USER`, `LOGNAME`, `SHELL`, `LANG`, `TERM`, `TZ`,
+     `COLORTERM`, `NO_COLOR`, `LC_*`, `ANTHROPIC_*`, `CLAUDE_*`, `OPENAI_*`, `CODEX_*`, plus names the
+     user passes with `--pass-env`); the key directory variable and other tokens are dropped.
+  4. Approval boundary: inside the sandbox `run event` cannot read the key, so it queues the request in
+     a per-launch inbox. The orchestrator (outside) accepts only step reports (`STEP_STARTED`,
+     `STEP_PROGRESS`, `APPROVAL_REQUIRED`, `STEP_COMPLETED`, `STEP_FAILED`, `STEP_BLOCKED`) for this
+     run, copies known fields, forces `source: host`, drops gate results, and signs them; approvals and
+     run verdicts requested by the agent are refused and listed in the delivery outcome. Approvals stay
+     with `run approve-step` in the user's terminal (ADR-016).
+  5. Process tree: the orchestrator tracks every descendant from outside (parent links with start
+     times, plus a random per-launch mark in the environment) and, on normal end, timeout, cancellation
+     or Ctrl-C, freezes them all and kills them.
+  6. Evidence: an isolation report (requested and applied profile, provider, platform, network,
+     enforced and not enforced controls, environment variable names) is signed with `RUN_STARTED`.
+  7. `isolated` (separate OS user) is designed but not implemented; every platform reports it
+     UNSUPPORTED with the reason. Linux and Windows report `restricted` UNSUPPORTED.
+- **Unchanged:** ADR-015 and ADR-016 semantics, event format, step states, run statuses, exit codes;
+  `run deliver` without `--isolation` behaves as before.
+- **Assumptions:** the macOS kernel enforces Seatbelt profiles as tested on macOS 26.2 (25C56); Apple
+  documents `sandbox-exec` as **deprecated** (still functional), so the live probe runs before every
+  launch and a future macOS that drops it makes `restricted` UNSUPPORTED, never silent; launchd
+  refuses job submission from a sandboxed caller (tested); the user does not run the toolkit itself
+  inside the agent's sandbox.
+- **What remains unprotected:**
+  - Identity: the sandboxed agent runs as the user's OS account (AC1 not met).
+  - Readable outside the confined roots: system locations (`/etc`, `/usr`, `/Library`,
+    `/Applications`, `/Users/Shared`, other volumes) except the protected list.
+  - The workspace itself: the agent can change source files and run what it writes there (inside the
+    same sandbox).
+  - Network: allow-all by default (real hosts need their API); deny-all blocks all IP traffic, so a
+    real host cannot reach its model API with it; a domain allowlist is UNSUPPORTED (Seatbelt filters
+    addresses, not names). Local IPC to system services not listed above stays allowed.
+  - Keychain items reachable through the security daemon without a prompt: NOT_VERIFIED.
+  - A process that double-forks faster than the 100 ms scan and clears its environment can outlive
+    the run (test 12, adversarial: FAIL). It stays inside the sandbox (verified: it cannot read the key).
+  - A kernel or Seatbelt bug.
+  - Real Claude Code and Codex under the sandbox: NOT_VERIFIED (not installed). Codex's own sandbox
+    uses `sandbox-exec`, which cannot be nested (tested: `sandbox_apply: Operation not permitted`), so
+    Codex sandboxed commands may fail inside `restricted`.
+- **Consequences:** (+) on macOS, code the agent runs can no longer read the key, credentials, other
+  projects or the toolkit's runtime state, cannot forge approvals or verdicts, and cannot leave
+  processes behind in the tested cases; each claim has a kernel-level test. (−) Not an OS identity
+  boundary; macOS only; more host paths may need `--pass-env`/allow lists for real hosts; a
+  deprecated system tool.
 
 ## 5. Open questions
 

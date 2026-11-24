@@ -854,6 +854,28 @@ the event command). Run-level start and end come from the host's native stream; 
 approval requests come back through `run event`; the toolkit stops the host process tree on timeout
 or cancellation. The redacted transcript is kept as signed evidence of that run only.
 
+### 12.8 Runtime Isolation (W2.2-09, ADR-017 proposed, implemented for review)
+
+```
+run deliver --isolation p
+  resolve profile → detect (provider, live probe) → validate (every required control SUPPORTED,
+  else refuse: nothing starts) → prepare workspace and scratch → sandbox (Seatbelt profile,
+  environment allowlist, inbox, run mark) → launch host → monitor (inbox drained and signed,
+  descendants tracked) → approvals in the user's terminal → evidence (isolation report signed with
+  RUN_STARTED, transcript) → kill tree (normal end, timeout, cancel, Ctrl-C) → cleanup scratch
+```
+
+| Module | Role | May import |
+|---|---|---|
+| `src/core/isolation` | Contracts (profile, network policy, capability per control, policy, prepared launch) and `policyProblems` | nothing outside core |
+| `src/isolation` | Providers: `none`, `macos-seatbelt`, refusing providers (OS user, Linux, Windows), registry and platform matrix, `ProcessTree` | core, shared |
+| `src/app/isolation.ts` | Builds the policy for a project and host; prepares the launch; inbox validation | core, isolation, shared |
+
+Controls are reported one by one (`identity-separation`, `filesystem-read`, `filesystem-write`,
+`secret-isolation`, `process-exec`, `process-signal`, `network-deny`, `network-allowlist`,
+`approval-boundary`) as SUPPORTED, PARTIAL, UNSUPPORTED or NOT_VERIFIED. Limits:
+[threat model §6](11-runtime-threat-model.md#6-runtime-isolation-w22-09-adr-017).
+
 ## 13. Cross-cutting concerns
 
 | Concern | Approach |

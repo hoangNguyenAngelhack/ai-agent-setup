@@ -245,7 +245,7 @@
   },
   {
     "path": ".codex/hooks/ai-agent-setup/policy/key-location.cjs",
-    "sha256": "e244c34d02b73a7bcb8531d1efa6b52529733bd83bcd8e846c4a147ed3f79a68"
+    "sha256": "14cb7e04c236dd2e25b5212e1336da6dba2a5a15408f96ff83777511a6dc56f7"
   },
   {
     "path": ".codex/hooks/ai-agent-setup/policy/policy-engine.cjs",

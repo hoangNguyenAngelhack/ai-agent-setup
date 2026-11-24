@@ -11,6 +11,13 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
 
 ### Added
+- Runtime Isolation (W2.2-09, ADR-017 proposed): `isolation check` and `run deliver --isolation
+  none|restricted|isolated --network allow|deny --pass-env names`. On macOS, `restricted` runs the host
+  in a Seatbelt kernel sandbox (key, credentials, home and temporary directories closed; workspace
+  only; `.ai-agent-setup/` read-only; no signals to other processes; optional network deny-all);
+  step events go through a host-side inbox signed by the orchestrator; every descendant is killed at
+  the end of the run. `isolated` (separate OS user), Linux and Windows are refused with the reason;
+  nothing falls back to a weaker profile. Security tests: docs/v2/12.
 - Versioned catalog (`catalog/`) validated by JSON Schemas: 12 capability domains, 123
   capabilities, 9 canonical agents, V1 rules, skills, agents and commands migrated unchanged, three
   profiles from the V1 tiers, MCP servers as opt-in tools, and a mandatory safety policy.

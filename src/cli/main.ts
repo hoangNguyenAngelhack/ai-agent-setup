@@ -10,7 +10,7 @@ import type { ApprovalPoint, PlanMode, PlanOverrides } from '../core/contracts';
 import { ADAPTER_IDS, type AdapterId } from '../registry';
 import { oneOf, parseArgs, single, UsageError, type ParsedArgs } from './args';
 import { runCatalogValidate } from './catalog-validate';
-import { commandGates, commandRun } from './run-commands';
+import { commandGates, commandIsolation, commandRun } from './run-commands';
 import { renderImpact, renderPlan } from './plan-output';
 import { resolveCreateConfig, type Ask } from './create-config';
 
@@ -40,6 +40,7 @@ Usage:
   ${BIN} explain <plan-id>               Show the explanation of a saved plan
   ${BIN} impact [files...] [--since ref] What changed files touch: areas, risk, tests, owners
   ${BIN} gates list|run|history [dir]    Quality gates: support status, run with evidence, history (V2.2)
+  ${BIN} isolation check                 Runtime isolation (W2.2-09): what this platform can enforce
   ${BIN} run <action> …                  Execution runs (V2.1 preview): create <plan-id>, approve, deliver,
                                          event, verify, approve-step, cancel, status <run-id>
 
@@ -84,6 +85,9 @@ Run options:
       --host <id>          deliver: claude-code or codex (needs the CLI on PATH; --dry-run prints it)
       --timeout <seconds>  deliver: stop the host after this long (default 3600); Ctrl-C cancels
       --event-command <c>  deliver: how the agent reports events (default: npx create-ai-agent-setup run event <run-id>)
+      --isolation <p>      deliver: none (default), restricted (OS sandbox), isolated (separate OS user); refused if not enforceable
+      --network <m>        deliver: allow (default) or deny, with --isolation
+      --pass-env <names>   deliver: extra environment variable names the isolated agent may see (comma-separated)
       --type, --step, --reason, --message, --evidence   event: what the agent reports
       --decline            approve-step: decline instead of approve
 
@@ -262,6 +266,8 @@ export async function main(argv: readonly string[], io: CliIO): Promise<number> 
         return await commandGates(args, io);
       case 'run':
         return await commandRun(args, io);
+      case 'isolation':
+        return commandIsolation(args, io);
       case 'catalog':
         if (args.positionals[0] !== 'validate') throw new UsageError('Usage: catalog validate [catalog-dir]');
         return runCatalogValidate(resolve(io.cwd, args.positionals[1] ?? join(PACKAGE_ROOT, 'catalog')), (line) => io.write(`${line}\n`));
