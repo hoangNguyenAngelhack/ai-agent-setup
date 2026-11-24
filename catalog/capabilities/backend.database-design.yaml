@@ -1,0 +1,35 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: backend.database-design
+name: Database design
+description: Design schemas, indexes, migrations and query patterns.
+version: 0.1.0
+category: backend
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: backend
+skills:
+  - skill.nodejs-backend
+  - skill.nestjs-backend
+  - skill.build-resolve-prisma
+rules:
+  - rule.database
+  - rule.sql-patterns
+  - rule.naming-conventions
+defaultAgents:
+  - agent.implementer
+riskLevel: medium
+costHint: medium

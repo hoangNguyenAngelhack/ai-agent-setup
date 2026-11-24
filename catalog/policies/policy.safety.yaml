@@ -1,0 +1,67 @@
+# Mandatory safety policy (docs/v2/05 §9.2). Ships with the toolkit; no layer can loosen it.
+# Effects: ask = explicit human approval; deny = never allowed.
+schema: policy/v1
+id: policy.safety
+layer: mandatory
+description: Non-overridable safety rules for destructive, irreversible and secret-leaking actions.
+rules:
+  - id: safety.no-destructive-unapproved
+    description: Recursive deletes, hard resets, force pushes and discarding work need explicit approval.
+    effect: ask
+    match:
+      commands:
+        - "rm * -*r* *"
+        - "rm * -*R* *"
+        - "git reset * --hard *"
+        - "git push * --force *"
+        - "git push * -f *"
+        - "git clean * -*f* *"
+        - "git checkout * -- *"
+        - "git branch * -D *"
+        - "docker system prune *"
+  - id: safety.destructive-sql
+    description: Dropping or truncating tables, or deleting rows without a WHERE clause, needs explicit approval.
+    effect: ask
+    match:
+      ignoreCase: true
+      commandRegex:
+        - "\\bdrop\\s+(table|database|schema)\\b"
+        - "\\btruncate\\s+(table\\s+)?[\\w.\"`]+"
+        - "\\bdelete\\s+from\\s+[\\w.\"`]+\\s*(;|\"|'|$)"
+  - id: safety.publish-approval
+    description: Publishing packages and pushing to protected branches need explicit approval.
+    effect: ask
+    match:
+      commands:
+        - "npm publish *"
+        - "pnpm publish *"
+        - "yarn publish *"
+        - "yarn npm publish *"
+        - "git push * main *"
+        - "git push * master *"
+      intents:
+        - pkg.publish
+  - id: safety.no-secret-write
+    description: Writing content that contains a credential in a known token format is never allowed.
+    effect: deny
+    match:
+      contentRegex:
+        - "AKIA[0-9A-Z]{16}"
+        - "sk_live_[0-9a-zA-Z]{24,}"
+        - "gh[pousr]_[0-9A-Za-z]{36,}"
+        - "xox[bpars]-[0-9A-Za-z-]{10,}"
+        - "-----BEGIN (RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY( BLOCK)?-----"
+  - id: safety.possible-secret-write
+    description: Writing a literal password, secret, API key or token assignment needs explicit approval.
+    effect: ask
+    match:
+      ignoreCase: true
+      contentRegex:
+        - "(password|passwd|secret|api[_-]?key|access[_-]?token)\\s*[:=]\\s*[\"'][^\"'\\s]{8,}[\"']"
+invariants:
+  - id: safety.no-silent-overwrite
+    description: Installer writes to user-modified or unmanaged files require a diff and recorded consent.
+    enforcedBy: installer (W2.0-11, W2.0-12) and its test matrix (docs/v2/09 §3.3)
+  - id: safety.no-telemetry
+    description: No outbound transmission of source code or usage data by the toolkit.
+    enforcedBy: CI runs with networking disabled after install (docs/v2/09 §3.4)

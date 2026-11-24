@@ -1,0 +1,24 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.git-workflow
+name: Git workflow
+description: Branch naming, conventional commits and pull request rules.
+version: 1.6.1
+category: devops-sre
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.git-workflow.md
+scope:
+  always: true
+enforcement: advisory

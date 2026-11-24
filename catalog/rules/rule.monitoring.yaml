@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.monitoring
+name: Monitoring and observability
+description: Structured logging, metrics, tracing, dashboards and alerting.
+version: 1.6.1
+category: devops-sre
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.monitoring.md
+scope:
+  paths:
+    - "**/logger.*"
+    - "**/logging/**"
+    - "**/metrics/**"
+    - "**/monitoring/**"
+enforcement: advisory

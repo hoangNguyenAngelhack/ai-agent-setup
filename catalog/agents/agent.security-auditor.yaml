@@ -1,0 +1,43 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Agent
+id: agent.security-auditor
+name: Security auditor
+description: Models threats and reviews code, dependencies and configuration for security and compliance.
+version: 1.6.1
+category: agent
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions: &a1
+  - fs.read
+  - cmd:security-scanners
+inputSchema: null
+outputSchema: null
+validation: null
+purpose: Models threats and reviews code, dependencies and configuration for security and compliance.
+capabilities:
+  - security-compliance.authentication-security
+  - security-compliance.authorization-review
+  - security-compliance.compliance-mapping
+  - security-compliance.dependency-security
+  - security-compliance.privacy-assessment
+  - security-compliance.secrets-management
+  - security-compliance.security-incident-analysis
+  - security-compliance.security-testing
+  - security-compliance.threat-modeling
+  - security-compliance.vulnerability-assessment
+skills:
+  - skill.security-review
+tools:
+  allow: *a1
+  deny:
+    - fs.write
+    - vcs.push
+modelHint: deep
+body: agent.security-auditor.md
+aliasOf: null

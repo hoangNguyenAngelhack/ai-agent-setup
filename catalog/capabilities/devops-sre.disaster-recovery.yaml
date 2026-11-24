@@ -1,0 +1,29 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: devops-sre.disaster-recovery
+name: Disaster recovery
+description: Plan and test backups, restores and failover.
+version: 0.1.0
+category: devops-sre
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: devops-sre
+skills: []
+rules: []
+defaultAgents:
+  - agent.operator
+riskLevel: high
+costHint: medium

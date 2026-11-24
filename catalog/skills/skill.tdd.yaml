@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.tdd
+name: Test-Driven Development
+description: Write tests before code using RED-GREEN-REFACTOR cycle
+version: 1.6.1
+category: quality
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.tdd.md
+triggers: Write tests before code using RED-GREEN-REFACTOR cycle
+resources:
+  - skill.tdd/agent-skills-variant.md
+  - ../references/testing-patterns.md
+disableImplicit: false

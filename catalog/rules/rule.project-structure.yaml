@@ -1,0 +1,27 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.project-structure
+name: Project structure
+description: Layered architecture and folder organization for services.
+version: 1.6.1
+category: architecture-leadership
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.project-structure.md
+scope:
+  capabilities:
+    - backend.service-architecture
+    - frontend.application-architecture
+    - architecture-leadership.engineering-standards
+enforcement: advisory

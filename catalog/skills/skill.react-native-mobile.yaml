@@ -1,0 +1,32 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.react-native-mobile
+name: react-native-mobile
+description: Build React Native mobile apps with Expo or React Native CLI, NativeWind (Tailwind),
+  React Navigation, and Zustand. Use when creating iOS/Android apps, mobile UI, navigation, or
+  native features.
+version: 1.6.1
+category: mobile
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.react-native-mobile.md
+triggers: Build React Native mobile apps with Expo or React Native CLI, NativeWind (Tailwind), React
+  Navigation, and Zustand. Use when creating iOS/Android apps, mobile UI, navigation, or native
+  features.
+resources:
+  - ../references/mobile-performance-checklist.md
+  - ../references/mobile-release-checklist.md
+disableImplicit: false

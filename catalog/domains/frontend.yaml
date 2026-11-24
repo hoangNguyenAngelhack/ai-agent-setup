@@ -1,0 +1,44 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: frontend
+name: Frontend Engineering
+description: Web application architecture, components, state, rendering, performance and tests.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 3
+purpose: Build maintainable, performant and accessible web applications.
+roles:
+  - Frontend Engineer
+  - React Engineer
+  - Vue Engineer
+  - Angular Engineer
+  - Next.js Engineer
+  - Web Performance Engineer
+  - Frontend Architect
+capabilities:
+  - frontend.application-architecture
+  - frontend.component-engineering
+  - frontend.state-management
+  - frontend.routing
+  - frontend.api-integration
+  - frontend.rendering-strategy
+  - frontend.accessibility
+  - frontend.performance-optimization
+  - frontend.design-system-implementation
+  - frontend.frontend-testing
+depthLevel: L0

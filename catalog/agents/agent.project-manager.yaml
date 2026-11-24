@@ -1,0 +1,31 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Agent
+id: agent.project-manager
+name: Project Manager
+description: V1 compatibility alias of agent.analyst. Strategic project manager who plans sprints,
+  defines requirements, and ensures delivery.
+version: 1.6.1
+category: agent
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions: &a1
+  - fs.read
+  - fs.write:docs/**
+inputSchema: null
+outputSchema: null
+validation: null
+purpose: Strategic project manager who plans sprints, defines requirements, and ensures delivery
+capabilities: []
+skills: []
+tools:
+  allow: *a1
+  deny: []
+modelHint: deep
+body: agent.project-manager.md
+aliasOf: agent.analyst

@@ -1,0 +1,29 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: design-ux.design-system-definition
+name: Design system definition
+description: Define reusable components, patterns and usage guidance.
+version: 0.1.0
+category: design-ux
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+  - fs.write:design/**
+inputSchema: null
+outputSchema: null
+validation: null
+domain: design-ux
+skills: []
+rules: []
+defaultAgents:
+  - agent.designer
+riskLevel: low
+costHint: medium

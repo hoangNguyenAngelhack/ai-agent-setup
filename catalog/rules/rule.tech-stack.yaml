@@ -1,0 +1,27 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.tech-stack
+name: Technology stack (optional stack profile)
+description: The V1 opinionated Node/React/React Native stack; optional, not mandatory for every
+  project (TD-19).
+version: 1.6.1
+category: architecture-leadership
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.tech-stack.md
+scope:
+  capabilities:
+    - architecture-leadership.technical-decision-making
+    - architecture-leadership.architecture-design
+enforcement: advisory

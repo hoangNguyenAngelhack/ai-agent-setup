@@ -1,0 +1,30 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: mobile.mobile-architecture
+name: Mobile architecture
+description: Structure a mobile app into modules, layers and navigation graphs.
+version: 0.1.0
+category: mobile
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: mobile
+skills:
+  - skill.react-native-mobile
+rules: []
+defaultAgents:
+  - agent.architect
+riskLevel: medium
+costHint: high

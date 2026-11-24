@@ -1,0 +1,26 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.typescript-patterns
+name: TypeScript patterns
+description: Strict types, no any, type guards, utility types and discriminated unions.
+version: 1.6.1
+category: architecture-leadership
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.typescript-patterns.md
+scope:
+  paths:
+    - "**/*.ts"
+    - "**/*.tsx"
+enforcement: advisory

@@ -1,0 +1,25 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.code-review
+name: Code Review & Quality
+description: Five-axis code review for comprehensive quality assessment
+version: 1.6.1
+category: architecture-leadership
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.code-review.md
+triggers: Five-axis code review for comprehensive quality assessment
+resources:
+  - skill.code-review/agent-skills-variant.md
+disableImplicit: false

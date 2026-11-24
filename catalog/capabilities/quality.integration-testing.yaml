@@ -1,0 +1,30 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: quality.integration-testing
+name: Integration testing
+description: Verify components and services work together.
+version: 0.1.0
+category: quality
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: quality
+skills:
+  - skill.tdd
+rules: []
+defaultAgents:
+  - agent.tester
+riskLevel: medium
+costHint: medium

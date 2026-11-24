@@ -1,0 +1,47 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Agent
+id: agent.operator
+name: Operator
+description: Builds delivery pipelines and infrastructure, operates services and handles incidents and cost.
+version: 0.1.0
+category: agent
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions: &a1
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+purpose: Builds delivery pipelines and infrastructure, operates services and handles incidents and cost.
+capabilities:
+  - data-ai.mlops
+  - devops-sre.ci-cd
+  - devops-sre.cloud-infrastructure
+  - devops-sre.containerization
+  - devops-sre.cost-optimization
+  - devops-sre.deployment-strategies
+  - devops-sre.disaster-recovery
+  - devops-sre.incident-response
+  - devops-sre.infrastructure-as-code
+  - devops-sre.kubernetes
+  - devops-sre.logging-tracing
+  - devops-sre.monitoring
+  - devops-sre.reliability-engineering
+  - mobile.app-distribution
+skills: []
+tools:
+  allow: *a1
+  deny:
+    - pkg.publish
+    - vcs.push
+modelHint: balanced
+body: null
+aliasOf: null

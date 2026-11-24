@@ -1,0 +1,35 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Agent
+id: agent.frontend
+name: Frontend Developer
+description: V1 compatibility alias of agent.implementer. Expert frontend developer specializing in
+  Next.js, React, TypeScript, and modern UI development.
+version: 1.6.1
+category: agent
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions: &a1
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+purpose: Expert frontend developer specializing in Next.js, React, TypeScript, and modern UI development
+capabilities: []
+skills:
+  - skill.react-frontend
+tools:
+  allow: *a1
+  deny:
+    - pkg.publish
+    - vcs.push
+modelHint: balanced
+body: agent.frontend.md
+aliasOf: agent.implementer

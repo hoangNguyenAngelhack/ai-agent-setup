@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:catalog:v1:domain",
+  "title": "Domain",
+  "description": "A major area of engineering responsibility. Roles are descriptive only (ADR-004). See docs/v2/05 §6.3.",
+  "type": "object",
+  "allOf": [{ "$ref": "urn:ai-agent-setup:catalog:v1:envelope" }],
+  "required": ["ordinal", "purpose", "roles", "capabilities", "depthLevel"],
+  "properties": {
+    "kind": { "const": "Domain" },
+    "id": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/domainId" },
+    "category": { "const": "domain" },
+    "ordinal": { "type": "integer", "minimum": 1 },
+    "purpose": { "type": "string", "minLength": 10 },
+    "roles": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "capabilities": { "type": "array", "minItems": 1, "items": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/capabilityId" }, "uniqueItems": true },
+    "depthLevel": { "enum": ["L0", "L1", "L2", "L3"] }
+  },
+  "unevaluatedProperties": false
+}

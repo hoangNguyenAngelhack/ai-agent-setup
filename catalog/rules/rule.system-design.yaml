@@ -1,0 +1,27 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.system-design
+name: System design
+description: CAP, caching, scaling, queues, reliability and estimation principles.
+version: 1.6.1
+category: architecture-leadership
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.system-design.md
+scope:
+  capabilities:
+    - architecture-leadership.system-design
+    - backend.distributed-systems
+    - backend.reliability-scalability
+enforcement: advisory

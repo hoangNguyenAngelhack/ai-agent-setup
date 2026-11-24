@@ -1,0 +1,29 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: data-ai.mlops
+name: MLOps
+description: Version, deploy and monitor models in production.
+version: 0.1.0
+category: data-ai
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: data-ai
+skills: []
+rules: []
+defaultAgents:
+  - agent.operator
+riskLevel: medium
+costHint: medium

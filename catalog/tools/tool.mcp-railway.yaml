@@ -1,0 +1,33 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Tool
+id: tool.mcp-railway
+name: railway MCP server
+description: Railway - App deployment, databases
+version: 1.6.1
+category: integration-automation
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - mcp:railway
+inputSchema: null
+outputSchema: null
+validation: null
+type: mcp
+mcp:
+  command: npx
+  args:
+    - -y
+    - "@railway/mcp-server@latest"
+  env:
+    RAILWAY_API_TOKEN: ${RAILWAY_API_TOKEN}
+platforms:
+  - darwin
+  - linux
+  - win32
+network: true

@@ -1,0 +1,34 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Tool
+id: tool.mcp-upstash
+name: upstash MCP server
+description: Upstash - Serverless Redis and Kafka
+version: 1.6.1
+category: integration-automation
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - mcp:upstash
+inputSchema: null
+outputSchema: null
+validation: null
+type: mcp
+mcp:
+  command: npx
+  args:
+    - -y
+    - "@upstash/mcp-server@latest"
+  env:
+    UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL}
+    UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN}
+platforms:
+  - darwin
+  - linux
+  - win32
+network: true

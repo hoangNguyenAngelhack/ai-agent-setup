@@ -1,0 +1,32 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: frontend.application-architecture
+name: Frontend application architecture
+description: Structure a web application into modules, layers and boundaries.
+version: 0.1.0
+category: frontend
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: frontend
+skills:
+  - skill.react-frontend
+  - skill.build-resolve-react
+rules:
+  - rule.project-structure
+defaultAgents:
+  - agent.architect
+riskLevel: medium
+costHint: high

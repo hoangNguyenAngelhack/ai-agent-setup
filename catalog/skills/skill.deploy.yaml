@@ -1,0 +1,27 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.deploy
+name: deploy
+description: Skill to automate the full deployment process including build, test, and release steps
+version: 1.6.1
+category: devops-sre
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.deploy.md
+triggers: Skill to automate the full deployment process including build, test, and release steps
+resources:
+  - skill.deploy/deploy.md
+disableImplicit: false

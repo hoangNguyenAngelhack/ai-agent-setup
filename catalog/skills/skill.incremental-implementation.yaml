@@ -1,0 +1,26 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.incremental-implementation
+name: Incremental Implementation
+description: Build features in thin vertical slices with continuous verification
+version: 1.6.1
+category: architecture-leadership
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.incremental-implementation.md
+triggers: Build features in thin vertical slices with continuous verification
+resources: []
+disableImplicit: false

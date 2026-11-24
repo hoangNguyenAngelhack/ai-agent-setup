@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:catalog:v1:tool",
+  "title": "Tool",
+  "description": "An executable capability: local command, MCP server or host tool. See docs/v2/05 §6.3.",
+  "required": ["type", "platforms", "network"],
+  "properties": {
+    "kind": { "const": "Tool" },
+    "id": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/toolId" },
+    "type": { "enum": ["command", "mcp", "host"] },
+    "command": { "type": "string", "minLength": 1 },
+    "mcp": { "type": "object" },
+    "platforms": { "type": "array", "minItems": 1, "items": { "enum": ["darwin", "linux", "win32"] }, "uniqueItems": true },
+    "network": { "type": "boolean" }
+  },
+  "type": "object",
+  "allOf": [
+    { "$ref": "urn:ai-agent-setup:catalog:v1:envelope" },
+    { "if": { "properties": { "type": { "const": "command" } } }, "then": { "required": ["command"] } },
+    { "if": { "properties": { "type": { "const": "mcp" } } }, "then": { "required": ["mcp"] } }
+  ],
+  "unevaluatedProperties": false
+}

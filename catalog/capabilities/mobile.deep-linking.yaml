@@ -1,0 +1,30 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: mobile.deep-linking
+name: Deep linking
+description: Configure universal links, app links and in-app routing.
+version: 0.1.0
+category: mobile
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: mobile
+skills:
+  - skill.react-native-mobile
+rules: []
+defaultAgents:
+  - agent.implementer
+riskLevel: medium
+costHint: medium

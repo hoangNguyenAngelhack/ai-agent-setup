@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:catalog:v1:profile",
+  "title": "Profile",
+  "description": "A named preset of catalog selections, policy, context budget and required gates (V1 tiers become profiles). See docs/v2/05 \u00a76.3.",
+  "type": "object",
+  "allOf": [
+    {
+      "$ref": "urn:ai-agent-setup:catalog:v1:envelope"
+    }
+  ],
+  "required": [
+    "includes",
+    "policy",
+    "contextBudget",
+    "gates"
+  ],
+  "properties": {
+    "kind": {
+      "const": "Profile"
+    },
+    "id": {
+      "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/profileId"
+    },
+    "includes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "domains": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/domainId"
+          },
+          "uniqueItems": true
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/entityId"
+          },
+          "uniqueItems": true
+        },
+        "statuses": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "draft",
+              "experimental",
+              "stable",
+              "deprecated"
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "policy": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "contextBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claude-code": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "codex": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "gates": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/gateId"
+      },
+      "uniqueItems": true
+    },
+    "excludes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/entityId"
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "unevaluatedProperties": false
+}

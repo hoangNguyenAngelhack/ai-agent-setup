@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:contracts:v1:policy",
+  "title": "Policy document",
+  "description": "Layered policy evaluated by the Policy Engine. Effective effect = most restrictive match across layers; lower layers can only narrow (docs/v2/05 §7.4, §9).",
+  "type": "object",
+  "required": ["schema", "id", "layer", "description", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "policy/v1" },
+    "id": { "type": "string", "pattern": "^policy\\.[a-z0-9]+(-[a-z0-9]+)*$" },
+    "layer": { "enum": ["mandatory", "organization", "project", "user"] },
+    "description": { "type": "string", "minLength": 10 },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "effect", "match"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z0-9]+(-[a-z0-9]+)*)+$" },
+          "description": { "type": "string", "minLength": 10 },
+          "effect": { "enum": ["allow", "ask", "deny"] },
+          "match": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": false,
+            "properties": {
+              "commands": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+              "commandRegex": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+              "ignoreCase": { "type": "boolean" },
+              "intents": { "type": "array", "minItems": 1, "items": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/permissionIntent" } },
+              "contentRegex": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+            }
+          }
+        }
+      }
+    },
+    "invariants": {
+      "description": "Guarantees enforced by other modules and their tests rather than by matching actions.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "enforcedBy"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 10 },
+          "enforcedBy": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

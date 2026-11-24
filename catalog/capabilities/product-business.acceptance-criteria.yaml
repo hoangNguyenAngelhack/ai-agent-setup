@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: product-business.acceptance-criteria
+name: Acceptance criteria
+description: Define testable acceptance criteria for stories and features.
+version: 0.1.0
+category: product-business
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+inputSchema: null
+outputSchema: null
+validation: null
+domain: product-business
+skills: []
+rules: []
+defaultAgents:
+  - agent.analyst
+riskLevel: low
+costHint: medium

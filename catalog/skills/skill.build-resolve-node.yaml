@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.build-resolve-node
+name: Node.js build resolution
+description: "Use when a Node.js or Express project fails to install, compile or start: npm,
+  TypeScript, ESM/CommonJS or version errors."
+version: 1.6.1
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.build-resolve-node.md
+triggers: "Use when a Node.js or Express project fails to install, compile or start: npm,
+  TypeScript, ESM/CommonJS or version errors."
+resources: []
+disableImplicit: false

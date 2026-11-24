@@ -1,0 +1,44 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Domain
+id: design-ux
+name: Design & UX
+description: User research, interaction and visual design, design systems and accessibility.
+version: 0.1.0
+category: domain
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+  - fs.write:design/**
+inputSchema: null
+outputSchema: null
+validation: null
+ordinal: 2
+purpose: Design usable, consistent and accessible digital experiences.
+roles:
+  - UI Designer
+  - UX Designer
+  - UX Researcher
+  - Interaction Designer
+  - Visual Designer
+  - Design System Engineer
+  - Accessibility Specialist
+capabilities:
+  - design-ux.ux-research
+  - design-ux.user-journey-mapping
+  - design-ux.information-architecture
+  - design-ux.wireframing
+  - design-ux.ui-design
+  - design-ux.interaction-design
+  - design-ux.design-system-definition
+  - design-ux.design-token-management
+  - design-ux.accessibility-evaluation
+  - design-ux.usability-review
+depthLevel: L0

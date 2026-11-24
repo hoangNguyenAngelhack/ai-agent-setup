@@ -1,0 +1,31 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Tool
+id: tool.mcp-playwright
+name: playwright MCP server
+description: Playwright - Browser automation, E2E testing, screenshots
+version: 1.6.1
+category: integration-automation
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - mcp:playwright
+inputSchema: null
+outputSchema: null
+validation: null
+type: mcp
+mcp:
+  command: npx
+  args:
+    - -y
+    - "@anthropic/mcp-playwright@latest"
+platforms:
+  - darwin
+  - linux
+  - win32
+network: true

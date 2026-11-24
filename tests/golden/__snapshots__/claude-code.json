@@ -1,0 +1,266 @@
+[
+  {
+    "path": ".claude/agents/backend.md",
+    "sha256": "d1ee9117aef7c6794a54b84c03da6b4f1a0028c12418625e4ae7cece8bb35593"
+  },
+  {
+    "path": ".claude/agents/code-reviewer.md",
+    "sha256": "0068e45feec582f9062d294bdd393018e5aea5fa7cffcbac946fc9f77b1c5911"
+  },
+  {
+    "path": ".claude/agents/copywriter-seo.md",
+    "sha256": "c38ca1184d934b2157513f56c55f40df939ce17f235ba67889a71940c42e83ec"
+  },
+  {
+    "path": ".claude/agents/frontend.md",
+    "sha256": "5cf90633bc7430ca50be080b2c740c088b83700e7b99f90d27e1573287531daa"
+  },
+  {
+    "path": ".claude/agents/mobile.md",
+    "sha256": "e209732e9ab07119a8bd32d6f8aef37be2e3ff259d3cfa113a29129f6fc4f97f"
+  },
+  {
+    "path": ".claude/agents/project-manager.md",
+    "sha256": "8a56e5fda0a573d15d48b8a66f3d1eeea16f209de18434c7fa2d5014e495a033"
+  },
+  {
+    "path": ".claude/agents/qa.md",
+    "sha256": "c1c01f1954ed94fca90621696d6f838715e6bab6c622306ef8979f09962f4abc"
+  },
+  {
+    "path": ".claude/agents/security-auditor.md",
+    "sha256": "d332707828393d1aee17b3f42ad0d9086d1d4cbd8abefec8ba05024d790ed6d4"
+  },
+  {
+    "path": ".claude/agents/systems-architect.md",
+    "sha256": "4deb77732d3e5e5f9c4dd03e78f7f45ca67f5f871c0f6baa257946a07c3300e6"
+  },
+  {
+    "path": ".claude/agents/test-engineer.md",
+    "sha256": "82b35a56ab90c27c015c544d535f79ff227742790484a2168a2457223e48b57b"
+  },
+  {
+    "path": ".claude/agents/ui-ux-designer.md",
+    "sha256": "a9f09a20df3a7d34becdd27073b54d2defb1f3bd10a3ecb6d258da3a98352b21"
+  },
+  {
+    "path": ".claude/CLAUDE.md",
+    "sha256": "67b92ada8f5799968123c5dcf67959c15bcb81739533f17c6f5ad2a51ac4311c"
+  },
+  {
+    "path": ".claude/commands/build.md",
+    "sha256": "4ecff3c0ebc2bb6739856a8627a8898ffaded5ec92b750781d1797f11dfe8309"
+  },
+  {
+    "path": ".claude/commands/debug.md",
+    "sha256": "499055d92f1eddb2c7dc2b847f8b62c490b4e78e7f4f5ccb0217df080b21843c"
+  },
+  {
+    "path": ".claude/commands/deploy.md",
+    "sha256": "5bc5a422771f4a905ce905808171b774c5ec47cc04ec299c4a4ef25cb45cdb23"
+  },
+  {
+    "path": ".claude/commands/fix-issue.md",
+    "sha256": "32eed6635b41ad117acf18145f1df308d83f55b70f5a0678d29015dddb8d36b6"
+  },
+  {
+    "path": ".claude/commands/plan.md",
+    "sha256": "b9bfc297019b1e3420be40f704fc2f81e0df19e3f907bbf3b34321b7fabf1dc9"
+  },
+  {
+    "path": ".claude/commands/review.md",
+    "sha256": "910ceaf9d0d07c37d40580d84ecaaf54a86dfc687271b11b8b6d200de44bd5a1"
+  },
+  {
+    "path": ".claude/commands/simplify.md",
+    "sha256": "ecbb88e4997d05f49d1cde4070b91c29a2f35dc64533e91d9334646c913c68e9"
+  },
+  {
+    "path": ".claude/commands/spec.md",
+    "sha256": "1bad02c20ec8dc5363496acc87f76af4ac9863626adc3b9630cc874052f0be76"
+  },
+  {
+    "path": ".claude/commands/test.md",
+    "sha256": "770fd020ba4a48d93a9db652d32ad0280ecbd4ab833351992e0a3b1a3023b189"
+  },
+  {
+    "path": ".claude/hooks/ai-agent-setup/policies.json",
+    "sha256": "31e9464471f1bc4596ce9e39ed75eb18caa59b98a78552ddedc1ac17dc5cc089"
+  },
+  {
+    "path": ".claude/hooks/ai-agent-setup/policy-check.cjs",
+    "sha256": "00eea16a8966c2796a5aa1c8a5e5552ab8e876202462fa76f5186484840b3294"
+  },
+  {
+    "path": ".claude/hooks/ai-agent-setup/policy/command-matcher.cjs",
+    "sha256": "906b894869eeb78fa2babcd19c0ad27ff6dda1701d908b7950f08e14965686f9"
+  },
+  {
+    "path": ".claude/hooks/ai-agent-setup/policy/index.cjs",
+    "sha256": "7be2b47eb3b4360ff4184329ebb9faef5ed59afa100449577a240346ee08159e"
+  },
+  {
+    "path": ".claude/hooks/ai-agent-setup/policy/policy-engine.cjs",
+    "sha256": "c52616daf0d1060318e1c87b10ae565e4acdce1f5bb588ad0efb216312efaa84"
+  },
+  {
+    "path": ".claude/rules/api-conventions.md",
+    "sha256": "978b6eea84953849e11befabc36dce7520a208c04c8cf8359e65564ffef13db8"
+  },
+  {
+    "path": ".claude/rules/clean-code.md",
+    "sha256": "5543e4aa3643fe2be4503061925b50d2c2b60290676a83e7eba0dac287242f55"
+  },
+  {
+    "path": ".claude/rules/code-style.md",
+    "sha256": "fb7fad04a6e1f095b9fec588d53208ee5595a499085863718c302e59b08d0579"
+  },
+  {
+    "path": ".claude/rules/database.md",
+    "sha256": "ce4a55402ea7eae877cecf6b9868fc3c6bfebc3ebdb2f20a767db8d1cb7aa7c6"
+  },
+  {
+    "path": ".claude/rules/error-handling.md",
+    "sha256": "9d8b61715940d637c9276cd512fedc855ae6b157c96d4fb5060c428f1bbb8341"
+  },
+  {
+    "path": ".claude/rules/git-workflow.md",
+    "sha256": "598cd812c75004e33b4d0a3f4e13a4ebc38323a228ce089c80eca7ae8117339c"
+  },
+  {
+    "path": ".claude/rules/monitoring.md",
+    "sha256": "6b3b7d7f5b075d67db0bfb778293de381f050fb948b08447010eaaa9b34da9b3"
+  },
+  {
+    "path": ".claude/rules/python-patterns.md",
+    "sha256": "ce01a8e184e7f569015765ca2476ecc9b505d1d10c96e3d063380a77eb954be3"
+  },
+  {
+    "path": ".claude/rules/security.md",
+    "sha256": "046cb028967c107be3cb1c340e719837aebdab85d2b745bb9b63da8bdd01dea0"
+  },
+  {
+    "path": ".claude/rules/sql-patterns.md",
+    "sha256": "3aa1936705a76f5d27114d64e85d7a4247a8b690a47fe41c5d4f8576260cc0ac"
+  },
+  {
+    "path": ".claude/rules/testing.md",
+    "sha256": "d7b32c59c1f7a0a69ceda625f921869727224a673366eabe25d36a1696850cb1"
+  },
+  {
+    "path": ".claude/rules/typescript-patterns.md",
+    "sha256": "b90fec65aa4bd82fc091b0a9f87767dbb5f9ed6dbc608bc8456f1a88d32fcf22"
+  },
+  {
+    "path": ".claude/settings.json",
+    "sha256": "e57e26551bb9a7ef322db3f58aed0d2216a2f6209ec56f56b65f52216757bd34"
+  },
+  {
+    "path": ".claude/skills/build-resolve-node/SKILL.md",
+    "sha256": "c6827c12532940b80ea0a554e55bfb347a321849f1b908a98f91e9b223b72667"
+  },
+  {
+    "path": ".claude/skills/build-resolve-prisma/SKILL.md",
+    "sha256": "4c900197597505a18720c2521e1792afd0d0356b7e0eb4058535e0151c679174"
+  },
+  {
+    "path": ".claude/skills/build-resolve-react-native/SKILL.md",
+    "sha256": "e647e2081d9e352ee308534d0009fad32d8af37d49d936459a0c8365e0718166"
+  },
+  {
+    "path": ".claude/skills/build-resolve-react/SKILL.md",
+    "sha256": "cb26fc073d94da95a3127444f85dbaafa42c8a0665d7e73cc0c7d478a8735a36"
+  },
+  {
+    "path": ".claude/skills/code-review/references/agent-skills-variant.md",
+    "sha256": "36056896c9fd7dedfa9f2328d35ece60c5df6eeada18a0da6368644835210f60"
+  },
+  {
+    "path": ".claude/skills/code-review/SKILL.md",
+    "sha256": "944af983a751c2cfcb4c3cf9b1ad4e3a4afae4ff5b7e66443ba073ce930a171a"
+  },
+  {
+    "path": ".claude/skills/data-transform/SKILL.md",
+    "sha256": "adf6f5047a957c6ab06d1c4f3a984e411e5147ef4a9df84b516bee73ab1da585"
+  },
+  {
+    "path": ".claude/skills/deploy/references/deploy.md",
+    "sha256": "f058d062aa70af4e3f07a6e378acf0909eb946ab3060dab14f84b4c6a7605b7a"
+  },
+  {
+    "path": ".claude/skills/deploy/SKILL.md",
+    "sha256": "9500b7508138157c9b16478beebf050617072fedfbec10d7ae7e2153b9d1a1b5"
+  },
+  {
+    "path": ".claude/skills/incremental-implementation/SKILL.md",
+    "sha256": "081addd07d89a2f959dd912940dc8da88ccb4c8b97e99ce376a647e4054f0fea"
+  },
+  {
+    "path": ".claude/skills/naming-conventions/SKILL.md",
+    "sha256": "ffc5ed1c138a6dfbbc56f70b6612c7a62b4469e8df704529ac083ea88a613a88"
+  },
+  {
+    "path": ".claude/skills/nestjs-backend/SKILL.md",
+    "sha256": "30eabafda561470b4b372b51e3c2cdebdebf857248040f71a67d279e6fa0e7e8"
+  },
+  {
+    "path": ".claude/skills/nodejs-backend/SKILL.md",
+    "sha256": "f9b2b7bf48b9ac51ecc10c2f0374fdbe493ba8e13241766034e5f5cb6fc7d029"
+  },
+  {
+    "path": ".claude/skills/project-structure/SKILL.md",
+    "sha256": "2997841e853275ddbf411fa68295d5e7d3bffcb0acb102f7e53960416b367d6e"
+  },
+  {
+    "path": ".claude/skills/react-frontend/references/accessibility-checklist.md",
+    "sha256": "99f14587322e15ee856c19b37c3aa540ffd62d5fe922700083452c4a0a316df9"
+  },
+  {
+    "path": ".claude/skills/react-frontend/references/performance-checklist.md",
+    "sha256": "cc17e42411513993f218252d1490f09ed0c2c8245f4ed4d48e4f36d1d48a7cf9"
+  },
+  {
+    "path": ".claude/skills/react-frontend/SKILL.md",
+    "sha256": "b3474168baeb56c4951ce06d373dcb52f1635dddbc2b94676049a56f48e11a39"
+  },
+  {
+    "path": ".claude/skills/react-native-mobile/references/mobile-performance-checklist.md",
+    "sha256": "db1c469e936a79d552c7220becb875ee2a764e63966166412ab1ffd2ebd725ae"
+  },
+  {
+    "path": ".claude/skills/react-native-mobile/references/mobile-release-checklist.md",
+    "sha256": "bfb2199a342eb694957f10b083a0d2bbe710da2961fa750c531f1ae01993d3fb"
+  },
+  {
+    "path": ".claude/skills/react-native-mobile/SKILL.md",
+    "sha256": "0ef62e23645f32ddd097283f180153705da4bf59482137d4dabb4bc057c67f5c"
+  },
+  {
+    "path": ".claude/skills/security-review/references/security-checklist.md",
+    "sha256": "36c4726128b66d7d3646c3487344b7855bd181e1fa3c6a5d729debdee7fe6c4c"
+  },
+  {
+    "path": ".claude/skills/security-review/SKILL.md",
+    "sha256": "f82648850e655536eb0bcd5bcb891780b7a323c627ce12a027d1909a7e180449"
+  },
+  {
+    "path": ".claude/skills/system-design/SKILL.md",
+    "sha256": "7f4d3362d8fec440310423de1d367515b7016c3288757bf153ef25bd701d5d23"
+  },
+  {
+    "path": ".claude/skills/tdd/references/agent-skills-variant.md",
+    "sha256": "ef4e06e8e71a9c7c2c61f193e2a99b9d0d20575c02a823d366465ed6f59db312"
+  },
+  {
+    "path": ".claude/skills/tdd/references/testing-patterns.md",
+    "sha256": "5692ce0be0c4084e7e102e65aba514b325bea113225b1c7fd7468d2c3d5fbf3a"
+  },
+  {
+    "path": ".claude/skills/tdd/SKILL.md",
+    "sha256": "0adad68f1ec100b6bca912991e5a5a2f9ce17cfea9ab515a148e7aa3f3914fda"
+  },
+  {
+    "path": ".claude/skills/tech-stack/SKILL.md",
+    "sha256": "80e55b5468a5fdf25f1104a39ab5940868d49b1f51a753020ef267e60d18d944"
+  }
+]

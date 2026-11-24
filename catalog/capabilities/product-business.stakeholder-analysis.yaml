@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: product-business.stakeholder-analysis
+name: Stakeholder analysis
+description: Identify stakeholders, their interests, influence and decision rights.
+version: 0.1.0
+category: product-business
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+inputSchema: null
+outputSchema: null
+validation: null
+domain: product-business
+skills: []
+rules: []
+defaultAgents:
+  - agent.analyst
+riskLevel: low
+costHint: medium

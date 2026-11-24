@@ -1,0 +1,33 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Workflow
+id: wf.simplify
+name: Simplify
+description: Reduce complexity without changing behaviour.
+version: 1.6.1
+category: architecture-leadership
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+entry: simplify
+domains:
+  - architecture-leadership
+steps:
+  - id: simplify
+    capability: architecture-leadership.technical-debt-management
+    agent: agent.implementer
+    gates:
+      - gate.unit-tests
+    approval: none
+body: wf.simplify.md

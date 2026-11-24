@@ -1,0 +1,39 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Profile
+id: profile.strict
+name: Strict
+description: "Regulated and enterprise: adds integration tests, documentation and 95% coverage (V1
+  tier Strict)."
+version: 1.6.1
+category: profile
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+includes:
+  statuses:
+    - experimental
+    - stable
+excludes:
+  ids:
+    - rule.honesty
+policy: policy.default-project
+contextBudget:
+  codex: 24576
+gates:
+  - gate.build
+  - gate.unit-tests
+  - gate.lint
+  - gate.security-scan
+  - gate.integration-tests
+  - gate.documentation
+  - gate.coverage-95

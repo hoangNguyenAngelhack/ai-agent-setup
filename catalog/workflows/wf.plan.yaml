@@ -1,0 +1,31 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Workflow
+id: wf.plan
+name: Plan
+description: Decompose a spec into small, verifiable tasks with dependency ordering.
+version: 1.6.1
+category: product-business
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+inputSchema: null
+outputSchema: null
+validation: null
+entry: plan
+domains:
+  - product-business
+steps:
+  - id: decompose
+    capability: product-business.backlog-management
+    agent: agent.analyst
+    gates: []
+    approval: optional
+body: wf.plan.md

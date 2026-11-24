@@ -1,0 +1,30 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: security-compliance.secure-coding
+name: Secure coding
+description: Write code that avoids common vulnerability classes.
+version: 0.1.0
+category: security-compliance
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+domain: security-compliance
+skills: []
+rules:
+  - rule.security
+defaultAgents:
+  - agent.implementer
+riskLevel: high
+costHint: medium

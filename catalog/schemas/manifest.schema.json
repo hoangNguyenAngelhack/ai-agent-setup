@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:contracts:v1:manifest",
+  "title": "Install manifest (.ai-agent-setup/manifest.json)",
+  "description": "Records managed files, sections and transactions for diff, update, rollback and doctor. See docs/v2/05 §11.3.",
+  "type": "object",
+  "required": ["schema", "toolkitVersion", "catalogDigest", "adapters", "profile", "files", "sections", "transactions"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "manifest/v1" },
+    "toolkitVersion": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/semver" },
+    "catalogDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "adapters": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claude-code": { "$ref": "#/$defs/adapterRecord" },
+        "codex": { "$ref": "#/$defs/adapterRecord" }
+      }
+    },
+    "profile": { "type": "string", "minLength": 1 },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256", "source", "class"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "source": { "type": ["string", "null"] },
+          "class": { "enum": ["managed", "unmanaged-v1", "pristine-v1"] }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "marker", "sha256"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "marker": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "transactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "op", "backup"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^txn-[0-9]{8}T[0-9]{6}Z(-[0-9a-z]+)?$" },
+          "op": { "enum": ["create", "setup", "adopt", "update", "rollback"] },
+          "backup": { "type": ["string", "null"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "adapterRecord": {
+      "type": "object",
+      "required": ["version", "hostCompat"],
+      "additionalProperties": false,
+      "properties": {
+        "version": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/semver" },
+        "hostCompat": { "enum": ["verified", "unverified"] },
+        "trustRequired": { "type": "boolean" }
+      }
+    }
+  }
+}

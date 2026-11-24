@@ -1,0 +1,45 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Agent
+id: agent.tester
+name: Tester
+description: Designs test strategy, writes tests and test data, and reports quality with evidence.
+version: 0.1.0
+category: agent
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions: &a1
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+purpose: Designs test strategy, writes tests and test data, and reports quality with evidence.
+capabilities:
+  - frontend.frontend-testing
+  - quality.api-testing
+  - quality.e2e-testing
+  - quality.functional-testing
+  - quality.integration-testing
+  - quality.performance-testing
+  - quality.quality-reporting
+  - quality.regression-testing
+  - quality.test-automation
+  - quality.test-data-management
+  - quality.test-planning
+  - quality.test-strategy
+skills: []
+tools:
+  allow: *a1
+  deny:
+    - pkg.publish
+    - vcs.push
+modelHint: balanced
+body: null
+aliasOf: null

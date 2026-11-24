@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Capability
+id: architecture-leadership.technical-debt-management
+name: Technical debt management
+description: Identify, rank and plan repayment of technical debt.
+version: 0.1.0
+category: architecture-leadership
+status: draft
+dependencies: []
+requiredContext:
+  projectSignals: []
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write:docs/**
+inputSchema: null
+outputSchema: null
+validation: null
+domain: architecture-leadership
+skills: []
+rules: []
+defaultAgents:
+  - agent.reviewer
+riskLevel: medium
+costHint: medium
