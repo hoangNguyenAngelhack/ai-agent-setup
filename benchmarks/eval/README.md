@@ -16,6 +16,29 @@ npm run eval:routing        # prints the metrics and every failure
 npm test                    # tests/eval/routing.test.ts keeps the floors below
 ```
 
+## Regression detection (W2.2-06)
+
+`baseline.json` holds every case's checks (routing: `type`, `domains`, `topDomain`, and
+`minimality` for simple tasks; sensitivity: `mandatory` and `assessment`) and every metric, as
+recorded at a commit. A case is identified by a digest of its text and labels.
+
+```bash
+npm run eval:regressions    # compares the current code with the baseline; exit 1 unless PASS
+npm run eval:baseline       # records the current results as the new baseline
+```
+
+- **REGRESSED**: a check that passed in the baseline fails now, or a metric got worse. Aggregate
+  floors miss this when one case breaks while another is fixed; the per-case comparison does not.
+  A regression of the sensitive-impact suite is a **veto** (docs/v2/09 §6), whatever the other scores.
+- **STALE**: the set changed (cases added, removed or relabelled). Only the unchanged cases are
+  compared; metrics are not, because they now cover other cases. Never PASS.
+- **PASS**: every case and metric at least as good as the baseline.
+
+`tests/eval/regression.test.ts` runs the comparison in CI and seeds regressions into the classifier
+and the router (dropped secondary domains, an extra agent, a broken case offset by a fixed one, a
+lost payment review) to prove each is detected on exactly the cases it breaks. Record a new baseline
+only after reading the report, and say why in the commit when it accepts a regression.
+
 ## Results (2026-11-24, catalog at this commit, automatic mode, no project detected)
 
 | Metric | Value | Target (hypothesis, 09 §4) |

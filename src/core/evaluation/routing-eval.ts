@@ -20,6 +20,8 @@ export interface RoutingMetrics {
   /** Share of tasks labelled simple that were routed with <= 1 agent and <= 3 skills (docs/v2/09 §4). */
   minimality: number;
   failures: string[];
+  /** Per task: type, domains (exact set), topDomain, and minimality for tasks labelled simple. */
+  outcomes: Record<string, Record<string, boolean>>;
 }
 
 const round = (value: number) => Math.round(value * 1000) / 1000;
@@ -43,8 +45,11 @@ export function evaluateRouting(
   let simpleTotal = 0;
   let simpleMinimal = 0;
   const failures: string[] = [];
+  const outcomes: RoutingMetrics['outcomes'] = {};
 
   for (const task of tasks) {
+    const checks: Record<string, boolean> = {};
+    outcomes[task.id] = checks;
     const classification = classify(task.text);
     const got = new Set(classification.domains.map((domain) => domain.id));
     const want = new Set(task.domains);
@@ -58,16 +63,18 @@ export function evaluateRouting(
       if (task.domains.length > 1) multiFalseNegative += 1;
     }
     if (task.domains.length > 1) multiTruePositive += [...want].filter((id) => got.has(id)).length;
-    if (classification.domains[0] && want.has(classification.domains[0].id)) topDomain += 1;
-    if (classification.type === task.type) typeCorrect += 1;
+    checks.topDomain = Boolean(classification.domains[0] && want.has(classification.domains[0].id));
+    if (checks.topDomain) topDomain += 1;
+    checks.type = classification.type === task.type;
+    if (checks.type) typeCorrect += 1;
     else failures.push(`${task.id} type: expected ${task.type}, got ${classification.type}`);
-    if ([...want].some((id) => !got.has(id)) || [...got].some((id) => !want.has(id))) {
-      failures.push(`${task.id} domains: expected ${task.domains.join(',')}, got ${[...got].join(',') || 'none'}`);
-    }
+    checks.domains = [...want].every((id) => got.has(id)) && [...got].every((id) => want.has(id));
+    if (!checks.domains) failures.push(`${task.id} domains: expected ${task.domains.join(',')}, got ${[...got].join(',') || 'none'}`);
     if (task.simple) {
       simpleTotal += 1;
       const plan = route(task.text, classification);
-      if (plan.agents.length <= 1 && plan.skills.length <= 3) simpleMinimal += 1;
+      checks.minimality = plan.agents.length <= 1 && plan.skills.length <= 3;
+      if (checks.minimality) simpleMinimal += 1;
       else failures.push(`${task.id} minimality: ${plan.agents.length} agent(s), ${plan.skills.length} skill(s)`);
     }
   }
@@ -81,5 +88,6 @@ export function evaluateRouting(
     typeAccuracy: round(typeCorrect / Math.max(tasks.length, 1)),
     minimality: round(simpleMinimal / Math.max(simpleTotal, 1)),
     failures,
+    outcomes,
   };
 }

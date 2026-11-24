@@ -61,7 +61,9 @@
     "catalog:validate": "npm run build && node dist/cli/catalog-validate.js",
     "prepublishOnly": "npm run build && npm test",
     "docs:summary": "npm run build && node scripts/update-readme-summary.cjs",
-    "eval:routing": "npm run build && node dist/app/routing-eval-run.js"
+    "eval:routing": "npm run build && node dist/app/routing-eval-run.js",
+    "eval:regressions": "npm run build && node dist/app/eval-regression.js",
+    "eval:baseline": "npm run build && node dist/app/eval-regression.js --record"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
