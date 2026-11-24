@@ -826,7 +826,8 @@ continue. The result records `rulesVersion: 2`, `deferred` and `approval.pending
 | Report | Contract | Written | Rule |
 |---|---|---|---|
 | One gate invocation | `gate-report/v1` | `runs/<id>/gates/g<n>/report.json` (+ `report.md`) | Totals and overall status must follow from the records; an inconsistent PASS is stored as NOT_VERIFIED |
-| All runs of a project | `execution-report/v1` | Printed by `report` (read-only) | Runs counted by status and integrity; unloadable runs are UNREADABLE; gate pass rate only over verified runs; durations measured; no estimated figures |
+| One delivery to a host (W2.2-04) | `host-usage/v1` | `runs/<id>/evidence/usage-<host>-<ts>.json`, signed with the transcript | Tokens read from the host's raw stream before redaction (the redaction rules erase `*_tokens` values); a message repeated over several lines counted once; money only as the host's own figure, labelled estimated |
+| All runs of a project | `execution-report/v1` | Printed by `report` (read-only) | Runs counted by status and integrity; unloadable runs are UNREADABLE; gate pass rate only over verified runs; durations measured; tokens per host only from signed usage files (MEASURED, or NOT_STARTED in a verified run), never added across hosts; tokens per accepted outcome (SUCCEEDED run) = tokens of every delivery to the host / accepted outcomes, given only when every delivery is proved |
 
 ### 12.5 Runtime state protection (implemented)
 

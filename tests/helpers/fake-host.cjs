@@ -22,7 +22,21 @@ const mode = process.env.FAKE_HOST_MODE ?? 'success';
 const say = (value) => process.stdout.write(`${JSON.stringify(value)}\n`);
 const report = (args) => execSync(`${eventCommand} ${args}`, { stdio: 'ignore' });
 const start = () => say(host === 'claude' ? { type: 'system', subtype: 'init', session_id: 'fake' } : { type: 'thread.started', thread_id: 'fake' });
-const done = () => say(host === 'claude' ? { type: 'result', subtype: 'success', is_error: false } : { type: 'turn.completed' });
+// FAKE_HOST_USAGE=1: the stream carries token usage in each host's shape. Claude repeats one message
+// id over two lines (as its transcripts do), so a meter that counts lines would double it.
+const withUsage = process.env.FAKE_HOST_USAGE === '1';
+const usage = () => {
+  if (!withUsage || host !== 'claude') return;
+  const message = (id, input, output) => ({ type: 'assistant', message: { id, model: 'claude-test-1', usage: { input_tokens: input, output_tokens: output, cache_read_input_tokens: 100, cache_creation_input_tokens: 10 } } });
+  say(message('msg_a', 5, 20));
+  say(message('msg_a', 5, 20));
+  say(message('msg_b', 7, 30));
+};
+const done = () => {
+  usage();
+  if (host === 'claude') say({ type: 'result', subtype: 'success', is_error: false, ...(withUsage ? { total_cost_usd: 0.0125, usage: { input_tokens: 999, output_tokens: 999 } } : {}) });
+  else say({ type: 'turn.completed', ...(withUsage ? { usage: { input_tokens: 300, cached_input_tokens: 120, output_tokens: 45 } } : {}) });
+};
 const failed = (message) => say(host === 'claude' ? { type: 'result', subtype: 'error_during_execution', is_error: true } : { type: 'turn.failed', error: { message } });
 
 if (mode === 'silent') process.exit(0);

@@ -4,11 +4,14 @@ import { SchemaValidator } from '../registry';
 import { readGateHistory, type HistoryEntry } from './gates';
 import { projectIdentity, RUNS_DIR } from './run-files';
 import { computeRunResult } from './runs';
+import type { TokenCounts } from '../core/evaluation';
+import { runDeliveries, usageByHost, type HostUsageSummary, type ReportDelivery } from './usage-report';
 
 /**
  * Execution report across runs (W2.2-05): what the local artifacts prove about every execution run
- * and every quality gate. Read-only. All figures are measured from the artifacts; a run whose
- * artifacts cannot be loaded (changed plan, missing key, broken log) is UNREADABLE, never success.
+ * and every quality gate. Read-only. All counts and tokens are measured from the artifacts; a run
+ * whose artifacts cannot be loaded (changed plan, missing key, broken log) is UNREADABLE, never
+ * success. Token usage per host (W2.2-04) counts only signed usage; money is the host's estimate.
  */
 const PACKAGE_ROOT = join(__dirname, '..', '..');
 
@@ -32,6 +35,7 @@ export interface ReportRun {
   stepsSucceeded: number;
   anomalies: number;
   reason: string;
+  deliveries: ReportDelivery[];
 }
 
 export interface ReportGate {
@@ -53,6 +57,7 @@ export interface ExecutionReport {
   since: string | null;
   runs: { total: number; byStatus: Record<ReportRunStatus, number>; byIntegrity: Record<Integrity, number>; items: ReportRun[] };
   gates: { invocations: number; items: ReportGate[] };
+  usage: { hosts: HostUsageSummary[] };
 }
 
 /** `run-20261124T143247Z-4baf58` → 2026-11-24T14:32:47Z. */
@@ -81,9 +86,11 @@ function executionRuns(root: string, since: string | null, now: Date, validator:
           stepsSucceeded: result.verification.stepsSucceeded,
           anomalies: result.anomalies.length,
           reason: result.reason,
+          deliveries: runDeliveries(root, runId, result.integrity.status, validator),
         };
       } catch (error) {
-        return { runId, status: 'UNREADABLE', integrity: null, steps: 0, stepsSucceeded: 0, anomalies: 0, reason: (error as Error).message || 'unreadable' };
+        const reason = (error as Error).message || 'unreadable';
+        return { runId, status: 'UNREADABLE', integrity: null, steps: 0, stepsSucceeded: 0, anomalies: 0, reason, deliveries: runDeliveries(root, runId, null, validator) };
       }
     });
 }
@@ -139,6 +146,7 @@ export function buildExecutionReport(root: string, options: { since?: string; no
       items: runs,
     },
     gates: { invocations: new Set(history.map((entry) => entry.runId)).size, items: [...byGate].sort(([a], [b]) => a.localeCompare(b)).map(([gate, entries]) => gateSummary(gate, entries)) },
+    usage: { hosts: usageByHost(runs) },
   };
   const check = validator.validate(EXECUTION_REPORT_SCHEMA, report);
   if (!check.valid) throw new Error(`Execution report is invalid: ${check.errors.join('; ')}`);
@@ -154,7 +162,7 @@ export function renderExecutionReport(report: ExecutionReport): string {
     '',
     `- Generated: ${report.generatedAt}; period: ${report.since ? `since ${report.since}` : 'all runs'}`,
     `- Commit: ${report.project.commit ?? 'none'}${report.project.dirty ? ' (uncommitted changes)' : ''}`,
-    '- All figures are measured from local artifacts; nothing is estimated.',
+    '- Counts and tokens are measured from local artifacts; money is only the host\'s own figure, labelled estimated.',
     '',
     `## Execution runs (${report.runs.total})`,
     '',
@@ -179,5 +187,20 @@ export function renderExecutionReport(report: ExecutionReport): string {
       );
     }
   } else lines.push('No gate history.');
+  lines.push('', '## Token usage per host (measured)', '');
+  if (report.usage.hosts.length) {
+    const tokens = (counts: TokenCounts | null) => (counts ? `${counts.input} / ${counts.output} / ${counts.cacheRead} / ${counts.cacheWrite}` : 'n/a');
+    lines.push(
+      'Tokens as input / output / cache read / cache write, in each host\'s own terms; hosts are never added up.',
+      '',
+      '| Host | Deliveries | Proved | Tokens (proved) | Accepted outcomes | Per accepted outcome | Cost (host estimate, USD) | Note |',
+      '|---|---|---|---|---|---|---|---|',
+    );
+    for (const host of report.usage.hosts) {
+      const proved = host.byStatus.MEASURED + host.byStatus.NOT_STARTED;
+      const cost = host.cost ? `${host.cost.usd}${host.cost.perAcceptedOutcomeUsd === null ? '' : ` (${host.cost.perAcceptedOutcomeUsd} per outcome)`}` : 'not reported';
+      lines.push(`| ${host.host} | ${host.deliveries} | ${proved} | ${tokens(host.tokens)} | ${host.acceptedOutcomes} | ${tokens(host.perAcceptedOutcome)} | ${cost} | ${host.reason} |`);
+    }
+  } else lines.push('No delivery to a host.');
   return `${lines.join('\n')}\n`;
 }

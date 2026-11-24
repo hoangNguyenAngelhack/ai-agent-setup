@@ -127,7 +127,7 @@ describe('execution report across runs (W2.2-05)', () => {
     ]);
     const markdown = renderExecutionReport(report);
     expect(markdown).toContain('| gate.unit-tests | 3 | 1 | 1 | 1 | 50% | 200 | NOT_VERIFIED | aaa |');
-    expect(markdown).toContain('nothing is estimated');
+    expect(markdown).toContain("money is only the host's own figure, labelled estimated");
 
     const recent = buildExecutionReport(root, { since: '2026-11-21' });
     expect(recent.since).toBe('2026-11-21T00:00:00.000Z');

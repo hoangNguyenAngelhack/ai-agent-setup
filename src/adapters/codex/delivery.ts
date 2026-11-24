@@ -1,4 +1,10 @@
-import { deliveryPrompt, jsonLine, type HostDelivery } from '../common/delivery';
+import { deliveryPrompt, jsonLine, usageCounts, type HostDelivery } from '../common/delivery';
+
+/**
+ * Codex `turn.completed.usage` fields (published docs; NOT verified on an installed CLI). Following
+ * the OpenAI API convention, cached input is assumed to be part of `input_tokens`, not added to it.
+ */
+const USAGE_FIELDS = { input: 'input_tokens', output: 'output_tokens', cacheRead: 'cached_input_tokens' };
 
 /**
  * Codex non-interactive mode: `codex exec --json <prompt>` prints JSONL events (`thread.started`,
@@ -30,5 +36,11 @@ export const codexDelivery: HostDelivery = {
       return { kind: 'failed', reason: `codex ${event.type}: ${message}` };
     }
     return null;
+  },
+  parseUsage(line) {
+    const event = jsonLine(line);
+    if (event?.type !== 'turn.completed') return null;
+    const tokens = usageCounts(event.usage, USAGE_FIELDS);
+    return tokens ? { tokens } : null;
   },
 };

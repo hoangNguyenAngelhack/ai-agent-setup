@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:contracts:v1:host-usage",
+  "title": "Token usage reported by a host during one delivery",
+  "description": "Written next to the delivery transcript and signed with it (V2.2, W2.2-04). Tokens are measured: read from the host's own stream, never computed; token kinds keep each host's meaning, and figures from different hosts are never added up. A cost in money is only the host's own figure, labelled estimated.",
+  "type": "object",
+  "required": ["schemaVersion", "host", "samples", "tokens", "byModel", "label", "basis", "cost"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "host-usage/v1" },
+    "host": { "enum": ["claude-code", "codex"] },
+    "samples": { "description": "Usage records read from the stream; 0 means the stream carried no usage.", "$ref": "#/$defs/count" },
+    "tokens": { "$ref": "#/$defs/tokens" },
+    "byModel": { "type": "object", "additionalProperties": { "$ref": "#/$defs/tokens" } },
+    "label": { "const": "measured" },
+    "basis": { "type": "string", "minLength": 1 },
+    "cost": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["usd", "label", "basis"],
+          "additionalProperties": false,
+          "properties": { "usd": { "type": "number", "minimum": 0 }, "label": { "const": "estimated" }, "basis": { "type": "string", "minLength": 1 } }
+        },
+        { "type": "null" }
+      ]
+    }
+  },
+  "$defs": {
+    "count": { "type": "integer", "minimum": 0 },
+    "tokens": {
+      "type": "object",
+      "required": ["input", "output", "cacheRead", "cacheWrite"],
+      "additionalProperties": false,
+      "properties": {
+        "input": { "$ref": "#/$defs/count" },
+        "output": { "$ref": "#/$defs/count" },
+        "cacheRead": { "$ref": "#/$defs/count" },
+        "cacheWrite": { "$ref": "#/$defs/count" }
+      }
+    }
+  }
+}

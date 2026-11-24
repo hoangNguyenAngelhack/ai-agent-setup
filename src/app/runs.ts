@@ -23,6 +23,7 @@ import {
 } from '../core/execution';
 import { SchemaValidator } from '../registry';
 import type { IsolationProfile, NetworkPolicy, PreparedLaunch } from '../core/isolation';
+import { UsageMeter, type HostUsage } from '../core/evaluation';
 import { ProcessTree, RUN_MARK_ENV } from '../isolation';
 import { killTree } from '../quality';
 import { redactText, redactValue } from '../shared/redact';
@@ -217,6 +218,15 @@ function verifiedEvents(root: string, runId: string, key: ProjectKey): { events:
   return { events, violations };
 }
 
+/**
+ * Evidence files whose checksums were signed with an event of this run. They are proved unchanged
+ * only when the run's integrity is VERIFIED (every signed checksum was checked on load).
+ */
+export function signedEvidence(root: string, runId: string): Set<string> {
+  const entries = readJsonLines<SignatureEntry>(files(root, runId).signatures).items;
+  return new Set(entries.flatMap((entry) => Object.keys(entry.files ?? {})));
+}
+
 export type EventInput = { type: ExecutionEvent['type']; source: ExecutionEvent['source'] } & Record<string, unknown>;
 
 /**
@@ -391,6 +401,8 @@ export interface DeliveryOutcome {
   transcript: string | null;
   /** Isolation actually applied (W2.2-09); absent for profile none. */
   isolation?: DeliveryIsolation;
+  /** Token usage the host reported in its stream (W2.2-04), kept as signed evidence next to the transcript. */
+  usage?: { file: string } & HostUsage;
 }
 
 export interface DeliveryIsolation {
@@ -461,10 +473,17 @@ async function runHost(
   launch: PreparedLaunch | null,
   outcome: (status: DeliveryOutcome['status'], reason: string, signals?: number, transcript?: string | null) => DeliveryOutcome,
 ): Promise<DeliveryOutcome> {
-  const transcriptPath = `${RUNS_DIR}/${runId}/evidence/host-${host}-${Date.now()}.jsonl`;
+  const stamp = Date.now();
+  const transcriptPath = `${RUNS_DIR}/${runId}/evidence/host-${host}-${stamp}.jsonl`;
+  const usagePath = `${RUNS_DIR}/${runId}/evidence/usage-${host}-${stamp}.json`;
   mkdirSync(join(root, RUNS_DIR, runId, 'evidence'), { recursive: true });
   writeFileSync(join(root, transcriptPath), '');
-  const transcriptChecksum = (): Record<string, string> => ({ [transcriptPath]: sha256File(join(root, transcriptPath))! });
+  // The usage file is signed with the transcript: neither can be changed afterwards unnoticed.
+  const deliveryEvidence = (): Record<string, string> => ({
+    [transcriptPath]: sha256File(join(root, transcriptPath))!,
+    [usagePath]: sha256File(join(root, usagePath))!,
+  });
+  const meter = new UsageMeter(host);
   let isolation: DeliveryIsolation | undefined;
   const startEvidence: Record<string, string> = {};
   if (launch) {
@@ -515,6 +534,8 @@ async function runHost(
   let signals = 0;
   let terminal: HostSignal | null = null;
   createInterface({ input: child.stdout }).on('line', (line) => {
+    const usage = delivery.parseUsage(line);
+    if (usage) meter.add(usage);
     appendFileSync(join(root, transcriptPath), `${redactText(line).text}\n`);
     const signal = delivery.parseLine(line);
     if (!signal) return;
@@ -543,23 +564,25 @@ async function runHost(
   // The host is gone; whatever it left running in the sandbox is stopped too.
   tree?.stop();
   drainInbox();
-  const withIsolation = (result: DeliveryOutcome): DeliveryOutcome => (isolation ? { ...result, isolation } : result);
+  const usage = meter.result();
+  writeJson(join(root, usagePath), usage);
+  const withRunData = (result: DeliveryOutcome): DeliveryOutcome => ({ ...result, ...(isolation ? { isolation } : {}), usage: { file: usagePath, ...usage } });
 
   if (spawnError) {
     recordEvent(root, runId, { type: 'RUN_FAILED', source: 'orchestrator', reason: `could not start ${delivery.executable}: ${spawnError}` });
-    return withIsolation(outcome('NOT_VERIFIED', `could not start ${delivery.executable}: ${spawnError}`, signals));
+    return withRunData(outcome('NOT_VERIFIED', `could not start ${delivery.executable}: ${spawnError}`, signals));
   }
   if (stopped === 'cancelled') {
-    recordEvent(root, runId, { type: 'RUN_CANCELLED', source: 'user', reason: `delivery to ${host} cancelled by the user` }, new Date(), transcriptChecksum());
-    return withIsolation(outcome('CANCELLED', `delivery to ${host} cancelled; the host process was stopped`, signals, transcriptPath));
+    recordEvent(root, runId, { type: 'RUN_CANCELLED', source: 'user', reason: `delivery to ${host} cancelled by the user` }, new Date(), deliveryEvidence());
+    return withRunData(outcome('CANCELLED', `delivery to ${host} cancelled; the host process was stopped`, signals, transcriptPath));
   }
   if (stopped === 'timeout') {
-    recordEvent(root, runId, { type: 'RUN_FAILED', source: 'orchestrator', reason: `${host} did not finish within ${timeoutMs} ms` }, new Date(), transcriptChecksum());
-    return withIsolation(outcome('NOT_VERIFIED', `${host} timed out after ${timeoutMs} ms; the host process was stopped`, signals, transcriptPath));
+    recordEvent(root, runId, { type: 'RUN_FAILED', source: 'orchestrator', reason: `${host} did not finish within ${timeoutMs} ms` }, new Date(), deliveryEvidence());
+    return withRunData(outcome('NOT_VERIFIED', `${host} timed out after ${timeoutMs} ms; the host process was stopped`, signals, transcriptPath));
   }
   const end = terminal as HostSignal | null;
-  if (end?.kind === 'completed') recordEvent(root, runId, { type: 'RUN_COMPLETED', source: 'host' }, new Date(), transcriptChecksum());
-  if (end?.kind === 'failed') recordEvent(root, runId, { type: 'RUN_FAILED', source: 'host', reason: end.reason }, new Date(), transcriptChecksum());
-  if (!end) return withIsolation(outcome('NOT_VERIFIED', `no end-of-run event in the ${host} stream (exit code ${child.exitCode}); progress unknown`, signals, transcriptPath));
-  return withIsolation(outcome('DELIVERED', `${host} reported ${end.kind} (exit code ${child.exitCode}); steps are verified separately`, signals, transcriptPath));
+  if (end?.kind === 'completed') recordEvent(root, runId, { type: 'RUN_COMPLETED', source: 'host' }, new Date(), deliveryEvidence());
+  if (end?.kind === 'failed') recordEvent(root, runId, { type: 'RUN_FAILED', source: 'host', reason: end.reason }, new Date(), deliveryEvidence());
+  if (!end) return withRunData(outcome('NOT_VERIFIED', `no end-of-run event in the ${host} stream (exit code ${child.exitCode}); progress unknown`, signals, transcriptPath));
+  return withRunData(outcome('DELIVERED', `${host} reported ${end.kind} (exit code ${child.exitCode}); steps are verified separately`, signals, transcriptPath));
 }

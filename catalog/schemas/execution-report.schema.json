@@ -2,9 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ai-agent-setup:contracts:v1:execution-report",
   "title": "Execution report across runs",
-  "description": "Aggregated view of execution runs and quality gate history in one project (V2.2, W2.2-05). Every figure is measured from local artifacts; nothing is estimated, and runs whose artifacts cannot be read are listed as UNREADABLE, never counted as success.",
+  "description": "Aggregated view of execution runs, quality gate history and host token usage in one project (V2.2, W2.2-05, W2.2-04). Counts and tokens are measured from local artifacts, and runs whose artifacts cannot be read are listed as UNREADABLE, never counted as success. Tokens count only when a signed usage file proves them; a cost in money is only the host's own figure, labelled estimated.",
   "type": "object",
-  "required": ["schemaVersion", "generatedAt", "project", "since", "runs", "gates"],
+  "required": ["schemaVersion", "generatedAt", "project", "since", "runs", "gates", "usage"],
   "additionalProperties": false,
   "properties": {
     "schemaVersion": { "const": "execution-report/v1" },
@@ -33,7 +33,7 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["runId", "status", "integrity", "steps", "stepsSucceeded", "anomalies", "reason"],
+            "required": ["runId", "status", "integrity", "steps", "stepsSucceeded", "anomalies", "reason", "deliveries"],
             "additionalProperties": false,
             "properties": {
               "runId": { "type": "string", "pattern": "^run-[0-9TZ]+-[0-9a-f]{6}$" },
@@ -42,7 +42,8 @@
               "steps": { "$ref": "#/$defs/count" },
               "stepsSucceeded": { "$ref": "#/$defs/count" },
               "anomalies": { "$ref": "#/$defs/count" },
-              "reason": { "type": "string", "minLength": 1 }
+              "reason": { "type": "string", "minLength": 1 },
+              "deliveries": { "type": "array", "items": { "$ref": "#/$defs/delivery" } }
             }
           }
         }
@@ -97,6 +98,12 @@
           }
         }
       }
+    },
+    "usage": {
+      "type": "object",
+      "required": ["hosts"],
+      "additionalProperties": false,
+      "properties": { "hosts": { "type": "array", "items": { "$ref": "#/$defs/hostUsage" } } }
     }
   },
   "$defs": {
@@ -113,6 +120,70 @@
         "NOT_VERIFIED": { "$ref": "#/$defs/count" },
         "UNREADABLE": { "$ref": "#/$defs/count" }
       }
+    },
+    "tokens": { "$ref": "urn:ai-agent-setup:contracts:v1:host-usage#/$defs/tokens" },
+    "usageStatus": {
+      "description": "MEASURED: signed usage file with records. NOT_STARTED: the host printed nothing in a verified run (counted as zero). NOT_REPORTED: signed, but the stream carried no usage. UNSIGNED: no signature proves the file. NOT_RECORDED: delivered before W2.2-04. INVALID: unreadable or off-contract usage file.",
+      "enum": ["MEASURED", "NOT_STARTED", "NOT_REPORTED", "UNSIGNED", "NOT_RECORDED", "INVALID"]
+    },
+    "usageCounts": {
+      "type": "object",
+      "required": ["MEASURED", "NOT_STARTED", "NOT_REPORTED", "UNSIGNED", "NOT_RECORDED", "INVALID"],
+      "additionalProperties": false,
+      "properties": {
+        "MEASURED": { "$ref": "#/$defs/count" },
+        "NOT_STARTED": { "$ref": "#/$defs/count" },
+        "NOT_REPORTED": { "$ref": "#/$defs/count" },
+        "UNSIGNED": { "$ref": "#/$defs/count" },
+        "NOT_RECORDED": { "$ref": "#/$defs/count" },
+        "INVALID": { "$ref": "#/$defs/count" }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "required": ["host", "status", "tokens", "costUsd"],
+      "additionalProperties": false,
+      "properties": {
+        "host": { "type": "string", "minLength": 1 },
+        "status": { "$ref": "#/$defs/usageStatus" },
+        "tokens": { "oneOf": [{ "$ref": "#/$defs/tokens" }, { "type": "null" }] },
+        "costUsd": { "oneOf": [{ "type": "number", "minimum": 0 }, { "type": "null" }] }
+      }
+    },
+    "hostUsage": {
+      "type": "object",
+      "required": ["host", "deliveries", "byStatus", "tokens", "complete", "acceptedOutcomes", "perAcceptedOutcome", "reason", "cost"],
+      "additionalProperties": false,
+      "properties": {
+        "host": { "type": "string", "minLength": 1 },
+        "deliveries": { "$ref": "#/$defs/count" },
+        "byStatus": { "$ref": "#/$defs/usageCounts" },
+        "tokens": { "description": "Sum over MEASURED and NOT_STARTED deliveries only; a lower bound when complete is false.", "$ref": "#/$defs/tokens" },
+        "complete": { "type": "boolean" },
+        "acceptedOutcomes": { "description": "SUCCEEDED runs with at least one delivery to this host.", "$ref": "#/$defs/count" },
+        "perAcceptedOutcome": {
+          "description": "Tokens of every delivery to this host, accepted or not, divided by the accepted outcomes; null when incomplete or when there is no accepted outcome.",
+          "oneOf": [{ "type": "object", "required": ["input", "output", "cacheRead", "cacheWrite"], "additionalProperties": false, "properties": { "input": { "type": "number", "minimum": 0 }, "output": { "type": "number", "minimum": 0 }, "cacheRead": { "type": "number", "minimum": 0 }, "cacheWrite": { "type": "number", "minimum": 0 } } }, { "type": "null" }]
+        },
+        "reason": { "type": "string", "minLength": 1 },
+        "cost": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["usd", "perAcceptedOutcomeUsd", "label", "basis"],
+              "additionalProperties": false,
+              "properties": {
+                "usd": { "type": "number", "minimum": 0 },
+                "perAcceptedOutcomeUsd": { "oneOf": [{ "type": "number", "minimum": 0 }, { "type": "null" }] },
+                "label": { "const": "estimated" },
+                "basis": { "type": "string", "minLength": 1 }
+              }
+            },
+            { "type": "null" }
+          ]
+        }
+      },
+      "allOf": [{ "if": { "properties": { "complete": { "const": false } } }, "then": { "properties": { "perAcceptedOutcome": { "type": "null" }, "cost": { "type": "null" } } } }]
     }
   }
 }

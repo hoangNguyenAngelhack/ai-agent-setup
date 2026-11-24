@@ -1,3 +1,4 @@
+import { tokenCount, type TokenCounts, type UsageSample } from '../../core/evaluation';
 import type { ExecutionPlan } from '../../core/execution';
 
 /**
@@ -29,6 +30,11 @@ export interface HostDelivery {
   invocation(plan: ExecutionPlan, files: DeliveryFiles): Invocation;
   /** Parses one stdout line; null for lines that carry no run-level signal. */
   parseLine(line: string): HostSignal | null;
+  /**
+   * Token usage carried by one raw stdout line (W2.2-04); null when there is none. Read before the
+   * line is redacted for the transcript: the redaction rules erase every `*_tokens` value.
+   */
+  parseUsage(line: string): UsageSample | null;
 }
 
 /** Same instructions for every host; the plan file is the source of truth, not this text. */
@@ -59,4 +65,15 @@ export function jsonLine(line: string): Record<string, unknown> | null {
   } catch {
     return null;
   }
+}
+
+/** Token counts from a host usage object, by host field name; fields that are not counts are left out. */
+export function usageCounts(usage: unknown, fields: Partial<Record<keyof TokenCounts, string>>): Partial<TokenCounts> | null {
+  if (!usage || typeof usage !== 'object' || Array.isArray(usage)) return null;
+  const counts: Partial<TokenCounts> = {};
+  for (const [kind, field] of Object.entries(fields) as Array<[keyof TokenCounts, string]>) {
+    const count = tokenCount((usage as Record<string, unknown>)[field]);
+    if (count !== undefined) counts[kind] = count;
+  }
+  return Object.keys(counts).length ? counts : null;
 }
