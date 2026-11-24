@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 import { listGates, readGateHistory, runQualityGates } from '../app/gates';
-import { approveRun, createRun, deliverRun, finishRun, loadRun, recordEvent, verifyStep, type EventInput } from '../app/runs';
+import { approveRun, createRun, deliverRun, loadRun, recordEvent, reportRun, verifyStep, type EventInput } from '../app/runs';
 import { renderGateReport } from '../quality';
 import { single, UsageError, type ParsedArgs } from './args';
 
@@ -123,12 +123,14 @@ export async function commandRun(args: ParsedArgs, io: IO): Promise<number> {
       io.write(`Cancelled ${id}.\n`);
       return 0;
     case 'status': {
-      const result = finishRun(project, id);
+      const { result, changes } = reportRun(project, id);
       if (args.switches.has('json')) json(io, result);
       else {
         io.write(`${result.runId}: ${result.status} — ${result.reason}\n`);
-        for (const step of result.steps) io.write(`  ${step.id}: ${step.final}${step.reason ? ` — ${step.reason}` : ''}\n`);
-        for (const anomaly of result.anomalies) io.write(`  ignored ${anomaly.type} (${anomaly.eventId}): ${anomaly.reason}\n`);
+        for (const step of result.steps) io.write(`  ${step.id}: ${step.final}${step.approval.pending ? ' (approval pending)' : ''}${step.reason ? ` — ${step.reason}` : ''}\n`);
+        for (const anomaly of result.anomalies) io.write(`  ${anomaly.code ?? 'ignored'} ${anomaly.type} (${anomaly.eventId}): ${anomaly.reason}\n`);
+        for (const waiting of result.deferred) io.write(`  waiting ${waiting.type} for ${waiting.stepId} (${waiting.eventId}): ${waiting.reason}\n`);
+        if (changes.length) io.write(`Changed since the last report: ${changes.join('; ')}\n`);
       }
       return EXIT[result.status]!;
     }

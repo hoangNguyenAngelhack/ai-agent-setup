@@ -47,6 +47,11 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 - Development checks: `npm run lint` (ESLint 9 + typescript-eslint, type-aware, zero warnings) and
   `npm run test:coverage` (V8, 80% minimum for statements, branches, functions and lines), both in
   CI. `gate.coverage-80` / `-95` 1.1.0 now check all four metrics, not only lines.
+- Early step events (ADR-015): host work on a step whose dependencies the host finished is accepted
+  before the orchestrator verified them; earlier events are kept, replayed in log order and flagged
+  `DEPENDENCY_ORDER_VIOLATION`; gates run only after the dependencies succeeded; a pending approval is
+  never lost and keeps the run from SUCCEEDED. `run-result` rules version 2 (`deferred`,
+  `approval.pending`); `run status` reports what changed when an old log is replayed.
 - Runtime state protection: mandatory policy rules deny agent writes to `.ai-agent-setup/**` (file
   tools, Codex patches and shell writes) and ask before other shell access; policies can now match
   written paths (`match.paths`). A gate never passes on a command that checks nothing. A guard, not

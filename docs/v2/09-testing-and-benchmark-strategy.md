@@ -49,6 +49,13 @@ Measured 2026-11-24 (600 tests): statements 94.01%, branches 85.31%, functions 9
 Target for `installer` and `policy`: 95% branches, because of their safety role. **Not met and not
 enforced yet:** measured 93.64% (installer) and 93.98% (policy) on 2026-11-24.
 
+Execution-state rules (ADR-015) have a dedicated suite, `tests/unit/core/execution-adr015.test.ts`:
+host events before the dependency is verified, replay after it succeeds, a failed dependency blocking
+its dependants without losing evidence, a host starting a step before reporting its dependency
+finished, ad-hoc and independent pending approvals, pending approvals keeping the run from
+SUCCEEDED, restart replay equality and duplicate delivery. The run store tests cover the refusal to
+run gates early and the report of what changed when an old log is replayed under new rules.
+
 Contract fixtures: `tests/contract/fixtures/run-result/` holds a valid result for each run status
 (SUCCEEDED, FAILED, NOT_VERIFIED, CANCELLED) and invalid results (for example SUCCEEDED with an
 unverified step, a SUCCEEDED step without gates or with a failed gate, an unapproved required step, a

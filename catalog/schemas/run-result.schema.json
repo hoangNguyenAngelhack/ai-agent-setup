@@ -6,6 +6,7 @@
   "type": "object",
   "required": [
     "schemaVersion",
+    "rulesVersion",
     "runId",
     "planId",
     "planDigest",
@@ -20,12 +21,17 @@
     "steps",
     "counts",
     "verification",
-    "anomalies"
+    "anomalies",
+    "deferred"
   ],
   "additionalProperties": false,
   "properties": {
     "schemaVersion": {
       "const": "run-result/v1"
+    },
+    "rulesVersion": {
+      "description": "Reconciliation rules the result was computed with; 2 = ADR-015.",
+      "const": 2
     },
     "runId": {
       "type": "string",
@@ -241,6 +247,42 @@
           "type": {
             "type": "string",
             "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "code": {
+            "enum": [
+              "DEPENDENCY_ORDER_VIOLATION"
+            ]
+          }
+        }
+      }
+    },
+    "deferred": {
+      "description": "ADR-015: events still waiting at reconciliation, never applied.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "eventId",
+          "type",
+          "stepId",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stepId": {
+            "type": "string"
           },
           "reason": {
             "type": "string",
@@ -555,7 +597,8 @@
           "type": "object",
           "required": [
             "required",
-            "approved"
+            "approved",
+            "pending"
           ],
           "additionalProperties": false,
           "properties": {
@@ -564,6 +607,10 @@
             },
             "approved": {
               "type": "boolean"
+            },
+            "pending": {
+              "type": "boolean",
+              "description": "An approval was requested and not yet resolved by the user."
             }
           }
         },
@@ -671,7 +718,12 @@
                     }
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "properties": {
+                  "pending": {
+                    "const": false
+                  }
+                }
               }
             }
           }

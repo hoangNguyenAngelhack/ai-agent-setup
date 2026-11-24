@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | ADR-001–008 **Accepted** (approved in [EXECUTION-SPECIFICATION §3, §13](EXECUTION-SPECIFICATION.md)). ADR-009 and ADR-014 **Accepted** by the Product Owner on 2026-11-24. ADR-010–013 **Proposed, not approved.** |
+| Status | ADR-001–008 **Accepted** (approved in [EXECUTION-SPECIFICATION §3, §13](EXECUTION-SPECIFICATION.md)). ADR-009, ADR-014 and ADR-015 **Accepted** by the Product Owner on 2026-11-24. ADR-010–013 **Proposed, not approved.** |
 | Date | 2026-11-23 |
 | Related | [04 Product](04-product-specification.md) · [05 Architecture](05-architecture-specification.md) · [08 Roadmap](08-implementation-roadmap.md) |
 
@@ -11,7 +11,7 @@
 This document records the approved architecture decisions, the conflicts found between the approved
 direction and the current repository, the proposed (unapproved) decisions, and the open questions.
 
-No approval is implied for anything outside ADR-001–009 and ADR-014.
+No approval is implied for anything outside ADR-001–009, ADR-014 and ADR-015.
 
 ## 2. Accepted decisions
 
@@ -180,6 +180,106 @@ No approval is implied for anything outside ADR-001–009 and ADR-014.
   - (−) Depends on capability and impact signals; ambiguous text-only cases need a person to assess
     them.
 - **Status:** Accepted (Product Owner). **Date:** 2026-11-24. Resolves OQ-11.
+
+### ADR-015: Handling step events that arrive before their step is ready
+
+**Status:** Accepted (Product Owner), 2026-11-24: option C + B, with the three decisions below. Implemented in `src/core/execution/state.ts` (rules version 2).
+
+**Context.** The orchestrator enforces dependencies on *verified* state: a step becomes READY only
+when every dependency is SUCCEEDED, and that needs the orchestrator's gates (`run verify`). A host
+working headless does the steps in order without waiting for verification. Typical timeline for
+plan `A → B`:
+
+| # | Event (source) | Today |
+|---|---|---|
+| 1 | `STEP_STARTED A` (host) | A RUNNING |
+| 2 | `STEP_COMPLETED A` (host) | A NOT_VERIFIED, awaiting verification; B stays PENDING |
+| 3 | `STEP_STARTED B` (host) | **rejected**: "dependencies are not satisfied" (anomaly) |
+| 4 | `APPROVAL_REQUIRED B` (host) | **rejected**: the approval request is only visible as an anomaly |
+| 5 | `STEP_COMPLETED B` (host) | **rejected** |
+| 6 | `run verify A` (orchestrator) | A SUCCEEDED, B READY, but B has no execution evidence and its approval request is gone |
+
+The host respected the dependency order (it finished A before starting B); only verification
+lags. Steps 3–5 are lost, so the run ends at best as OUTCOME_VERIFIED and an approval the agent asked
+for never reaches the user as a pending approval. Events are never silently dropped (they are
+anomalies), but they no longer influence the state.
+
+**Decision drivers.**
+
+1. An approval request must never be lost or bypassed.
+2. Dependencies stay enforced: a step is never verified, and never counts as succeeded, before its
+   dependencies succeeded.
+3. No success inflation: early reports are execution evidence, not verification.
+4. Determinism: the state is still a pure function of the event log (replay after restart gives the
+   same result); idempotent by event id; tolerant of duplicates and reordering.
+5. A real ordering violation (the host starts B before it reported A finished) stays visible.
+
+**Options.**
+
+| Option | Description | Assessment |
+|---|---|---|
+| A. Keep rejecting (today) | Early events become anomalies | Violates drivers 1 and 3 (evidence lost); simplest |
+| B. Deferred queue | An event rejected only because the step is not ready yet is parked; after every state change, parked events are retried in log order; leftovers are reported at reconciliation | Keeps every event; the step state still follows verification. Approval requests wait in the queue, so they are pending but not visible as WAITING_FOR_APPROVAL until the step is ready |
+| C. Two readiness levels | Distinguish *host-ready* (every dependency SUCCEEDED or reported completed by the host) from *verified-ready* (every dependency SUCCEEDED). Host events are accepted on host-ready steps; verification needs verified-ready | Models the real situation; needs one more concept in the state machine |
+
+**Recommendation: C, with B as the fallback for events that are early even at host level.**
+
+- *Host-ready.* A PENDING step whose dependencies are all SUCCEEDED or host-completed
+  (NOT_VERIFIED after a host `STEP_COMPLETED`) accepts host events. They are recorded as execution
+  evidence (`reports`), and the step moves to RUNNING or WAITING_FOR_APPROVAL as today.
+- *Verification order.* An orchestrator `STEP_COMPLETED` (gate results) for a step is applied only
+  when every dependency is SUCCEEDED; otherwise it waits in the queue (driver 2).
+- *Approvals first.* `APPROVAL_REQUIRED` is accepted in any open state, including PENDING. It
+  records a pending approval that `run status` shows and that `run approve-step` can resolve. A step
+  with an unresolved request cannot complete (driver 1).
+- *Deferred queue (B).* Events for a step that is not even host-ready (the host started B before
+  reporting A finished) are parked, retried after each state change in log order, and recorded as
+  ordering anomalies. Events still parked at reconciliation are listed in the result as
+  `deferred` (not applied) with the reason.
+- *Failure propagation.* If a dependency is later verified FAILED, its host-ready dependants become
+  BLOCKED. Their reports stay as evidence, and the reason names the failed dependency.
+- *Unchanged.* The event log format, the ten step states, run statuses (including OUTCOME_VERIFIED)
+  and exit codes.
+
+**Consequences.**
+
+- (+) No approval request or execution report is lost. Headless runs can reach SUCCEEDED after
+  verification without the host replaying events.
+- (+) Real ordering violations stay visible as anomalies.
+- (−) One more concept (host-ready) and a queue in the reducer. Replay cost grows with the number of
+  parked events, bounded by the log size.
+- (−) Replaying an existing log under the new rules can change a stored result (for example
+  OUTCOME_VERIFIED → SUCCEEDED). `result.json` is regenerated by `run status`, so this is visible.
+
+**Test plan (before merging an implementation).** One test per row of the timeline above. Plus:
+- duplicate and reordered events (including the orchestrator verifying B before A);
+- an approval requested on a PENDING step, then approved and then declined;
+- a dependency verified FAILED after its dependant was host-completed;
+- a host start of B before A was reported finished (ordering anomaly, parked, applied later);
+- restart replay equality;
+- `run-result` contract validation for every scenario.
+
+**Decisions (Product Owner, 2026-11-24).**
+
+1. **C + B.** Two readiness levels, `host-ready` and `verified-ready`, plus a deferred queue that
+   keeps and replays early events. No event is dropped only because the previous step's gates have
+   not run yet.
+2. **Host starts B before A finished.** B's events and evidence are kept and applied once B becomes
+   host-ready; the anomaly `DEPENDENCY_ORDER_VIOLATION` is recorded. This alone does not make the run
+   NOT_VERIFIED. B is never gated or completed before A is verified SUCCEEDED; if A fails, B becomes
+   BLOCKED with its evidence kept.
+3. **Pending approval.** It blocks completion of its step and blocks run SUCCEEDED, but not
+   independent steps. Only the user resolves an approval.
+
+**As implemented.**
+
+- `run verify` refuses to run gates for a step whose dependencies are not SUCCEEDED or whose
+  approval is pending; an orchestrator result that arrives early anyway waits in the queue.
+- `run-result` gains `rulesVersion` (2), `deferred` (events never applied, with why), and
+  `approval.pending` per step; anomalies can carry `code`. `run status` prints what changed since the
+  previous `result.json`, so a log replayed under the new rules shows its new outcome (for example
+  `rules 1 → 2`, `status OUTCOME_VERIFIED → SUCCEEDED`).
+- Unchanged: event log format, the ten step states, run statuses and exit codes.
 
 ## 3. Conflicts between the specification and the repository
 

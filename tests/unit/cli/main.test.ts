@@ -290,4 +290,25 @@ describe('main — gates and runs', () => {
 
     expect((await cli(root, ['run', 'status', runId])).out).toContain('SKIPPED');
   });
+
+  it('should show order violations, waiting events and pending approvals in run status (ADR-015)', async () => {
+    const root = backend();
+    await cli(root, ['setup', '--yes']);
+    const plan = JSON.parse((await cli(root, ['plan', 'Implement the orders API endpoint and build the orders page in the React app', '--domain', 'backend,frontend', '--json'])).out) as { id: string; steps: Array<{ id: string }> };
+    const runId = /Created (run-\S+)/.exec((await cli(root, ['run', 'create', plan.id])).out)![1]!;
+    await cli(root, ['run', 'approve', runId]);
+    const [first, second] = plan.steps.map((item) => item.id) as [string, string];
+
+    await cli(root, ['run', 'event', runId, '--type', 'STEP_STARTED', '--step', second]);
+    await cli(root, ['run', 'event', runId, '--type', 'APPROVAL_REQUIRED', '--step', second, '--reason', 'needs a schema change']);
+    const status = await cli(root, ['run', 'status', runId]);
+
+    expect(status.code).toBe(2);
+    expect(status.out).toContain('approval pending: ');
+    expect(status.out).toContain(`${second}: NOT_VERIFIED (approval pending)`);
+    expect(status.out).toContain('DEPENDENCY_ORDER_VIOLATION STEP_STARTED');
+    expect(status.out).toContain(`waiting STEP_STARTED for ${second}`);
+    expect((await cli(root, ['run', 'verify', runId, second])).err).toContain(`depends on ${first}`);
+  });
 });
+

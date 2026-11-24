@@ -124,6 +124,10 @@ export interface StepRecord {
   lastProgress: string | null;
   /** Accepted step events reported by the host (agent), e.g. `STEP_STARTED`: execution evidence. */
   reports: string[];
+  /** The host reported the step completed (ADR-015: its dependants become host-ready). */
+  hostCompleted: boolean;
+  /** An approval requested and not yet resolved by the user; blocks completion of this step. */
+  pendingApproval: { eventId: string; reason: string } | null;
   history: Array<{ eventId: string; from: StepState; to: StepState }>;
 }
 
@@ -137,8 +141,27 @@ export interface ExecutionState {
   steps: Record<string, StepRecord>;
   processed: string[];
   /** Events that were rejected or ignored, with why; never silently dropped. */
-  anomalies: Array<{ eventId: string; type: string; reason: string }>;
+  anomalies: Anomaly[];
+  /**
+   * ADR-015: events that arrived before their step could take them (host reports for a step whose
+   * dependencies the host has not finished, verifications before the dependencies SUCCEEDED). They
+   * are retried in log order after every state change.
+   */
+  deferred: Array<{ event: ExecutionEvent; reason: string }>;
 }
+
+export type AnomalyCode = 'DEPENDENCY_ORDER_VIOLATION';
+
+export interface Anomaly {
+  eventId: string;
+  type: string;
+  /** Set for anomalies with a defined meaning (ADR-015). */
+  code?: AnomalyCode;
+  reason: string;
+}
+
+/** Version of the reconciliation rules; results computed under older rules may differ on replay. */
+export const RESULT_RULES_VERSION = 2;
 
 /**
  * SUCCEEDED: every step's outcome passed its gates AND every step has execution evidence.
@@ -156,7 +179,7 @@ export interface RunResultStep {
   state: StepState;
   final: Exclude<StepState, 'PENDING' | 'READY' | 'RUNNING' | 'WAITING_FOR_APPROVAL'>;
   reason: string | null;
-  approval: { required: boolean; approved: boolean };
+  approval: { required: boolean; approved: boolean; pending: boolean };
   /** Gate results recorded by the orchestrator: the outcome. */
   gates: GateOutcome[];
   evidence: string[];
@@ -170,6 +193,8 @@ export interface RunResultStep {
 /** Contract `urn:ai-agent-setup:contracts:v1:run-result` (catalog/schemas/run-result.schema.json). */
 export interface RunResult {
   schemaVersion: 'run-result/v1';
+  /** 2: ADR-015 (host-ready steps, deferred events, pending approvals). */
+  rulesVersion: typeof RESULT_RULES_VERSION;
   runId: string;
   planId: string;
   planDigest: string;
@@ -186,4 +211,6 @@ export interface RunResult {
   counts: Record<StepState, number>;
   verification: { stepsTotal: number; stepsSucceeded: number; stepsWithExecutionEvidence: number; gates: Record<GateStatus, number> };
   anomalies: ExecutionState['anomalies'];
+  /** Events still waiting at reconciliation: never applied, listed with why. */
+  deferred: Array<{ eventId: string; type: string; stepId: string; reason: string }>;
 }

@@ -209,7 +209,7 @@ positives, assessment accuracy 1.0 — consistency evidence, not real-world accu
 
 ### 9.2 V2.2 status
 
-Branch `feature/v2.2-quality-gates` (`9bbd4cb`, `9146618`, `900473c`), pushed 2026-11-24. GitHub CI
+Branch `feature/v2.2-quality-gates` (`9bbd4cb`, `9146618`, `900473c`), merged into `main` (PR #5, `41395ba`). GitHub CI
 run 45360246078 on `900473c`: **9/9 jobs green** (Linux, macOS, Windows × Node 20/22/24), including
 lint and coverage. The first run (45359428923, on `9146618`) failed the three Windows jobs: `cmd.exe`
 exits with 1, not 9009, when a gate's program is missing, so the gate said FAIL instead of
@@ -226,7 +226,7 @@ event semantics and need a decision):
 
 - **Local artifacts are guarded, not tamper-proof.** Decision 2026-11-24 (Product Owner): control
   writes through the hosts' permissions rather than an HMAC, whose key an agent under the same account
-  could read. Implemented on branch `feature/v2.2-runtime-protection`:
+  could read. Implemented and merged (PR #6, `92045ae`):
   - `.ai-agent-setup/**` is runtime state written by the toolkit only. Mandatory rules in
     `policy.safety` (no layer can loosen them): `safety.runtime-state-write` denies file-tool writes
     (Claude Code `Write`/`Edit`, Codex `apply_patch`, per file in the patch);
@@ -240,10 +240,17 @@ event semantics and need a decision):
     boundary: a program the agent runs under the same OS account (for example `node script.js`) can
     still write the files, and the hook only sees command text. It must not be described as
     protection against a malicious agent.
-- **Early step events are dropped.** When a host reports work on a step whose dependency is still
-  NOT_VERIFIED, the events (including APPROVAL_REQUIRED) become anomalies and are not replayed later.
-  The step can still be verified with `run verify`, and plan-level approvals are still enforced, but
-  an ad-hoc approval request from the agent is only visible in `run status`.
+- **Early step events (resolved by ADR-015, accepted 2026-11-24).** Host events for a step whose
+  dependencies the host finished are accepted (host-ready) even before the orchestrator verified the
+  dependencies; events that are early even at host level are kept, replayed in log order and flagged
+  `DEPENDENCY_ORDER_VIOLATION`; gates run only after the dependencies SUCCEEDED; a failed dependency
+  blocks its dependants without losing their evidence; a pending approval is never lost, blocks its
+  step and run SUCCEEDED, and leaves independent steps running. Branch `feature/adr-015-event-queue`
+  (uncommitted); tests in `tests/unit/core/execution-adr015.test.ts`, `tests/unit/app/runs.test.ts`,
+  `tests/unit/cli/main.test.ts`.
+- **Technical debt (ADR-015 queue).** Parked events are rescanned linearly after every applied event
+  during replay. Not optimised on purpose: no benchmark shows a problem yet. Measure with large event
+  logs before changing it.
 - Evidence logs are cut at 1 MiB before redaction, which can leave part of a secret that was split at
   the cut; redaction does not cover `--password value` or `-pVALUE` forms.
 - The task text is stored unredacted in `plan.json` and the execution plan objective.
@@ -266,7 +273,7 @@ Self-run on this repository:
 |---|---|---|
 | Lint (standard profile `gate.lint`) | Done: ESLint 9 + typescript-eslint `recommendedTypeChecked` on `src`, `tests`, `scripts`, `bin`; no rule disabled globally (one option: `ignoreRestSiblings`); shipped content (`templates/`, `examples/`, catalog bodies) is not linted; findings were fixed in code | `eslint.config.mjs`, `npm run lint`; `tests/tooling/lint-config.test.ts` |
 | Coverage (standard profile `gate.coverage-80`) | Done: V8 coverage of all of `src/`, thresholds 80% on four metrics enforced by Vitest and by the gate (1.1.0); CLI tested in-process so its branches are measured | `vitest.config.mts`, `npm run test:coverage`; `tests/unit/cli/main.test.ts` |
-| `run-result` contract | Done: JSON Schema with conditional rules (SUCCEEDED needs every step SUCCEEDED with at least one gate and all gates PASS **and** execution evidence; OUTCOME_VERIFIED when the gates pass but execution was not reported — decided 2026-11-24; CANCELLED never success; reasons required for non-success); `run status` validates the result and turns an invalid SUCCEEDED into NOT_VERIFIED, or refuses to write it | `catalog/schemas/run-result.schema.json`, `src/app/runs.ts`; `tests/contract/` (4 valid, 14 invalid fixtures), `tests/unit/core/execution.test.ts` |
+| `run-result` contract | Done (rules version 2 since ADR-015: `deferred`, `approval.pending`, anomaly `code`): JSON Schema with conditional rules (SUCCEEDED needs every step SUCCEEDED with at least one gate and all gates PASS **and** execution evidence; OUTCOME_VERIFIED when the gates pass but execution was not reported — decided 2026-11-24; CANCELLED never success; reasons required for non-success); `run status` validates the result and turns an invalid SUCCEEDED into NOT_VERIFIED, or refuses to write it | `catalog/schemas/run-result.schema.json`, `src/app/runs.ts`; `tests/contract/` (4 valid, 14 invalid fixtures), `tests/unit/core/execution.test.ts` |
 | Installer and policy at 95% branches (09 §3.1) | Not met: 93.64% and 93.98%; not enforced | coverage report |
 
 Working assumptions adopted to start (reversible until merge): ADR-010 (YAML + JSON Schema) and

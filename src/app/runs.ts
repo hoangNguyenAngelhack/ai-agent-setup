@@ -147,11 +147,44 @@ export function checkedRunResult(result: RunResult, validateSchema: Validate): R
 
 /** Reconciles every step, checks the result against the contract and writes result.json. */
 export function finishRun(root: string, runId: string, now: Date = new Date()): RunResult {
+  return reportRun(root, runId, now).result;
+}
+
+export interface RunReport {
+  result: RunResult;
+  /** How the result differs from the previous result.json (for example after a rules change). */
+  changes: string[];
+}
+
+/** What changed between the previous report and this one; an older file may use older rules. */
+export function resultChanges(previous: unknown, next: RunResult): string[] {
+  if (typeof previous !== 'object' || previous === null) return [];
+  const old = previous as { rulesVersion?: number; status?: string; steps?: Array<{ id?: string; final?: string }> };
+  const changes: string[] = [];
+  const oldRules = old.rulesVersion ?? 1;
+  if (oldRules !== next.rulesVersion) changes.push(`rules ${oldRules} → ${next.rulesVersion} (recomputed from the event log)`);
+  if (old.status !== next.status) changes.push(`status ${old.status ?? 'none'} → ${next.status}`);
+  for (const step of next.steps) {
+    const before = old.steps?.find((item) => item.id === step.id)?.final;
+    if (before !== undefined && before !== step.final) changes.push(`${step.id} ${before} → ${step.final}`);
+  }
+  return changes;
+}
+
+/** Reconciles every step, checks the result against the contract and writes result.json. */
+export function reportRun(root: string, runId: string, now: Date = new Date()): RunReport {
   const { plan, state } = loadRun(root, runId);
   const validator = new SchemaValidator(join(PACKAGE_ROOT, 'catalog', 'schemas'));
   const result = checkedRunResult(reconcile(plan, state, now.toISOString()), (value) => validator.validate(RUN_RESULT_SCHEMA, value));
-  writeJson(files(root, runId).result, result);
-  return result;
+  const file = files(root, runId).result;
+  let previous: unknown = null;
+  try {
+    previous = existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as unknown) : null;
+  } catch {
+    previous = null; // An unreadable previous result is replaced; the event log is the source of truth.
+  }
+  writeJson(file, result);
+  return { result, changes: resultChanges(previous, result) };
 }
 
 /**
@@ -159,16 +192,21 @@ export function finishRun(root: string, runId: string, now: Date = new Date()): 
  * without its own gates is verified against the profile's required gates.
  */
 export async function verifyStep(root: string, runId: string, stepId: string, now: () => Date = () => new Date()): Promise<{ state: ExecutionState; gates: GateOutcome[] }> {
-  const { plan } = loadRun(root, runId);
+  const { plan, state } = loadRun(root, runId);
   const step = plan.steps.find((item) => item.id === stepId);
   if (!step) throw new Error(`Run ${runId} has no step "${stepId}"`);
+  // ADR-015: no gate runs for a step before its dependencies SUCCEEDED or while an approval is pending.
+  const unverified = step.dependsOn.filter((id) => state.steps[id]!.state !== 'SUCCEEDED');
+  if (unverified.length) throw new Error(`${stepId} depends on ${unverified.map((id) => `${id} (${state.steps[id]!.state})`).join(', ')}; verify the dependencies first`);
+  const record = state.steps[stepId]!;
+  if (record.pendingApproval || (step.approval === 'required' && !record.approved)) throw new Error(`${stepId} waits for the user's approval (run approve-step ${runId} ${stepId})`);
   const outcome = await runQualityGates({ root, runId, gates: step.verification, profileId: plan.profile, now });
   const verification = step.verification.length > 0 ? step.verification : outcome.report.required;
   const records = outcome.report.records.filter((record) => verification.includes(record.gate));
   const gates = records.map((record) => ({ gate: record.gate, status: record.status, reason: record.reason }));
   const evidence = records.map((record) => `${outcome.recordsDir}/${record.gate}.json`);
-  const state = recordEvent(root, runId, { type: 'STEP_COMPLETED', source: 'orchestrator', stepId, gates, evidence }, now());
-  return { state, gates };
+  const next = recordEvent(root, runId, { type: 'STEP_COMPLETED', source: 'orchestrator', stepId, gates, evidence }, now());
+  return { state: next, gates };
 }
 
 export function hostAvailable(executable: string): boolean {

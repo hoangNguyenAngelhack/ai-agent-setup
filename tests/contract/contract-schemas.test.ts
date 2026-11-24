@@ -99,7 +99,7 @@ describe('RunResult contract (ADR-009, docs/v2/05 §12.4)', () => {
   const load = (name: string): unknown => JSON.parse(readFileSync(join(dir, name), 'utf8'));
 
   it('should have valid fixtures for every run status and invalid ones', () => {
-    expect(fixtures.filter((name) => name.startsWith('valid-')).sort()).toEqual(['valid-cancelled.json', 'valid-failed.json', 'valid-not-verified.json', 'valid-outcome-verified.json', 'valid-succeeded.json']);
+    expect(fixtures.filter((name) => name.startsWith('valid-')).sort()).toEqual(['valid-cancelled.json', 'valid-failed.json', 'valid-not-verified-pending-approval-and-deferred.json', 'valid-not-verified.json', 'valid-outcome-verified.json', 'valid-succeeded.json']);
     expect(fixtures.filter((name) => name.startsWith('invalid-')).length).toBeGreaterThanOrEqual(10);
   });
 

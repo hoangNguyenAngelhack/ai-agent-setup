@@ -3,8 +3,8 @@ import { delimiter, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { claudeCodeDelivery } from '../../../src/adapters/claude-code';
 import { codexDelivery } from '../../../src/adapters/codex';
-import { approveRun, checkedRunResult, createRun, deliverRun, finishRun, loadRun, recordEvent, verifyStep } from '../../../src/app/runs';
-import type { RunResult } from '../../../src/core/execution';
+import { approveRun, checkedRunResult, createRun, deliverRun, finishRun, loadRun, recordEvent, reportRun, verifyStep } from '../../../src/app/runs';
+import type { ExecutionStep, RunResult } from '../../../src/core/execution';
 import { TaskClassifier } from '../../../src/core/planning';
 import { routeTask } from '../../../src/core/routing';
 import { KnowledgeIndex, Registry, SchemaValidator, validateCatalog, type ProfileEntry } from '../../../src/registry';
@@ -161,6 +161,46 @@ describe('run artifacts (ADR-009)', () => {
     expect(existsSync(join(root, '.ai-agent-setup', 'runs', runId, 'result.json'))).toBe(true);
     expect(existsSync(join(root, '.ai-agent-setup', 'runs', runId, 'gates', 'g1', 'gate.build.json'))).toBe(true);
     expect(existsSync(join(root, '.ai-agent-setup', 'runs', runId, 'gates', 'g2', 'gate.build.json'))).toBe(true);
+  }, 30000);
+});
+
+describe('ADR-015 in the run store', () => {
+  it('should refuse to run gates for a step whose dependency has not succeeded', async () => {
+    const root = projectWithPlan();
+    const { runId, steps } = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
+    const [first, second] = steps as [ExecutionStep, ExecutionStep];
+    recordEvent(root, runId, { type: 'STEP_COMPLETED', source: 'host', stepId: first.id, gates: [], evidence: [] });
+
+    await expect(verifyStep(root, runId, second.id)).rejects.toThrow(`${second.id} depends on ${first.id} (NOT_VERIFIED); verify the dependencies first`);
+    expect(existsSync(join(root, '.ai-agent-setup', 'runs', runId, 'gates'))).toBe(false);
+  });
+
+  it('should refuse to run gates while an approval is pending', async () => {
+    const root = projectWithPlan();
+    const { runId, steps } = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
+    recordEvent(root, runId, { type: 'APPROVAL_REQUIRED', source: 'host', stepId: steps[0]!.id, reason: 'runs a migration' });
+
+    await expect(verifyStep(root, runId, steps[0]!.id)).rejects.toThrow(/waits for the user's approval/);
+  });
+
+  it('should replay an old log under the new rules and say what changed', async () => {
+    const root = projectWithPlan();
+    const { runId, steps } = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
+    const [first, second] = steps as [ExecutionStep, ExecutionStep];
+    // The shape of a log written before ADR-015: the host worked on the second step before the first was verified.
+    for (const [type, stepId] of [['STEP_STARTED', first.id], ['STEP_COMPLETED', first.id], ['STEP_STARTED', second.id], ['STEP_COMPLETED', second.id]] as const) {
+      recordEvent(root, runId, { type, source: 'host', stepId, ...(type === 'STEP_COMPLETED' ? { gates: [], evidence: [] } : {}) });
+    }
+    await verifyStep(root, runId, first.id);
+    await verifyStep(root, runId, second.id);
+    // The result an older version wrote for this log: no rulesVersion, the second step without execution evidence.
+    const file = join(root, '.ai-agent-setup', 'runs', runId, 'result.json');
+    writeFileSync(file, JSON.stringify({ status: 'OUTCOME_VERIFIED', steps: [{ id: first.id, final: 'SUCCEEDED' }, { id: second.id, final: 'SUCCEEDED' }] }));
+
+    const { result, changes } = reportRun(root, runId);
+    expect(result).toMatchObject({ status: 'SUCCEEDED', rulesVersion: 2, anomalies: [], deferred: [] });
+    expect(changes).toEqual(['rules 1 → 2 (recomputed from the event log)', 'status OUTCOME_VERIFIED → SUCCEEDED']);
+    expect(reportRun(root, runId).changes).toEqual([]);
   }, 30000);
 });
 

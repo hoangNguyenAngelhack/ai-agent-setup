@@ -1,5 +1,6 @@
 {
   "schemaVersion": "run-result/v1",
+  "rulesVersion": 2,
   "runId": "run-20261124T100000Z-abcdef",
   "planDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "revision": 1,
@@ -26,7 +27,8 @@
       "reason": "all gates passed: gate.build, gate.unit-tests",
       "approval": {
         "required": false,
-        "approved": false
+        "approved": false,
+        "pending": false
       },
       "gates": [
         {
@@ -60,7 +62,8 @@
       "reason": "all gates passed: gate.build, gate.unit-tests",
       "approval": {
         "required": true,
-        "approved": true
+        "approved": true,
+        "pending": false
       },
       "gates": [
         {
@@ -106,5 +109,6 @@
     },
     "stepsWithExecutionEvidence": 2
   },
-  "anomalies": []
+  "anomalies": [],
+  "deferred": []
 }

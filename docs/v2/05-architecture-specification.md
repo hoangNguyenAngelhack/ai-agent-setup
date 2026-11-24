@@ -808,6 +808,19 @@ is never confused with a single gate. A result that fails the schema or the tota
 reported as it stands: SUCCEEDED and OUTCOME_VERIFIED become NOT_VERIFIED with the errors, and a
 result that is still invalid is not written.
 
+### 12.4.1 Early events and approvals (ADR-015, implemented)
+
+Two readiness levels decide which events a step takes. **Host-ready:** every dependency SUCCEEDED or
+reported completed by the host; host work (start, progress, completion) is accepted and recorded as
+execution evidence. **Verified-ready:** every dependency SUCCEEDED; only then are gate results applied,
+and `run verify` refuses to run gates before it. Events that arrive before their step can take them
+wait in `deferred` and are retried in log order after every state change; host work on a step that is
+not even host-ready also records `DEPENDENCY_ORDER_VIOLATION` (the run is not downgraded for it). A
+stopped dependency (FAILED, BLOCKED, SKIPPED, CANCELLED) blocks every dependant that has not
+succeeded, keeping its evidence. `APPROVAL_REQUIRED` is accepted in any open state; until the user
+resolves it the step cannot complete and the run cannot be SUCCEEDED, while independent steps
+continue. The result records `rulesVersion: 2`, `deferred` and `approval.pending`.
+
 ### 12.5 Runtime state protection (implemented)
 
 `.ai-agent-setup/**` holds run artifacts, gate configuration and results, and the install manifest.
