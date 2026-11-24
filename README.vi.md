@@ -121,8 +121,7 @@ nằm trong lộ trình.
   sau khi bạn duyệt bằng `/hooks`.
 - **Dự án V1** giữ nguyên các rule `allow` cũ trong `.claude/settings.json`, kể cả `Bash(rm *)`;
   `setup` cảnh báo nhưng không xoá cấu hình của bạn.
-- **Node.js:** CI kiểm Node 20, 22, 24. `package.json` vẫn khai `>=18` nhưng chưa được kiểm (câu hỏi
-  mở OQ-07).
+- **Node.js:** 20 trở lên (`engines.node >=20`), đúng các bản CI kiểm (20, 22, 24).
 - `--db mysql` / `sqlite` đổi provider Prisma; chưa kiểm chứng schema của từng template migrate được
   trên các CSDL đó.
 - **Bảo vệ trạng thái runtime** chặn agent ghi vào `.ai-agent-setup/` qua công cụ của host, và mỗi lượt
