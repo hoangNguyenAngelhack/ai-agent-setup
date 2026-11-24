@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { readGateHistory, runQualityGates } from '../../../src/app/gates';
 import type { GateCategory } from '../../../src/core/contracts';
-import { GATES, type GateRecord, parseCoverageSummary, parseNpmAudit, resolveCommand, runGates, scanDiffForSecrets, scanFilesForSecrets, validateGateConfig, type GateRunContext } from '../../../src/quality';
+import { firstProgram, GATES, type GateRecord, parseCoverageSummary, programExists, parseNpmAudit, resolveCommand, runGates, scanDiffForSecrets, scanFilesForSecrets, validateGateConfig, type GateRunContext } from '../../../src/quality';
 import { SchemaValidator } from '../../../src/registry';
 import { writeTree } from '../../helpers/fs-tree';
 import { REPO_ROOT } from '../../helpers/v1-cli';
@@ -221,6 +221,34 @@ describe('runGates', () => {
     const report = await runGates({ gates: [], required: ['gate.coverage-95'] }, context(root, { gates: { 'gate.coverage-95': { command: node('ok.js') } } }));
 
     expect(report.records[0]!.reason).toMatch(/coverage-summary.json not found/);
+  });
+});
+
+describe('programExists', () => {
+  it.each([
+    ['npm run build', 'npm'],
+    ['FOO=1 BAR=2 node x.js', 'node'],
+    ['"C:\\Program Files\\tool.exe" --check', 'C:\\Program Files\\tool.exe'],
+    ['./gradlew test', './gradlew'],
+    ['   ', null],
+  ])('should find the program of %j', (command, program) => {
+    expect(firstProgram(command)).toBe(program);
+  });
+
+  it('should tell a missing program from a present one, builtins and paths included', () => {
+    const root = writeTree({ 'scripts/ok.js': '' });
+
+    expect(programExists('definitely-not-a-real-tool-xyz --check', root)).toBe(false);
+    expect(programExists('node scripts/ok.js', root)).toBe(true);
+    expect(programExists('cd sub && npm test', root)).toBe(true);
+    expect(programExists('./missing-wrapper build', root)).toBe(false);
+    expect(programExists('./scripts/ok.js', root)).toBe(true);
+  });
+
+  it('should keep a real failure of an existing program as FAIL', async () => {
+    const { root, config } = project({ 'gate.lint': node('fail.js') });
+
+    expect((await runGates({ gates: [], required: ['gate.lint'] }, context(root, config))).records[0]).toMatchObject({ status: 'FAIL', reason: 'exit code 3' });
   });
 });
 

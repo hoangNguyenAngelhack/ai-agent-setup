@@ -3,7 +3,7 @@ import { isAbsolute, join } from 'node:path';
 import type { GateCategory, GateStatus } from '../core/contracts';
 import { redactText } from '../shared/redact';
 import { COVERAGE_METRICS, parseCoverageSummary, parseNpmAudit, scanDiff, scanFilesForSecrets } from './checks';
-import { runCommand, type CommandOutcome } from './execute';
+import { programExists, runCommand, type CommandOutcome } from './execute';
 import { gateById, type GateDefinition } from './gates';
 import { missingCommandReason, resolveCommand, type GateConfig, type ProjectFacts } from './resolve';
 
@@ -105,6 +105,12 @@ const MAX_SCAN_BYTES = 1024 * 1024;
 /** Shell exit codes for a missing executable: POSIX sh 127, Windows cmd 9009. */
 const COMMAND_NOT_FOUND = new Set([127, 9009]);
 
+/** A failed command whose program is not installed proves nothing about the project: NOT_VERIFIED, not FAIL. */
+function missingProgram(exitCode: number, command: string, cwd: string): boolean {
+  if (COMMAND_NOT_FOUND.has(exitCode)) return true;
+  return exitCode !== 0 && !programExists(command, cwd);
+}
+
 function interruptedReason(outcome: CommandOutcome, timeoutMs: number): string {
   if (outcome.interrupted === 'timeout') return `timed out after ${timeoutMs} ms`;
   if (outcome.interrupted === 'cancelled') return 'cancelled';
@@ -158,7 +164,9 @@ class GateRunner {
     const { outcome, evidence, checksum, startedMs } = await this.execute(definition, resolved.command, resolved.timeoutMs);
     const base = { command: resolved.command, exitCode: outcome.exitCode, evidence, checksum };
     if (outcome.exitCode === null) return { ...base, status: 'NOT_VERIFIED', reason: interruptedReason(outcome, resolved.timeoutMs) };
-    if (COMMAND_NOT_FOUND.has(outcome.exitCode)) return { ...base, status: 'NOT_VERIFIED', reason: `command not found (exit code ${outcome.exitCode}); install the tool or configure another command` };
+    if (missingProgram(outcome.exitCode, resolved.command, this.ctx.root)) {
+      return { ...base, status: 'NOT_VERIFIED', reason: `command not found (exit code ${outcome.exitCode}); install the tool or configure another command` };
+    }
 
     if (resolved.source === 'built-in' && definition.check === 'secret-scan') return this.secretScan(base, outcome.output);
     if (resolved.source === 'built-in' && definition.check === 'npm-audit') return npmAudit(base, outcome.output);

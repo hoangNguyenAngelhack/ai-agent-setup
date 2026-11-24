@@ -1,4 +1,6 @@
 import { spawn, spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 export interface CommandOutcome {
   exitCode: number | null;
@@ -67,4 +69,33 @@ export function runCommand(command: string, options: { cwd: string; timeoutMs: n
     child.on('error', (error) => finish(null, error.message));
     child.on('close', (code) => finish(code, null));
   });
+}
+
+/** Shell builtins: they never resolve to a file, so their absence proves nothing. */
+const BUILTINS = new Set(['cd', 'echo', 'set', 'export', 'true', 'false', 'test', '[', 'exit', 'call', 'if', 'for', 'type', 'dir', 'exec', '.', 'source', 'env', 'command']);
+
+/** The program a shell command starts with: env assignments skipped, quotes removed. */
+export function firstProgram(command: string): string | null {
+  const tokens = command.trim().match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
+  const program = tokens.find((token) => !/^[A-Za-z_][A-Za-z0-9_]*=/.test(token));
+  return program ? program.replace(/^["']|["']$/g, '') : null;
+}
+
+/**
+ * False only when the command's program certainly does not exist (not a builtin, not a file, not on
+ * PATH). Used after a failure: cmd.exe reports a missing program with exit code 1, indistinguishable
+ * from a failing test run, and its message is localised.
+ */
+export function programExists(command: string, cwd: string): boolean {
+  const program = firstProgram(command);
+  if (!program || BUILTINS.has(program.toLowerCase())) return true;
+  if (/[\\/]/.test(program)) {
+    const extensions = process.platform === 'win32' ? ['', '.cmd', '.exe', '.bat'] : [''];
+    return extensions.some((extension) => existsSync(resolve(cwd, `${program}${extension}`)));
+  }
+  const probe =
+    process.platform === 'win32'
+      ? spawnSync('where.exe', [program], { cwd, stdio: 'ignore' })
+      : spawnSync('sh', ['-c', 'command -v "$1"', 'sh', program], { cwd, stdio: 'ignore' });
+  return probe.status === 0;
 }
