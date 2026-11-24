@@ -821,6 +821,13 @@ succeeded, keeping its evidence. `APPROVAL_REQUIRED` is accepted in any open sta
 resolves it the step cannot complete and the run cannot be SUCCEEDED, while independent steps
 continue. The result records `rulesVersion: 2`, `deferred` and `approval.pending`.
 
+### 12.4.2 Gate and execution reports (W2.2-05, implemented)
+
+| Report | Contract | Written | Rule |
+|---|---|---|---|
+| One gate invocation | `gate-report/v1` | `runs/<id>/gates/g<n>/report.json` (+ `report.md`) | Totals and overall status must follow from the records; an inconsistent PASS is stored as NOT_VERIFIED |
+| All runs of a project | `execution-report/v1` | Printed by `report` (read-only) | Runs counted by status and integrity; unloadable runs are UNREADABLE; gate pass rate only over verified runs; durations measured; no estimated figures |
+
 ### 12.5 Runtime state protection (implemented)
 
 `.ai-agent-setup/**` holds run artifacts, gate configuration and results, and the install manifest.

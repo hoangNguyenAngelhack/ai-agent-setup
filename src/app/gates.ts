@@ -2,13 +2,14 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, write
 import { join } from 'node:path';
 import { detectProject } from '../core/project-detection';
 import { readManifest, MANIFEST_PATH } from '../installer';
-import { GATES, resolveCommand, runGates, renderGateReport, validateGateConfig, type Ecosystem, type GateConfig, type GateReport, type ProjectFacts } from '../quality';
+import { GATES, gateReportErrors, resolveCommand, runGates, renderGateReport, validateGateConfig, type Ecosystem, type GateConfig, type GateReport, type ProjectFacts } from '../quality';
 import { Registry, SchemaValidator, validateCatalog } from '../registry';
 import { ensureIgnoredDir, GATES_DIR, newRunId, projectIdentity, projectPath, readJsonLines, runDir, sha256, writeJson } from './run-files';
 
 const PACKAGE_ROOT = join(__dirname, '..', '..');
 const CONFIG_PATH = '.ai-agent-setup/gates.json';
 const RECORD_SCHEMA = 'urn:ai-agent-setup:contracts:v1:gate-record';
+const REPORT_SCHEMA = 'urn:ai-agent-setup:contracts:v1:gate-report';
 
 const LOCKFILES: Array<[file: string, manager: string]> = [
   ['pnpm-lock.yaml', 'pnpm'],
@@ -95,6 +96,24 @@ function nextInvocation(dir: string): string {
   return `g${used + 1}`;
 }
 
+/**
+ * A report that fails the gate-report contract is never stored as it stands: PASS becomes
+ * NOT_VERIFIED with the errors (FAIL and NOT_VERIFIED are kept). Still invalid: nothing is written.
+ */
+export function checkedGateReport(report: GateReport, validateSchema: (value: unknown) => { valid: boolean; errors: string[] }): GateReport {
+  const errorsOf = (value: GateReport) => {
+    const check = validateSchema(value);
+    return check.valid ? gateReportErrors(value) : check.errors;
+  };
+  const errors = errorsOf(report);
+  if (errors.length === 0) return report;
+  if (report.status !== 'PASS') throw new Error(`Gate report ${report.runId} is invalid: ${errors.join('; ')}`);
+  const downgraded: GateReport = { ...report, status: 'NOT_VERIFIED', reason: `report failed contract validation: ${errors.join('; ')}` };
+  const remaining = errorsOf(downgraded).filter((error) => !error.startsWith('/status:'));
+  if (remaining.length) throw new Error(`Gate report ${report.runId} is invalid: ${remaining.join('; ')}`);
+  return downgraded;
+}
+
 /** Runs the gates, stores records, report and history under .ai-agent-setup (git-ignored). */
 export async function runQualityGates(options: GateRunOptions): Promise<GateRunOutcome> {
   const now = options.now ?? (() => new Date());
@@ -109,7 +128,7 @@ export async function runQualityGates(options: GateRunOptions): Promise<GateRunO
   mkdirSync(recordsDir, { recursive: true });
   mkdirSync(join(dir, 'evidence', invocation), { recursive: true });
   const validator = new SchemaValidator(join(PACKAGE_ROOT, 'catalog', 'schemas'));
-  const report = await runGates(
+  const engineReport = await runGates(
     { gates: options.gates ?? [], required: required.gates, skip: options.skip ?? [] },
     {
       runId,
@@ -130,6 +149,7 @@ export async function runQualityGates(options: GateRunOptions): Promise<GateRunO
       ...(options.signal ? { signal: options.signal } : {}),
     },
   );
+  const report = checkedGateReport(engineReport, (value) => validator.validate(REPORT_SCHEMA, value));
   for (const record of report.records) writeJson(join(recordsDir, `${record.gate}.json`), record);
   writeJson(join(recordsDir, 'report.json'), report);
   writeFileSync(join(recordsDir, 'report.md'), renderGateReport(report));

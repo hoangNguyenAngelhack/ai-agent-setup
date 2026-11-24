@@ -317,6 +317,21 @@ export async function runGates(request: GateRunRequest, ctx: GateRunContext): Pr
   return { schemaVersion: 'gate-report/v1', runId: ctx.runId, project: ctx.project, startedAt, endedAt: now().toISOString(), ...overall(request.required, records), required: request.required, records, summary };
 }
 
+/** What JSON Schema cannot express: totals and the overall status must follow from the records. */
+export function gateReportErrors(report: GateReport): string[] {
+  const errors: string[] = [];
+  for (const status of ['PASS', 'FAIL', 'NOT_VERIFIED'] as const) {
+    const actual = report.records.filter((record) => record.status === status).length;
+    if (report.summary[status] !== actual) errors.push(`/summary/${status}: ${report.summary[status]} but ${actual} record(s)`);
+  }
+  for (const record of report.records) if (record.runId !== report.runId) errors.push(`/records: ${record.gate} belongs to run ${record.runId}`);
+  const missing = report.required.filter((id) => !report.records.some((record) => record.gate === id));
+  if (missing.length) errors.push(`/required: no record for ${missing.join(', ')}`);
+  const expected = overall(report.required, report.records).status;
+  if (report.status !== expected) errors.push(`/status: ${report.status} but the required gates give ${expected}`);
+  return errors;
+}
+
 /** Markdown summary of a gate report. */
 export function renderGateReport(report: GateReport): string {
   const lines = [

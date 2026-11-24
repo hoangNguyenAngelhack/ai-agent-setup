@@ -10,7 +10,7 @@ import type { ApprovalPoint, PlanMode, PlanOverrides } from '../core/contracts';
 import { ADAPTER_IDS, type AdapterId } from '../registry';
 import { oneOf, parseArgs, single, UsageError, type ParsedArgs } from './args';
 import { runCatalogValidate } from './catalog-validate';
-import { commandGates, commandIsolation, commandRun } from './run-commands';
+import { commandGates, commandIsolation, commandReport, commandRun } from './run-commands';
 import { renderImpact, renderPlan } from './plan-output';
 import { resolveCreateConfig, type Ask } from './create-config';
 
@@ -41,6 +41,7 @@ Usage:
   ${BIN} impact [files...] [--since ref] What changed files touch: areas, risk, tests, owners
   ${BIN} gates list|run|history [dir]    Quality gates: support status, run with evidence, history (V2.2)
   ${BIN} isolation check                 Runtime isolation (W2.2-09): what this platform can enforce
+  ${BIN} report [dir] [--since d] [--json]  Execution report across runs and gate history (W2.2-05)
   ${BIN} run <action> …                  Execution runs (V2.1 preview): create <plan-id>, approve, deliver,
                                          event, verify, approve-step, cancel, status <run-id>
 
@@ -268,6 +269,8 @@ export async function main(argv: readonly string[], io: CliIO): Promise<number> 
         return await commandRun(args, io);
       case 'isolation':
         return commandIsolation(args, io);
+      case 'report':
+        return commandReport(args, io);
       case 'catalog':
         if (args.positionals[0] !== 'validate') throw new UsageError('Usage: catalog validate [catalog-dir]');
         return runCatalogValidate(resolve(io.cwd, args.positionals[1] ?? join(PACKAGE_ROOT, 'catalog')), (line) => io.write(`${line}\n`));

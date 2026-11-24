@@ -4,6 +4,7 @@ import { approveRun, createRun, deliverRun, loadRun, recordEvent, reportRun, ver
 import { renderGateReport } from '../quality';
 import { single, UsageError, type ParsedArgs } from './args';
 import type { Ask } from './create-config';
+import { buildExecutionReport, renderExecutionReport } from '../app/reports';
 import { buildIsolationPolicy, INBOX_ENV, queueInboxRequest, resolveExecutable } from '../app/isolation';
 import { policyProblems, type IsolationProfile, type NetworkPolicy } from '../core/isolation';
 import { capabilitiesFor, platformMatrix } from '../isolation';
@@ -225,6 +226,16 @@ function isolationOption(args: ParsedArgs): { profile: IsolationProfile; network
   // Extra variable names the agent may see (values are taken from this environment, never printed).
   const passEnv = args.values.get('pass-env');
   return { profile: profile as IsolationProfile, ...(network ? { network } : {}), ...(passEnv?.length ? { passEnv } : {}) };
+}
+
+/** `report`: execution runs and gate history aggregated from local artifacts (read-only). */
+export function commandReport(args: ParsedArgs, io: IO): number {
+  const [dir] = args.positionals;
+  const since = single(args, 'since');
+  const report = buildExecutionReport(root(args, io, dir), since === undefined ? {} : { since });
+  if (args.switches.has('json')) json(io, report);
+  else io.write(renderExecutionReport(report));
+  return 0;
 }
 
 /** `isolation check`: platform matrix, provider capabilities and whether a profile can start here (exit 2 if not). */

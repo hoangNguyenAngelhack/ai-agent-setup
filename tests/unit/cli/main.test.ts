@@ -345,3 +345,16 @@ describe('isolation check and deliver options (W2.2-09)', () => {
     expect((await cli(root, ['run', 'deliver', 'run-20261124T100000Z-abcdef', '--host', 'codex', '--isolation', 'airgap'])).err).toContain('--isolation must be one of');
   });
 });
+
+describe('report (W2.2-05)', () => {
+  it('should print the execution report as Markdown or JSON, read-only', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'report-cli-'));
+    const markdown = await cli(root, ['report']);
+    expect(markdown.code).toBe(0);
+    expect(markdown.out).toContain('## Execution runs (0)');
+    const json = await cli(root, ['report', '--json', '--since', '2026-11-01']);
+    expect(JSON.parse(json.out)).toMatchObject({ schemaVersion: 'execution-report/v1', since: '2026-11-01T00:00:00.000Z' });
+    expect(existsSync(join(root, '.ai-agent-setup'))).toBe(false);
+    expect((await cli(root, ['report', '--since', 'soon'])).code).toBe(1);
+  });
+});

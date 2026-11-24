@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:contracts:v1:gate-report",
+  "title": "Quality gate report",
+  "description": "One invocation of the Quality Gate Engine (V2.2, W2.2-05): every gate record and the overall status. PASS only when every required gate passed; totals must agree with the records (checked in code).",
+  "type": "object",
+  "required": ["schemaVersion", "runId", "project", "startedAt", "endedAt", "status", "reason", "required", "records", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "gate-report/v1" },
+    "runId": { "type": "string", "pattern": "^run-[0-9TZ]+-[0-9a-f]{6}$" },
+    "project": {
+      "type": "object",
+      "required": ["name", "commit"],
+      "additionalProperties": false,
+      "properties": { "name": { "type": "string", "minLength": 1 }, "commit": { "type": ["string", "null"] }, "dirty": { "type": "boolean" } }
+    },
+    "startedAt": { "$ref": "urn:ai-agent-setup:contracts:v1:gate-record#/$defs/timestamp" },
+    "endedAt": { "$ref": "urn:ai-agent-setup:contracts:v1:gate-record#/$defs/timestamp" },
+    "status": { "enum": ["PASS", "FAIL", "NOT_VERIFIED"] },
+    "reason": { "type": "string", "minLength": 1 },
+    "required": { "type": "array", "items": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/gateId" }, "uniqueItems": true },
+    "records": { "type": "array", "items": { "$ref": "urn:ai-agent-setup:contracts:v1:gate-record" } },
+    "summary": {
+      "type": "object",
+      "required": ["PASS", "FAIL", "NOT_VERIFIED"],
+      "additionalProperties": false,
+      "properties": {
+        "PASS": { "type": "integer", "minimum": 0 },
+        "FAIL": { "type": "integer", "minimum": 0 },
+        "NOT_VERIFIED": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "allOf": [{ "if": { "properties": { "status": { "const": "PASS" } } }, "then": { "properties": { "required": { "type": "array", "minItems": 1 } } } }]
+}
