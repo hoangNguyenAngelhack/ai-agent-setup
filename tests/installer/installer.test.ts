@@ -236,7 +236,7 @@ describe('apply, manifest and rollback', () => {
     chmodSync(join(root, 'locked'), 0o700);
     expect(hashTree(root)).toEqual(before);
     const journals = readdirSync(join(root, '.ai-agent-setup', 'transactions'));
-    expect(JSON.parse(readFileSync(join(root, '.ai-agent-setup', 'transactions', journals[0]!), 'utf8')).status).toBe('rolled-back');
+    expect((JSON.parse(readFileSync(join(root, '.ai-agent-setup', 'transactions', journals[0]!), 'utf8')) as { status: string }).status).toBe('rolled-back');
   });
 });
 

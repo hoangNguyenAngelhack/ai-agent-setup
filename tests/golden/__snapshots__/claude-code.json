@@ -45,7 +45,7 @@
   },
   {
     "path": ".claude/CLAUDE.md",
-    "sha256": "67b92ada8f5799968123c5dcf67959c15bcb81739533f17c6f5ad2a51ac4311c"
+    "sha256": "cf6dcdf3af1ed704f5cecfcaa0a5b08b9bf29ead3c3524d627a58af79b9cd5f4"
   },
   {
     "path": ".claude/commands/build.md",
@@ -85,7 +85,7 @@
   },
   {
     "path": ".claude/hooks/ai-agent-setup/policies.json",
-    "sha256": "31e9464471f1bc4596ce9e39ed75eb18caa59b98a78552ddedc1ac17dc5cc089"
+    "sha256": "74c43316967651a6a8ac68904ed8b31c0a22ee692bd9c4e1b3fd32023b17203d"
   },
   {
     "path": ".claude/hooks/ai-agent-setup/policy-check.cjs",

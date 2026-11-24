@@ -9,8 +9,9 @@ function isPlainObject(value: Json): value is Record<string, Json> {
 /** Objects merge recursively, arrays are unioned (order kept), scalars from `patch` win. */
 export function mergeJson(base: Json, patch: Json): Json {
   if (Array.isArray(base) && Array.isArray(patch)) {
-    const seen = new Set(base.map((item) => JSON.stringify(item)));
-    return [...base, ...patch.filter((item) => !seen.has(JSON.stringify(item)))];
+    const items: Json[] = base;
+    const seen = new Set(items.map((item) => JSON.stringify(item)));
+    return [...items, ...(patch as Json[]).filter((item) => !seen.has(JSON.stringify(item)))];
   }
   if (isPlainObject(base) && isPlainObject(patch)) {
     const result: Record<string, Json> = { ...base };

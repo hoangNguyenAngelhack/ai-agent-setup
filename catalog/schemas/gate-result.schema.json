@@ -9,7 +9,7 @@
   "properties": {
     "gate": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/gateId" },
     "category": {
-      "enum": ["build", "unit", "integration", "e2e", "security", "performance", "accessibility", "documentation", "deployment-readiness"]
+      "enum": ["build", "unit", "integration", "e2e", "static-analysis", "security", "dependency-audit", "performance", "accessibility", "documentation", "deployment-readiness"]
     },
     "status": { "enum": ["PASS", "FAIL", "NOT_VERIFIED"] },
     "measured": { "type": "boolean" },

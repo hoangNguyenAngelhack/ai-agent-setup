@@ -1,3 +1,4 @@
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SchemaValidator } from '../../src/registry';
@@ -88,5 +89,25 @@ describe('Install manifest contract (docs/v2/05 §11.3)', () => {
     const files = [{ ...manifest.files[0], class: 'mine' }];
 
     expect(schemas.validate(MANIFEST, { ...manifest, files }).valid).toBe(false);
+  });
+});
+
+describe('RunResult contract (ADR-009, docs/v2/05 §12.4)', () => {
+  const RUN_RESULT = 'urn:ai-agent-setup:contracts:v1:run-result';
+  const dir = join(REPO_ROOT, 'tests', 'contract', 'fixtures', 'run-result');
+  const fixtures = readdirSync(dir).filter((name) => name.endsWith('.json'));
+  const load = (name: string): unknown => JSON.parse(readFileSync(join(dir, name), 'utf8'));
+
+  it('should have valid fixtures for every run status and invalid ones', () => {
+    expect(fixtures.filter((name) => name.startsWith('valid-')).sort()).toEqual(['valid-cancelled.json', 'valid-failed.json', 'valid-not-verified.json', 'valid-outcome-verified.json', 'valid-succeeded.json']);
+    expect(fixtures.filter((name) => name.startsWith('invalid-')).length).toBeGreaterThanOrEqual(10);
+  });
+
+  it.each(fixtures.filter((name) => name.startsWith('valid-')))('should accept %s', (name) => {
+    expect(schemas.validate(RUN_RESULT, load(name))).toEqual({ valid: true, errors: [] });
+  });
+
+  it.each(fixtures.filter((name) => name.startsWith('invalid-')))('should reject %s', (name) => {
+    expect(schemas.validate(RUN_RESULT, load(name)).valid).toBe(false);
   });
 });

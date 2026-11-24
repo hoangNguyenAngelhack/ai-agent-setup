@@ -17,3 +17,9 @@ rules:
     match:
       commands:
         - "docker run * --privileged *"
+  - id: project.run-approval
+    description: Approving an execution plan or a step is the user's decision; an agent must ask.
+    effect: ask
+    match:
+      commandRegex:
+        - "\\bai-agent-setup\\b.*\\brun\\b.*\\b(approve|approve-step|cancel)\\b"

@@ -138,3 +138,19 @@ describe('PolicyEngine — layer precedence (docs/v2/05 §7.4–7.5)', () => {
     ]);
   });
 });
+
+describe('PolicyEngine — run approvals belong to the user (ADR-009)', () => {
+  it.each([
+    'npx create-ai-agent-setup run approve run-20261124T100000Z-abcdef',
+    'npx create-ai-agent-setup run approve-step run-20261124T100000Z-abcdef backend.api-design',
+    'node bin/create-ai-agent-setup.js run cancel run-20261124T100000Z-abcdef',
+    'npx create-ai-agent-setup run --by me approve-step run-20261124T100000Z-abcdef backend.api-design',
+  ])('should ask before an agent runs "%s"', (text) => {
+    expect(engine.evaluate(command(text))).toMatchObject({ effect: 'ask', matches: [expect.objectContaining({ ruleId: 'project.run-approval' })] });
+  });
+
+  it('should let the agent report events and read status', () => {
+    expect(engine.evaluate(command('npx create-ai-agent-setup run event run-20261124T100000Z-abcdef --type STEP_STARTED --step x')).effect).toBe('allow');
+    expect(engine.evaluate(command('npx create-ai-agent-setup run status run-20261124T100000Z-abcdef')).effect).toBe('allow');
+  });
+});

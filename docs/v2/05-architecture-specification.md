@@ -698,7 +698,7 @@ Implemented in `src/installer/` (installer core) and `src/app/setup.ts` (setup u
 
 ```yaml
 gate: gate.unit-tests
-category: unit            # build|unit|integration|e2e|security|performance|accessibility|documentation|deployment-readiness
+category: unit            # build|unit|integration|e2e|static-analysis|security|dependency-audit|performance|accessibility|documentation|deployment-readiness
 status: PASS              # PASS|FAIL|NOT_VERIFIED
 measured: true            # false => estimate or not executed
 evidence:
@@ -738,6 +738,75 @@ Rules:
 Profiles map V1 tiers: `starter` requires build + unit; `standard` adds lint, security and coverage
 ≥ 80% when measurable; `strict` adds integration, coverage ≥ 95% and documentation. These thresholds
 come from V1 `TIERS.md`; the profile names are kept for compatibility.
+
+### 12.3 Gate execution record (V2.2, implemented)
+
+The Quality Gate Engine (`src/quality/`) stores one record per gate and run, contract
+`urn:ai-agent-setup:contracts:v1:gate-record`: the gate-result fields plus `runId`, `gateVersion`,
+`project` (name, commit, dirty), `command` (redacted), `environment` (platform, arch, Node, CI),
+`startedAt`, `endedAt`, `durationMs`, `exitCode` and `checksum` (sha256 of the stored evidence log).
+Artifact evidence carries its own checksum.
+
+| Status | Definition |
+|---|---|
+| PASS | The gate ran in this run and its check succeeded, with command or artifact evidence; the record validates against the contract |
+| FAIL | The gate ran and its check failed (non-zero exit, findings, threshold missed) |
+| NOT_VERIFIED | No trustworthy result: no command, tool missing, timeout, cancellation, unreadable output, stale artifact, skipped, unknown gate, or an invalid record |
+
+Required gates are the profile's gates plus `required` in `.ai-agent-setup/gates.json` (the file can
+add gates and commands, never remove a required gate). The overall status is PASS only when every
+required gate is PASS, FAIL when any required gate failed, NOT_VERIFIED otherwise — including when
+nothing is required. Records and reports live under `.ai-agent-setup/runs/<run-id>/gates/g<n>/`, one
+folder per invocation so earlier evidence is never overwritten, with logs in `evidence/g<n>/`; history
+is `.ai-agent-setup/gates/history.jsonl`. Both top folders carry a `.gitignore` of `*`. A configured
+command may replace a built-in check (secret scan, audit), and the record then says so in its reason.
+The coverage gates (1.1.0) require statements, branches, functions and lines; a metric counts as not
+applicable only when the report states `total: 0` (named in the reason), lines must be measured, and
+anything else missing or `"Unknown"` is NOT_VERIFIED.
+
+| Category | Gate (support) |
+|---|---|
+| build | `gate.build` (project command) |
+| unit | `gate.unit-tests` (project command); `gate.coverage-80`, `gate.coverage-95` (built-in threshold on an Istanbul json-summary written by this run) |
+| integration | `gate.integration-tests` (project command) |
+| e2e | `gate.e2e-tests` (project command) |
+| static-analysis | `gate.lint`, `gate.typecheck` (project command) |
+| security | `gate.security-scan` (built-in scan of uncommitted and untracked changes) |
+| dependency-audit | `gate.dependency-audit` (built-in for npm lockfiles; other ecosystems need a configured command) |
+| performance | `gate.performance` (project command) |
+| accessibility | `gate.accessibility` (project command) |
+| documentation | `gate.documentation` (project command) |
+| deployment-readiness | `gate.deployment-readiness` (composite: build, unit tests, security scan) |
+
+### 12.4 Run result (implemented)
+
+`run status` reconciles a run and writes `.ai-agent-setup/runs/<run-id>/result.json`, contract
+`urn:ai-agent-setup:contracts:v1:run-result`: run and plan identity (`runId`, `planId`, `planDigest`,
+`revision`), `project`, `profile`, `generatedAt`, the plan `approval` (by, at), `status` and `reason`,
+the run-level state reported by events, one entry per step (`state` as logged, `final` always
+terminal, reason, approval required/approved, orchestrator gate results, evidence paths), counts per
+state, a verification summary (steps succeeded, gate results by status) and the anomalies.
+
+A result has two axes per step: the **outcome** (orchestrator gate results; step state SUCCEEDED
+means its gates passed) and **execution evidence** (`execution.reports`: step events the host
+reported and the orchestrator accepted). Execution evidence shows that execution was reported in this
+run; it does not prove the report true — the gates verify the outcome.
+
+| Run status | Meaning | Exit code |
+|---|---|---|
+| SUCCEEDED | Every step passed its gates (at least one gate, all PASS) **and** has execution evidence | 0 |
+| OUTCOME_VERIFIED | Every step passed its gates, but at least one step has no execution evidence: the product state is verified, the assigned work is not shown to have been executed. Not success, not failure | 2 |
+| FAILED | A step failed, or the host reported the run failed | 1 |
+| CANCELLED | The run was cancelled; never success, whatever the steps reached | 2 |
+| NOT_VERIFIED | Anything else: open steps, missing or unverified gates, blocked or skipped steps | 2 |
+
+Reports rejected as anomalies (for example a start reported after the step was already verified)
+are not execution evidence.
+
+Gate statuses stay PASS, FAIL and NOT_VERIFIED; run statuses use SUCCEEDED and FAILED so that a run
+is never confused with a single gate. A result that fails the schema or the totals check is not
+reported as it stands: SUCCEEDED and OUTCOME_VERIFIED become NOT_VERIFIED with the errors, and a
+result that is still invalid is not written.
 
 ## 13. Cross-cutting concerns
 

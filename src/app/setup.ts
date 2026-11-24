@@ -69,7 +69,7 @@ function chooseAdapters(requested: AdapterId[] | undefined, hosts: HostConfigDet
 function permissionWarnings(root: string, hosts: HostConfigDetection[]): Diagnostic[] {
   let settings: { permissions?: { allow?: unknown[] } };
   try {
-    settings = JSON.parse(readFileSync(join(root, '.claude', 'settings.json'), 'utf8'));
+    settings = JSON.parse(readFileSync(join(root, '.claude', 'settings.json'), 'utf8')) as typeof settings;
   } catch {
     return [];
   }

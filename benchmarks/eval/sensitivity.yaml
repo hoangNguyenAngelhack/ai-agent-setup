@@ -1,0 +1,30 @@
+# Sensitive-impact review cases (ADR-014, docs/v2/10). DEVELOPMENT SET, same author as the rules.
+# expect: the mandatory review categories the router must add (empty list = no mandatory review)
+# assess: categories that must be flagged as requiring assessment without a mandatory review
+schema: eval/sensitivity/v1
+items:
+  # Positive: real impact on payments, credentials or personal data
+  - { id: sp-01, expect: [payment], text: "Integrate Stripe checkout and handle the payment webhook" }
+  - { id: sp-02, expect: [payment], text: "Add refund processing to the billing service" }
+  - { id: sp-03, expect: [payment], text: "Fix the rounding error in the settlement job" }
+  - { id: sp-04, expect: [credentials], text: "Store the auth token in the iOS keychain instead of AsyncStorage" }
+  - { id: sp-05, expect: [credentials], text: "Implement JWT refresh tokens with rotation for the login API" }
+  - { id: sp-06, expect: [credentials], text: "Rotate the signing key used to verify webhooks" }
+  - { id: sp-07, expect: [personal-data], text: "Add an endpoint that exports a customer's personal data for GDPR requests" }
+  - { id: sp-08, expect: [personal-data], text: "Log the user's email address when a login fails" }
+  - { id: sp-09, expect: [personal-data], text: "Delete inactive users' personal data after two years" }
+  - { id: sp-10, expect: [credentials], text: "Move the API keys from the config file into the secrets manager" }
+  # Negative: the words appear but nothing sensitive is affected
+  - { id: sn-01, expect: [], text: "Define design tokens for color, spacing and typography" }
+  - { id: sn-02, expect: [], text: "Reduce LLM token usage of the summarizer prompt" }
+  - { id: sn-03, expect: [], text: "Create synthetic test data fixtures without personal data" }
+  - { id: sn-04, expect: [], text: "Update the UI copy of the payment page button" }
+  - { id: sn-05, expect: [], text: "Write documentation for the billing module" }
+  - { id: sn-06, expect: [], text: "Write release notes about the new checkout page" }
+  - { id: sn-07, expect: [], text: "Mock the payment API in the unit tests" }
+  - { id: sn-08, expect: [], text: "Rename the design token for the primary color" }
+  - { id: sn-09, expect: [], text: "Add a paginated GET /orders endpoint with filtering by status" }
+  - { id: sn-10, expect: [], text: "Explain token counting to a junior engineer as mentoring notes" }
+  # Ambiguous: plausible but uncertain impact in non-code work → flag for assessment
+  - { id: sa-01, expect: [], assess: [personal-data], text: "Analyse how the reports use customer data" }
+  - { id: sa-02, expect: [], assess: [payment], text: "Research which payment providers we could support" }

@@ -2,9 +2,9 @@
 
 | Field | Value |
 |---|---|
-| Status | Draft for review. Documentation only; **no implementation is authorized.** |
+| Status | Implementation in progress (V2.0 merged; V2.1 and V2.2 partly implemented). Progress: [08 §9](08-implementation-roadmap.md#9-implementation-status) |
 | Baseline | `main` @ `51bfc3a` (`create-ai-agent-setup` 1.6.1) |
-| Date | 2026-11-23 |
+| Date | 2026-11-23 (status updated 2026-11-24) |
 | Governing instruction | [EXECUTION-SPECIFICATION.md](EXECUTION-SPECIFICATION.md) |
 
 ## Reading order
@@ -20,7 +20,7 @@
 | 07 | [Migration Strategy](07-migration-strategy.md) | How V1 assets, CLI flags and V1 projects move to V2 |
 | 08 | [Implementation Roadmap](08-implementation-roadmap.md) | V2.0, V2.1 and V2.2 work items, dependencies and exit criteria (`W*`) |
 | 09 | [Testing & Benchmark Strategy](09-testing-and-benchmark-strategy.md) | How the toolkit is tested and how baseline, V1 and V2 are compared |
-| 10 | [Architecture Decisions](10-architecture-decisions.md) | ADR-001–008 (accepted), conflicts, proposed ADRs, open questions |
+| 10 | [Architecture Decisions](10-architecture-decisions.md) | ADR-001–009 and ADR-014 (accepted), conflicts, proposed ADRs, open questions |
 
 User-facing upgrade steps: [Migrating from V1](../guides/migrating-from-v1.md).
 

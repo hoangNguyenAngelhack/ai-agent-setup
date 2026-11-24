@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | ADR-001–008 **Accepted** (approved in [EXECUTION-SPECIFICATION §3, §13](EXECUTION-SPECIFICATION.md)). ADR-009–013 **Proposed, not approved.** |
+| Status | ADR-001–008 **Accepted** (approved in [EXECUTION-SPECIFICATION §3, §13](EXECUTION-SPECIFICATION.md)). ADR-009 and ADR-014 **Accepted** by the Product Owner on 2026-11-24. ADR-010–013 **Proposed, not approved.** |
 | Date | 2026-11-23 |
 | Related | [04 Product](04-product-specification.md) · [05 Architecture](05-architecture-specification.md) · [08 Roadmap](08-implementation-roadmap.md) |
 
@@ -11,7 +11,7 @@
 This document records the approved architecture decisions, the conflicts found between the approved
 direction and the current repository, the proposed (unapproved) decisions, and the open questions.
 
-No approval is implied for anything outside ADR-001–008.
+No approval is implied for anything outside ADR-001–009 and ADR-014.
 
 ## 2. Accepted decisions
 
@@ -41,7 +41,7 @@ No approval is implied for anything outside ADR-001–008.
   implicit selection (V1 status quo).
 - **Consequences:** + transparency through explanation records; + team and enterprise fit.
   − Requires an evaluation suite to keep automatic proposals good (V2.1). − Plan delivery to hosts
-  needs a mechanism (ADR-009, proposed).
+  needs a mechanism (ADR-009, accepted 2026-11-24).
 - **Status:** Accepted. **Date:** 2026-11-23.
 
 ### ADR-003: Provider-independent Core
@@ -121,13 +121,73 @@ No approval is implied for anything outside ADR-001–008.
   environments without the required tools. This is intended.
 - **Status:** Accepted. **Date:** 2026-11-23.
 
+### ADR-009: Canonical execution plan artifact and native host adapter protocol
+
+- **Context:** the router produces plans (W2.1-05/07), but hosts need a way to receive one and the
+  orchestrator needs a reliable execution state (W2.1-09/10). Claude Code and Codex expose different
+  native mechanisms (structured CLI output and event streams); their permission, streaming and
+  approval semantics are not identical. OQ-01 asked how hosts should receive plans.
+- **Decision:**
+  - The Universal Core owns a versioned **ExecutionPlan** contract and its run artifacts, which are
+    local and git-ignored:
+    `.ai-agent-setup/runs/<run-id>/{execution-plan.json, execution-plan.md, execution-state.json, events.jsonl, result.json, evidence/}`.
+  - An approved plan is immutable; a change of scope produces a new plan revision. Every step has a
+    stable id, dependencies, inputs, expected outputs, verification criteria, permissions, risk and
+    approval requirements.
+  - Each adapter delivers the approved plan revision through its host's native, documented
+    interface and normalises the host's events into a provider-independent **ExecutionEvent**
+    contract: RUN_STARTED, STEP_STARTED, STEP_PROGRESS, APPROVAL_REQUIRED, APPROVAL_RESOLVED,
+    STEP_COMPLETED, STEP_FAILED, STEP_BLOCKED, RUN_COMPLETED, RUN_FAILED, RUN_CANCELLED.
+  - The orchestrator, not model text, owns step state. A step succeeds only with its structured
+    result and verification criteria satisfied, never from a sentence such as "Done" or an exit
+    code alone. If progress cannot be established reliably, the state is NOT_VERIFIED.
+  - Private conversation transcripts are never transferred between providers; no separate agent
+    runtime is introduced (ADR-006).
+- **Alternatives considered:** a planner skill that shells out to the CLI (the earlier proposal);
+  generated static instructions only; a proprietary runtime that makes both hosts look identical.
+- **Consequences:**
+  - (+) One audit trail per run, idempotent state, and host differences stay inside adapters.
+  - (−) Each adapter needs real-host verification (W2.0-15). Unsupported host capabilities must be
+    reported explicitly.
+- **Status:** Accepted (Product Owner). **Date:** 2026-11-24. Resolves OQ-01; supersedes the earlier
+  ADR-009 proposal.
+
+### ADR-014: Impact-based review for payment, credential and personal-data work
+
+- **Context:** the V2.1 router added a mandatory review whenever the task text mentioned words such
+  as payment, token or personal data. On the development set this kept routing minimality at 0.903,
+  and it produces false positives for design tokens, token counting, synthetic fixtures, UI copy and
+  documentation (OQ-11).
+- **Decision:**
+  - A mandatory specialist review is added when the **actual planned work or changed files**
+    affect:
+    - payments: processing, billing, refunds, settlement, payment credentials, financial
+      transactions;
+    - tokens and credentials: auth tokens, signing keys, token custody, wallets and transfers,
+      secret storage;
+    - personal data: collection, storage, access, modification, deletion, transmission, logging,
+      retention, anonymisation.
+  - Keywords alone do not trigger it in documentation, unrelated examples, synthetic fixtures,
+    UI copy, token counting or design tokens.
+  - When impact is plausible but uncertain, the risk is flagged as requiring assessment; the safer
+    review path is preferred when actual impact is plausible.
+  - Every mandatory review records its reason, and ordinary user overrides cannot remove it.
+  - Positive and negative evaluation cases guard against both misses and excessive reviews.
+- **Alternatives considered:** keep keyword-triggered review (status quo); review only from changed
+  files.
+- **Consequences:**
+  - (+) Fewer unnecessary reviews, and the reasons can be audited.
+  - (−) Depends on capability and impact signals; ambiguous text-only cases need a person to assess
+    them.
+- **Status:** Accepted (Product Owner). **Date:** 2026-11-24. Resolves OQ-11.
+
 ## 3. Conflicts between the specification and the repository
 
 None of these reopens an approved decision. Each one has a proposed resolution.
 
 | ID | Conflict | Proposed resolution |
 |---|---|---|
-| CF-01 | Hybrid orchestration needs the plan at host run time, but a standalone agent runtime is out of scope (EXECUTION-SPECIFICATION §3) | The router runs as a local library invoked on demand by the host (ADR-009 proposed). It is not a resident runtime and runs no models. |
+| CF-01 | Hybrid orchestration needs the plan at host run time, but a standalone agent runtime is out of scope (EXECUTION-SPECIFICATION §3) | The router runs as a local library invoked on demand by the host (ADR-009, accepted 2026-11-24). It is not a resident runtime and runs no models. |
 | CF-02 | Codex loads project `.codex/` config, agents and hooks **only in trusted projects**, so policy enforcement through project config is not guaranteed | Setup reports the trust status; generated `AGENTS.md` carries the safety summary (T0); `doctor` flags untrusted state. Enforcement in untrusted Codex projects is `NOT_VERIFIED`. |
 | CF-03 | The universal audience conflicts with the V1 `tech-stack.md`, which mandates Next.js, Express, Prisma and so on for all projects | Move it to optional stack profiles selected by detection (TD-19) |
 | CF-04 | The README claims "Compatible with 30+ AI coding agents", but only two adapters are approved | Remove the claim; state that other hosts may read `.agents/skills` but are unsupported (F-28) |
@@ -139,7 +199,6 @@ None of these reopens an approved decision. Each one has a proposed resolution.
 
 | ID | Proposal | Rationale | Decide by |
 |---|---|---|---|
-| ADR-009 | **Router delivery:** the host obtains plans by calling the local CLI (`plan --json`) from a generated "planner" skill. An optional local stdio MCP server exposing `plan`, `explain` and `verify` is a later option. | Works in both hosts with documented mechanisms (skills); no resident process | Start of V2.1 |
 | ADR-010 | **Catalog format:** YAML entries + JSON Schema 2020-12 + Markdown bodies | Human-editable; standard validation tooling | Start of V2.0 (W2.0-03). **Implemented as a working assumption** on `feature/v2-foundation` (2026-11-24); reversible until merged |
 | ADR-011 | **Language:** migrate `src/` to TypeScript compiled to `dist/` | Typed contracts for a growing core; consistent with the rules the product ships | Start of V2.0. **Implemented as a working assumption** on `feature/v2-foundation` (2026-11-24); reversible until merged |
 | ADR-012 | **Bundled catalog, no runtime download:** catalog shipped in the npm package; `update` changes the version explicitly | Reproducibility and offline use (TD-02) | Start of V2.0 |
@@ -149,7 +208,7 @@ None of these reopens an approved decision. Each one has a proposed resolution.
 
 | ID | Question | Impact | Owner |
 |---|---|---|---|
-| OQ-01 | How do hosts receive and follow a plan (ADR-009 options: skill calling the CLI, MCP server, generated static instructions only)? | V2.1 design | Maintainer |
+| OQ-01 | ~~How do hosts receive and follow a plan?~~ **Resolved 2026-11-24 by ADR-009 (accepted).** | — | Product Owner |
 | OQ-02 | Keep the package name `create-ai-agent-setup` and the manifest directory `.ai-agent-setup/`, or rename to reflect the "OS" positioning? A rename affects npm discoverability and V1 users. | CLI and migration | Maintainer |
 | OQ-03 | Which actual token and cost data does each host expose locally (Claude Code transcripts or status data; Codex `PostModelRequest` hook payload)? Needs verification before W2.2-04. | Cost KPIs | Implementer |
 | OQ-04 | Is the 9-agent canonical set ([05 §6.6](05-architecture-specification.md#66-canonical-agent-set-proposed)) right, for example whether to split `implementer` by platform? | Routing, migration aliases | Maintainer + review |
@@ -158,7 +217,7 @@ None of these reopens an approved decision. Each one has a proposed resolution.
 | OQ-07 | Minimum Node.js version (V1 says ≥ 18, which is past upstream end of life; check current LTS dates at implementation) | CI matrix, users | Maintainer |
 | OQ-08 | Support window for 1.x after V2.0 GA, and whether the V1.x patch track ([08 §2](08-implementation-roadmap.md#2-v1x-maintenance-track-proposed)) is approved | Users on 1.x | Maintainer |
 | OQ-09 | Organization policy file location and format (path flag, environment variable, or managed host settings) | Enterprise | Maintainer |
-| OQ-11 | Should mentions of payments, tokens, passwords or personal data, and capabilities rated high risk (such as app store release), always add an independent review step? They currently do, which keeps routing minimality at 0.903 against the ≥ 0.95 hypothesis (benchmarks/eval/README.md). | Routing, review cost | Maintainer |
+| OQ-11 | ~~Should sensitive keywords always add a review step?~~ **Resolved 2026-11-24 by ADR-014 (accepted): no, review follows actual impact.** | — | Product Owner |
 | OQ-10 | Should the default profile for Codex set `sandbox_mode = "workspace-write"` with `approval_policy = "on-request"`? | Security defaults | Security review |
 
 ## 6. Acceptance criteria

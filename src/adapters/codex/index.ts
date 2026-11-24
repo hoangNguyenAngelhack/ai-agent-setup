@@ -24,3 +24,5 @@ export const codexAdapter: Adapter = {
     return { adapter: 'codex', present: artifacts.length > 0, artifacts, v1Fingerprint: false };
   },
 };
+
+export { codexDelivery } from './delivery';
