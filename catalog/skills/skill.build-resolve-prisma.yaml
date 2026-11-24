@@ -8,7 +8,8 @@ category: backend
 status: experimental
 dependencies: []
 requiredContext:
-  projectSignals: []
+  projectSignals:
+    - prisma
   files: []
 supportedAdapters:
   claude-code: native

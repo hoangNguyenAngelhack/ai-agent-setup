@@ -376,6 +376,24 @@ overrides:    [{rank: 4, field: excludeAgents, value: [agent.reviewer]}]
 policyDecisions: [{rule: safety.no-force-push, effect: deny}]
 ```
 
+### 7.7 Implementation notes (V2.1 preview, 2026-11-24)
+
+- **Classification is deterministic and lexical**, because the toolkit never calls a model
+  (§3). Each capability is scored from its catalog name, slug and description (IDF-weighted) plus a
+  curated phrase lexicon. Domains add up their two best capabilities. A secondary domain must score
+  at least 70% of the best domain.
+- **Task type** comes from weighted cue words. Without a cue, it is inferred from the owner of the
+  main capability (writer → docs, tester → test, …), and the explanation records that as an
+  assumption.
+- **Plan status:**
+  - `hybrid` plans are always `proposed`.
+  - `automatic` plans are `ready`, or `needs-approval` when risk is high, an approval point applies
+    or the budget is exceeded.
+  - `manual` plans are `ready` unless approval of the plan was requested.
+  - Blocking conflicts make a plan `invalid`.
+- **Agents in plans are canonical ids.** Mapping them to the agent names each host has (for example
+  V1 aliases) is part of W2.1-10.
+
 ## 8. Context Engine
 
 **Objective:** load the smallest instruction set that preserves quality (NFR-09).

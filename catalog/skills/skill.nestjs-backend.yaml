@@ -10,7 +10,8 @@ category: backend
 status: experimental
 dependencies: []
 requiredContext:
-  projectSignals: []
+  projectSignals:
+    - nestjs
   files: []
 supportedAdapters:
   claude-code: native

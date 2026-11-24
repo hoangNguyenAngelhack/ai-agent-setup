@@ -1,0 +1,162 @@
+# Routing evaluation set (docs/v2/09 §4). DEVELOPMENT SET: written by the same author as the
+# classifier lexicon, so scores are optimistic. A held-out set labelled by a second reviewer is
+# still required before reporting results as evaluation (see README.md in this folder).
+#
+# type:    feature | bug | refactor | test | docs | review | ops | analysis
+# domains: expected domain ids (order irrelevant)
+# simple:  single-domain, low-risk, small task: the router must use <= 1 agent and <= 3 skills
+schema: eval/classification/v1
+items:
+  # D01 product-business
+  - { id: pb-01, type: analysis, domains: [product-business], simple: true, text: "Write a PRD for a referral program with goals, scope and success metrics" }
+  - { id: pb-02, type: analysis, domains: [product-business], simple: true, text: "Turn this feature request into user stories with acceptance criteria" }
+  - { id: pb-03, type: analysis, domains: [product-business], simple: true, text: "Prioritize the backlog for next sprint by value and risk" }
+  - { id: pb-04, type: analysis, domains: [product-business], simple: true, text: "Define what is in and out of scope for the MVP of the booking feature" }
+  - { id: pb-05, type: analysis, domains: [product-business], simple: true, text: "Map the current invoice approval process and find the bottlenecks" }
+  - { id: pb-06, type: analysis, domains: [product-business], simple: true, text: "List the stakeholders for the payroll migration and their decision rights" }
+  - { id: pb-07, type: analysis, domains: [product-business], simple: true, text: "Plan the Q3 release: which epics ship in which release and why" }
+  - { id: pb-08, type: analysis, domains: [product-business], simple: true, text: "Clarify the requirements for exporting reports, including non-functional ones" }
+  - { id: pb-09, type: analysis, domains: [product-business], simple: true, text: "Run product discovery on why trial users churn in the first week" }
+  - { id: pb-10, type: docs, domains: [product-business], simple: true, text: "Write a business requirements document for the loyalty points system" }
+  # D02 design-ux
+  - { id: ux-01, type: analysis, domains: [design-ux], simple: true, text: "Create wireframes for the onboarding flow on mobile web" }
+  - { id: ux-02, type: analysis, domains: [design-ux], simple: true, text: "Map the user journey for a first-time buyer from landing page to checkout" }
+  - { id: ux-03, type: review, domains: [design-ux], simple: true, text: "Do a usability review of the settings page and list the top issues" }
+  - { id: ux-04, type: analysis, domains: [design-ux], simple: true, text: "Propose an information architecture and navigation labels for the help center" }
+  - { id: ux-05, type: analysis, domains: [design-ux], simple: true, text: "Define design tokens for color, spacing and typography for our design system" }
+  - { id: ux-06, type: review, domains: [design-ux], simple: true, text: "Evaluate the signup form against WCAG accessibility criteria" }
+  - { id: ux-07, type: analysis, domains: [design-ux], simple: true, text: "Plan user research interviews with five personas for the scheduling feature" }
+  - { id: ux-08, type: analysis, domains: [design-ux], simple: true, text: "Specify the interaction states, hover and loading animations for the upload button" }
+  - { id: ux-09, type: analysis, domains: [design-ux], simple: true, text: "Design the visual layout of the pricing page" }
+  - { id: ux-10, type: analysis, domains: [design-ux], simple: true, text: "Document the button and card components for the design system guidelines" }
+  # D03 frontend
+  - { id: fe-01, type: feature, domains: [frontend], simple: true, text: "Add a reusable modal component with focus trap to the React app" }
+  - { id: fe-02, type: bug, domains: [frontend], simple: true, text: "Fix the hydration error on the Next.js product page" }
+  - { id: fe-03, type: feature, domains: [frontend], simple: true, text: "Move the cart state from props drilling to a Zustand store" }
+  - { id: fe-04, type: feature, domains: [frontend], simple: true, text: "Add client-side routing for the account pages with a route guard" }
+  - { id: fe-05, type: refactor, domains: [frontend], simple: true, text: "Improve Lighthouse performance: reduce bundle size and fix the slow LCP image" }
+  - { id: fe-06, type: feature, domains: [frontend], simple: true, text: "Switch the blog pages from client rendering to static generation with ISR" }
+  - { id: fe-07, type: feature, domains: [frontend], simple: true, text: "Call the orders API from the dashboard with React Query and show loading states" }
+  - { id: fe-08, type: bug, domains: [frontend], simple: true, text: "Fix the screen reader not announcing errors on the checkout form (add aria-live)" }
+  - { id: fe-09, type: test, domains: [frontend], simple: true, text: "Write component tests for the date picker with Testing Library" }
+  - { id: fe-10, type: feature, domains: [frontend], simple: true, text: "Implement the new design tokens as Tailwind theme variables in the web app" }
+  # D04 backend
+  - { id: be-01, type: feature, domains: [backend], simple: true, text: "Add a paginated GET /orders endpoint with filtering by status" }
+  - { id: be-02, type: feature, domains: [backend], simple: false, text: "Implement JWT refresh tokens with rotation for the login API" }
+  - { id: be-03, type: feature, domains: [backend], simple: true, text: "Add a database migration and index for the orders created_at column" }
+  - { id: be-04, type: feature, domains: [backend], simple: true, text: "Cache the product catalog in Redis with a 1 hour TTL and invalidation on update" }
+  - { id: be-05, type: feature, domains: [backend], simple: true, text: "Publish an order.created event to the queue and consume it in the email worker" }
+  - { id: be-06, type: bug, domains: [backend], simple: false, text: "Fix the race condition where two payments update the same balance without a transaction" }
+  - { id: be-07, type: analysis, domains: [backend], simple: true, text: "Model the domain entities and invariants for subscriptions and invoices" }
+  - { id: be-08, type: refactor, domains: [backend], simple: true, text: "Split the monolithic user service into a service and repository layer" }
+  - { id: be-09, type: feature, domains: [backend], simple: true, text: "Add rate limiting and retries with exponential backoff to the payment client" }
+  - { id: be-10, type: bug, domains: [backend], simple: true, text: "Fix the N+1 query in the GET /users endpoint" }
+  # D05 mobile
+  - { id: mo-01, type: feature, domains: [mobile], simple: true, text: "Add push notifications with FCM to the React Native app" }
+  - { id: mo-02, type: feature, domains: [mobile], simple: true, text: "Support deep links into the order detail screen on iOS and Android" }
+  - { id: mo-03, type: feature, domains: [mobile], simple: false, text: "Make the task list work offline and sync changes when the device reconnects" }
+  - { id: mo-04, type: bug, domains: [mobile], simple: true, text: "Fix the jank and dropped frames when scrolling the feed in the Expo app" }
+  - { id: mo-05, type: ops, domains: [mobile], simple: true, text: "Prepare the release build and upload it to TestFlight and the Play Store" }
+  - { id: mo-06, type: feature, domains: [mobile], simple: true, text: "Add a bottom tab navigator and keep the selected tab state on the mobile app" }
+  - { id: mo-07, type: feature, domains: [mobile], simple: true, text: "Store the auth token in the iOS keychain instead of AsyncStorage" }
+  - { id: mo-08, type: feature, domains: [mobile], simple: true, text: "Build the camera capture screen natively in Swift for iOS" }
+  - { id: mo-09, type: analysis, domains: [mobile], simple: true, text: "Propose a mobile architecture with modules for the new Flutter app" }
+  - { id: mo-10, type: bug, domains: [mobile], simple: true, text: "Reduce the Android app startup time from 4 seconds" }
+  # D06 data-ai
+  - { id: da-01, type: feature, domains: [data-ai], simple: true, text: "Build an ETL job that ingests CSV exports into the warehouse every night" }
+  - { id: da-02, type: feature, domains: [data-ai], simple: true, text: "Add data quality checks for null and duplicate customer ids in the pipeline" }
+  - { id: da-03, type: feature, domains: [data-ai], simple: false, text: "Add retrieval-augmented generation over our docs with embeddings and a vector index" }
+  - { id: da-04, type: feature, domains: [data-ai], simple: true, text: "Integrate an LLM to summarize support tickets with a prompt and guardrails" }
+  - { id: da-05, type: test, domains: [data-ai], simple: true, text: "Evaluate the churn classifier: precision, recall and error analysis on the test set" }
+  - { id: da-06, type: feature, domains: [data-ai], simple: true, text: "Train a model to predict delivery time from historical orders" }
+  - { id: da-07, type: analysis, domains: [data-ai], simple: true, text: "Design a star schema data model for sales analytics" }
+  - { id: da-08, type: feature, domains: [data-ai], simple: true, text: "Create a dashboard with weekly active users and retention KPIs" }
+  - { id: da-09, type: ops, domains: [data-ai], simple: true, text: "Set up MLOps: version the model and monitor drift after deployment" }
+  - { id: da-10, type: analysis, domains: [data-ai], simple: true, text: "Define data retention and lineage rules for customer data in the data catalog" }
+  # D07 devops-sre
+  - { id: op-01, type: ops, domains: [devops-sre], simple: true, text: "Create a GitHub Actions CI pipeline that runs lint, tests and build" }
+  - { id: op-02, type: ops, domains: [devops-sre], simple: true, text: "Write a multi-stage Dockerfile for the API and shrink the image" }
+  - { id: op-03, type: ops, domains: [devops-sre], simple: false, text: "Write Terraform for the VPC, database and S3 bucket on AWS" }
+  - { id: op-04, type: ops, domains: [devops-sre], simple: false, text: "Deploy the service to Kubernetes with a Helm chart and readiness probes" }
+  - { id: op-05, type: ops, domains: [devops-sre], simple: false, text: "Roll out the new version with a canary deployment and automatic rollback" }
+  - { id: op-06, type: ops, domains: [devops-sre], simple: true, text: "Add Prometheus metrics and a Grafana dashboard with alerts for error rate" }
+  - { id: op-07, type: ops, domains: [devops-sre], simple: true, text: "Add OpenTelemetry tracing and structured logging across the services" }
+  - { id: op-08, type: analysis, domains: [devops-sre], simple: true, text: "Write the postmortem for yesterday's outage and the incident timeline" }
+  - { id: op-09, type: ops, domains: [devops-sre], simple: false, text: "Set up database backups and test a restore for disaster recovery" }
+  - { id: op-10, type: analysis, domains: [devops-sre], simple: true, text: "Find why the cloud bill doubled and propose cost optimization" }
+  # D08 quality
+  - { id: qa-01, type: test, domains: [quality], simple: true, text: "Write a test plan for the checkout release" }
+  - { id: qa-02, type: test, domains: [quality], simple: true, text: "Add Playwright end-to-end tests for login and checkout" }
+  - { id: qa-03, type: test, domains: [quality], simple: true, text: "Add API contract tests for the orders service" }
+  - { id: qa-04, type: test, domains: [quality], simple: true, text: "Run a load test with k6 at 500 requests per second and report latency" }
+  - { id: qa-05, type: bug, domains: [quality], simple: true, text: "Fix the flaky integration test that fails randomly in CI" }
+  - { id: qa-06, type: test, domains: [quality], simple: true, text: "Create synthetic test data fixtures without personal data" }
+  - { id: qa-07, type: analysis, domains: [quality], simple: true, text: "Define the test strategy for the new mobile banking product" }
+  - { id: qa-08, type: test, domains: [quality], simple: true, text: "Write a quality report with coverage and pass rate for this sprint" }
+  - { id: qa-09, type: test, domains: [quality], simple: true, text: "Add regression tests for the three bugs fixed last week" }
+  - { id: qa-10, type: test, domains: [quality], simple: true, text: "Automate the manual smoke test suite and run it in CI" }
+  # D09 security-compliance
+  - { id: se-01, type: review, domains: [security-compliance], simple: false, text: "Check the API for IDOR: can a user read another user's invoice?" }
+  - { id: se-02, type: analysis, domains: [security-compliance], simple: false, text: "Create a threat model for the new file upload service" }
+  - { id: se-03, type: review, domains: [security-compliance], simple: true, text: "Audit our npm dependencies for known vulnerabilities and outdated packages" }
+  - { id: se-04, type: bug, domains: [security-compliance], simple: false, text: "Remove the hard-coded API key from the repository and rotate the secret" }
+  - { id: se-05, type: review, domains: [security-compliance], simple: false, text: "Assess GDPR compliance for how we store and delete personal data" }
+  - { id: se-06, type: review, domains: [security-compliance], simple: false, text: "Review password hashing and session handling for authentication weaknesses" }
+  - { id: se-07, type: bug, domains: [security-compliance], simple: false, text: "Fix the SQL injection vulnerability in the search query" }
+  - { id: se-08, type: analysis, domains: [security-compliance], simple: false, text: "Map our controls to SOC 2 requirements" }
+  - { id: se-09, type: test, domains: [security-compliance], simple: false, text: "Run security testing against OWASP top 10 for the admin panel" }
+  - { id: se-10, type: analysis, domains: [security-compliance], simple: false, text: "Analyse the security incident where an admin token was leaked" }
+  # D10 architecture-leadership
+  - { id: ar-01, type: review, domains: [architecture-leadership], simple: true, text: "Review this pull request for correctness, readability and performance" }
+  - { id: ar-02, type: docs, domains: [architecture-leadership], simple: true, text: "Write an ADR for choosing PostgreSQL over MongoDB" }
+  - { id: ar-03, type: analysis, domains: [architecture-leadership], simple: true, text: "Design the architecture for splitting the monolith into services" }
+  - { id: ar-04, type: review, domains: [architecture-leadership], simple: true, text: "Evaluate the current architecture against scalability and availability goals" }
+  - { id: ar-05, type: analysis, domains: [architecture-leadership], simple: true, text: "List our technical debt and propose a repayment plan" }
+  - { id: ar-06, type: analysis, domains: [architecture-leadership], simple: true, text: "Compare tRPC and REST for the new API and recommend one with trade-offs" }
+  - { id: ar-07, type: docs, domains: [architecture-leadership], simple: true, text: "Define coding standards and lint rules for the team" }
+  - { id: ar-08, type: analysis, domains: [architecture-leadership], simple: true, text: "Do a system design for a URL shortener that handles 10k requests per second" }
+  - { id: ar-09, type: docs, domains: [architecture-leadership], simple: true, text: "Explain the event sourcing design to a junior engineer as mentoring notes" }
+  - { id: ar-10, type: analysis, domains: [architecture-leadership], simple: true, text: "Coordinate the cross-team decision on a shared authentication approach" }
+  # D11 docs-devex
+  - { id: dx-01, type: docs, domains: [docs-devex], simple: true, text: "Update the README with setup instructions and environment variables" }
+  - { id: dx-02, type: docs, domains: [docs-devex], simple: true, text: "Generate OpenAPI documentation for the public API with examples" }
+  - { id: dx-03, type: docs, domains: [docs-devex], simple: true, text: "Write the changelog for version 2.3 from the merged pull requests" }
+  - { id: dx-04, type: docs, domains: [docs-devex], simple: true, text: "Write release notes for customers about the new export feature" }
+  - { id: dx-05, type: docs, domains: [docs-devex], simple: true, text: "Create an onboarding guide for new engineers joining the team" }
+  - { id: dx-06, type: docs, domains: [docs-devex], simple: true, text: "Document the architecture with C4 diagrams" }
+  - { id: dx-07, type: docs, domains: [docs-devex], simple: true, text: "Find broken links and outdated pages in the documentation site" }
+  - { id: dx-08, type: refactor, domains: [docs-devex], simple: true, text: "Speed up the local dev environment setup and the build for developers" }
+  - { id: dx-09, type: docs, domains: [docs-devex], simple: true, text: "Organize the team wiki into a searchable knowledge base" }
+  - { id: dx-10, type: docs, domains: [docs-devex], simple: true, text: "Write technical documentation for the billing module" }
+  # D12 integration-automation
+  - { id: in-01, type: feature, domains: [integration-automation], simple: true, text: "Integrate Stripe checkout and handle the payment webhook" }
+  - { id: in-02, type: feature, domains: [integration-automation], simple: true, text: "Build an MCP server that exposes our ticket search to the assistant" }
+  - { id: in-03, type: feature, domains: [integration-automation], simple: true, text: "Automate the weekly report with a cron job that posts to Slack" }
+  - { id: in-04, type: feature, domains: [integration-automation], simple: true, text: "Write an internal CLI tool to bootstrap new microservices" }
+  - { id: in-05, type: feature, domains: [integration-automation], simple: true, text: "Make the sync job idempotent and add a dead letter queue for failures" }
+  - { id: in-06, type: feature, domains: [integration-automation], simple: true, text: "Connect our CRM API to the billing system and map the fields" }
+  - { id: in-07, type: feature, domains: [integration-automation], simple: true, text: "Orchestrate the release tools: create the tag, publish notes and notify the channel" }
+  - { id: in-08, type: feature, domains: [integration-automation], simple: true, text: "Receive GitHub webhooks and trigger a workflow on new issues" }
+  - { id: in-09, type: feature, domains: [integration-automation], simple: true, text: "Integrate the SendGrid email service with retries" }
+  - { id: in-10, type: feature, domains: [integration-automation], simple: true, text: "Automate onboarding: create accounts in three SaaS tools when HR adds an employee" }
+  # Multi-domain
+  - { id: mx-01, type: feature, domains: [backend, frontend], simple: false, text: "Add a paginated orders endpoint and show it in a sortable table on the dashboard" }
+  - { id: mx-02, type: feature, domains: [backend, quality], simple: false, text: "Implement the refund endpoint and add integration tests for it" }
+  - { id: mx-03, type: feature, domains: [frontend, design-ux], simple: false, text: "Design and build an accessible date range picker component" }
+  - { id: mx-04, type: feature, domains: [backend, security-compliance], simple: false, text: "Add role-based access control to the admin API and review it for authorization flaws" }
+  - { id: mx-05, type: ops, domains: [devops-sre, backend], simple: false, text: "Containerize the API with Docker and add a health check endpoint" }
+  - { id: mx-06, type: feature, domains: [mobile, backend], simple: false, text: "Add push notifications to the mobile app and the backend endpoint that sends them" }
+  - { id: mx-07, type: feature, domains: [data-ai, backend], simple: false, text: "Expose the recommendation model through a REST API endpoint" }
+  - { id: mx-08, type: feature, domains: [backend, docs-devex], simple: false, text: "Add the webhooks API and write its API documentation" }
+  - { id: mx-09, type: analysis, domains: [product-business, design-ux], simple: false, text: "Write user stories and wireframes for the team invitation flow" }
+  - { id: mx-10, type: ops, domains: [devops-sre, quality], simple: false, text: "Add end-to-end tests to the CI pipeline and block deploys on failure" }
+  - { id: mx-11, type: feature, domains: [integration-automation, backend], simple: false, text: "Integrate Stripe webhooks and store the payment events in the database" }
+  - { id: mx-12, type: review, domains: [architecture-leadership, security-compliance], simple: false, text: "Review the pull request for security vulnerabilities and code quality" }
+  - { id: mx-13, type: feature, domains: [frontend, backend, quality], simple: false, text: "Build the password reset flow: API endpoint, React form and end-to-end test" }
+  - { id: mx-14, type: analysis, domains: [architecture-leadership, devops-sre], simple: false, text: "Design the architecture and Kubernetes deployment for the new event service" }
+  - { id: mx-15, type: docs, domains: [docs-devex, product-business], simple: false, text: "Write release notes and update the product roadmap for the export feature" }
+  - { id: mx-16, type: feature, domains: [data-ai, frontend], simple: false, text: "Add an analytics dashboard page in the web app showing retention metrics" }
+  - { id: mx-17, type: feature, domains: [mobile, design-ux], simple: false, text: "Design the onboarding screens and implement them in the React Native app" }
+  - { id: mx-18, type: ops, domains: [devops-sre, security-compliance], simple: false, text: "Move secrets from the CI config into a secrets manager and rotate them" }
+  - { id: mx-19, type: feature, domains: [data-ai, integration-automation], simple: false, text: "Build an LLM assistant that calls our ticketing API through an MCP server" }
+  - { id: mx-20, type: test, domains: [quality, frontend], simple: false, text: "Write a test plan and Playwright tests for the checkout page" }

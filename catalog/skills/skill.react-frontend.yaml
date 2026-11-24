@@ -10,7 +10,8 @@ category: frontend
 status: experimental
 dependencies: []
 requiredContext:
-  projectSignals: []
+  projectSignals:
+    - react
   files: []
 supportedAdapters:
   claude-code: native

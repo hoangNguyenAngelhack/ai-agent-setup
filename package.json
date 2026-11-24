@@ -58,7 +58,8 @@
     "test:watch": "vitest",
     "catalog:validate": "npm run build && node dist/cli/catalog-validate.js",
     "prepublishOnly": "npm run build && npm test",
-    "docs:summary": "npm run build && node scripts/update-readme-summary.cjs"
+    "docs:summary": "npm run build && node scripts/update-readme-summary.cjs",
+    "eval:routing": "npm run build && node dist/app/routing-eval-run.js"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",

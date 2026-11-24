@@ -9,7 +9,8 @@ category: mobile
 status: experimental
 dependencies: []
 requiredContext:
-  projectSignals: []
+  projectSignals:
+    - react-native
   files: []
 supportedAdapters:
   claude-code: native

@@ -9,7 +9,9 @@ category: backend
 status: experimental
 dependencies: []
 requiredContext:
-  projectSignals: []
+  projectSignals:
+    - javascript
+    - typescript
   files: []
 supportedAdapters:
   claude-code: native

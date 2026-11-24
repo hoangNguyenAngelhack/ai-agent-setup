@@ -56,6 +56,8 @@ node bin/cli.js rollback ../my-project      # undo the last install
 | `doctor [dir]` | Check managed files and sections against `.ai-agent-setup/manifest.json` |
 | `rollback [dir] [--force]` | Restore the state before the latest install, byte for byte |
 | `catalog validate [dir]` | Validate a catalog (schemas, references, policies, context budget) |
+| `plan "<task>"` *(V2.1 preview)* | Propose a plan: domains, agents, skills, gates and estimated cost, with an explanation; `--mode`, `--domain`, `--agent`, `--exclude-agent`, `--allow-tools`, `--budget`, `--approve-at`, `--json` |
+| `explain <plan-id>` | Show a saved plan with its explanation |
 
 ### Create options (same as V1)
 

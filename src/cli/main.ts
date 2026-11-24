@@ -2,11 +2,14 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { createProject } from '../app/create';
+import { readPlan, runPlan } from '../app/plan';
 import { runSetup, type SetupOutcome } from '../app/setup';
 import { doctor, rollback, type ConflictStrategy, type PlannedChange } from '../installer';
+import type { ApprovalPoint, PlanMode, PlanOverrides } from '../core/contracts';
 import { ADAPTER_IDS, type AdapterId } from '../registry';
 import { oneOf, parseArgs, single, UsageError, type ParsedArgs } from './args';
 import { runCatalogValidate } from './catalog-validate';
+import { renderPlan } from './plan-output';
 import { resolveCreateConfig, type Ask } from './create-config';
 
 const PACKAGE_ROOT = join(__dirname, '..', '..');
@@ -31,6 +34,8 @@ Usage:
   ${BIN} doctor [dir]                    Check an install against its manifest
   ${BIN} rollback [dir] [--force]        Undo the latest install transaction
   ${BIN} catalog validate [catalog-dir]  Validate a catalog
+  ${BIN} plan "<task>" [options]         Propose a plan: domains, agents, skills, gates, cost (V2.1 preview)
+  ${BIN} explain <plan-id>               Show the explanation of a saved plan
 
 Create options (V1):
   -t, --type <type>        backend, frontend, fullstack, mobile
@@ -49,6 +54,16 @@ Setup / diff options:
       --enable-tool <id>   Opt in to a tool entry, e.g. tool.mcp-github (repeatable)
       --dry-run            Plan only
   -y, --yes                Apply without asking
+
+Plan options:
+      --project <dir>      Project to plan for (default: current directory)
+      --mode <m>           hybrid (default: propose), automatic, manual
+      --domain, --agent, --skill, --workflow <ids>      Select (comma separated)
+      --exclude-agent <ids>  Exclude agents (never re-added silently)
+      --allow-tools <intents>  Narrow tools, e.g. fs.read,cmd
+      --budget <bytes>     Context budget
+      --approve-at <points>  plan, each-step, gates
+      --json               Print the plan as JSON
 
   -h, --help               Show this help
   -v, --version            Show the version
@@ -127,6 +142,49 @@ async function commandCreate(args: ParsedArgs, io: CliIO): Promise<number> {
   return 0;
 }
 
+const MODES: readonly PlanMode[] = ['hybrid', 'automatic', 'manual'];
+const APPROVAL_POINTS: readonly ApprovalPoint[] = ['plan', 'each-step', 'gates'];
+
+function planOverrides(args: ParsedArgs): PlanOverrides {
+  const list = (name: string) => args.values.get(name);
+  const budget = single(args, 'budget');
+  if (budget !== undefined && !/^\d+$/.test(budget)) throw new UsageError('--budget must be a number of bytes');
+  return {
+    ...(list('domain') ? { domains: list('domain')! } : {}),
+    ...(list('agent') ? { agents: list('agent')! } : {}),
+    ...(list('exclude-agent') ? { excludeAgents: list('exclude-agent')! } : {}),
+    ...(list('skill') ? { skills: list('skill')! } : {}),
+    ...(single(args, 'workflow') ? { workflow: single(args, 'workflow')! } : {}),
+    ...(list('allow-tools') ? { allowTools: list('allow-tools')! } : {}),
+    ...(budget !== undefined ? { budgetBytes: Number(budget) } : {}),
+    ...(list('approve-at') ? { approveAt: list('approve-at')!.map((point) => oneOf('approve-at', point, APPROVAL_POINTS)!) } : {}),
+  };
+}
+
+function commandPlan(args: ParsedArgs, io: CliIO): number {
+  const task = args.positionals.join(' ').trim();
+  if (!task) throw new UsageError('Usage: plan "<task description>"');
+  const { plan, savedTo } = runPlan({
+    root: resolve(io.cwd, single(args, 'project') ?? '.'),
+    task,
+    mode: oneOf('mode', single(args, 'mode'), MODES) ?? 'hybrid',
+    overrides: planOverrides(args),
+  });
+  io.write(args.switches.has('json') ? `${JSON.stringify(plan, null, 2)}\n` : renderPlan(plan));
+  if (!args.switches.has('json')) {
+    io.write(savedTo ? `Saved: ${savedTo}. Show it again with: ${BIN} explain ${plan.id}\n` : 'Not saved: the project has no ai-agent-setup install (run setup first).\n');
+  }
+  return plan.status === 'invalid' ? 1 : 0;
+}
+
+function commandExplain(args: ParsedArgs, io: CliIO): number {
+  const id = args.positionals[0];
+  if (!id) throw new UsageError('Usage: explain <plan-id>');
+  const plan = readPlan(resolve(io.cwd, single(args, 'project') ?? '.'), id);
+  io.write(args.switches.has('json') ? `${JSON.stringify(plan.explain, null, 2)}\n` : renderPlan(plan));
+  return 0;
+}
+
 function commandDoctor(args: ParsedArgs, io: CliIO): number {
   const report = doctor(resolve(io.cwd, args.positionals[0] ?? '.'));
   if (report.healthy) io.write(`Healthy: ${report.manifest!.files.length} managed file(s), ${report.manifest!.sections.length} managed section(s).\n`);
@@ -160,6 +218,10 @@ export async function main(argv: readonly string[], io: CliIO): Promise<number> 
         return commandDoctor(args, io);
       case 'rollback':
         return commandRollback(args, io);
+      case 'plan':
+        return commandPlan(args, io);
+      case 'explain':
+        return commandExplain(args, io);
       case 'catalog':
         if (args.positionals[0] !== 'validate') throw new UsageError('Usage: catalog validate [catalog-dir]');
         return runCatalogValidate(resolve(io.cwd, args.positionals[1] ?? join(PACKAGE_ROOT, 'catalog')), (line) => io.write(`${line}\n`));
