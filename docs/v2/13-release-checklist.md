@@ -46,9 +46,9 @@ agent. The script reads the list below as written: keep each item on one line in
 
 `npm run release:check` on branch `feature/w2.2-08-release-readiness`: **NOT_READY**.
 
-- Gates: 12 of 13 PASS. `engines` FAILS: `engines.node` is `>=18.0.0` but CI tests Node 20, 22 and
-  24 (decision OQ-07, sign-off S2). Not changed here: the minimum Node version is the maintainer's
-  decision.
+- Gates: 13 of 13 PASS. `engines` failed (`>=18.0.0` declared, CI tests 20, 22 and 24) until the
+  maintainer decided OQ-07 on 2026-11-25: Node ≥ 20, so `engines.node` is now `>=20.0.0`. Ticking S2
+  is still the maintainer's step.
 - Fixed for this release: the package no longer ships `templates/.claude` and `templates/.agents`
   (unused by V2, removed in 2.0 by 07 §5): 76 fewer published files. The
   folders stay in the repository for the V1 scripts that are deprecated until 2.1.

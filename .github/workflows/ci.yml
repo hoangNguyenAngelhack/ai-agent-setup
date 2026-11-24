@@ -16,8 +16,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        # Minimum Node version is open question OQ-07 (docs/v2/10); 20 is the lowest the dev
-        # tooling (Vitest 4) supports.
+        # The lowest version must equal engines.node in package.json (OQ-07, decided 2026-11-25:
+        # Node >= 20); `npm run release:check` fails otherwise.
         node: [20, 22, 24]
     steps:
       - uses: actions/checkout@v4

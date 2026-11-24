@@ -108,6 +108,8 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   macOS and Windows with Node 20, 22 and 24.
 
 ### Changed
+- Node.js 20 or later is required (`engines.node >=20.0.0`, was `>=18.0.0`): Node 18 is past upstream
+  end of life and was never tested; CI tests 20, 22 and 24 (OQ-07, decided by the maintainer).
 - The package no longer ships `templates/.claude` and `templates/.agents` (unused by V2; removed in
   2.0 by docs/v2/07 §5): 76 fewer published files. They stay in the repository for the V1
   scripts deprecated until 2.1.
