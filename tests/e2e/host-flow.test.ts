@@ -115,9 +115,13 @@ describe.skipIf(process.platform === 'win32')('host delivery end to end (fake ho
       env: { ...process.env, FAKE_HOST_MODE: 'hang' },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    for (let tries = 0; tries < 100 && !readFileSync(join(root, '.ai-agent-setup', 'runs', plan.runId, 'events.jsonl'), 'utf8').includes('STEP_STARTED'); tries += 1) {
+    // Under a loaded machine the CLI can take seconds to start: wait for the host's first event
+    // (so the SIGINT handler is installed) before pressing Ctrl-C, and fail clearly if it never comes.
+    const started = () => readFileSync(join(root, '.ai-agent-setup', 'runs', plan.runId, 'events.jsonl'), 'utf8').includes('STEP_STARTED');
+    for (let tries = 0; tries < 400 && !started(); tries += 1) {
       await new Promise((resolveWait) => setTimeout(resolveWait, 100));
     }
+    expect(started()).toBe(true);
     child.kill('SIGINT');
     const code = await new Promise<number | null>((resolveExit) => child.on('close', resolveExit));
 

@@ -11,6 +11,10 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
 
 ### Added
+- Execution reports (W2.2-05): `gate-report` and `execution-report` JSON Schemas; every gate
+  report is checked against its records before it is stored (an inconsistent PASS becomes
+  NOT_VERIFIED); `report [--since date] [--json]` aggregates execution runs and gate history from
+  local artifacts, read-only, with measured figures only.
 - Runtime Isolation (W2.2-09, ADR-017 proposed): `isolation check` and `run deliver --isolation
   none|restricted|isolated --network allow|deny --pass-env names`. On macOS, `restricted` runs the host
   in a Seatbelt kernel sandbox (key, credentials, home and temporary directories closed; workspace

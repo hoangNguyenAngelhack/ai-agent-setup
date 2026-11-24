@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:contracts:v1:execution-report",
+  "title": "Execution report across runs",
+  "description": "Aggregated view of execution runs and quality gate history in one project (V2.2, W2.2-05). Every figure is measured from local artifacts; nothing is estimated, and runs whose artifacts cannot be read are listed as UNREADABLE, never counted as success.",
+  "type": "object",
+  "required": ["schemaVersion", "generatedAt", "project", "since", "runs", "gates"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "execution-report/v1" },
+    "generatedAt": { "$ref": "urn:ai-agent-setup:contracts:v1:gate-record#/$defs/timestamp" },
+    "project": {
+      "type": "object",
+      "required": ["name", "commit", "dirty"],
+      "additionalProperties": false,
+      "properties": { "name": { "type": "string", "minLength": 1 }, "commit": { "type": ["string", "null"] }, "dirty": { "type": "boolean" } }
+    },
+    "since": { "oneOf": [{ "$ref": "urn:ai-agent-setup:contracts:v1:gate-record#/$defs/timestamp" }, { "type": "null" }] },
+    "runs": {
+      "type": "object",
+      "required": ["total", "byStatus", "byIntegrity", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "total": { "$ref": "#/$defs/count" },
+        "byStatus": { "$ref": "#/$defs/runCounts" },
+        "byIntegrity": {
+          "type": "object",
+          "required": ["VERIFIED", "UNSIGNED", "VIOLATED"],
+          "additionalProperties": false,
+          "properties": { "VERIFIED": { "$ref": "#/$defs/count" }, "UNSIGNED": { "$ref": "#/$defs/count" }, "VIOLATED": { "$ref": "#/$defs/count" } }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["runId", "status", "integrity", "steps", "stepsSucceeded", "anomalies", "reason"],
+            "additionalProperties": false,
+            "properties": {
+              "runId": { "type": "string", "pattern": "^run-[0-9TZ]+-[0-9a-f]{6}$" },
+              "status": { "enum": ["SUCCEEDED", "OUTCOME_VERIFIED", "FAILED", "CANCELLED", "NOT_VERIFIED", "UNREADABLE"] },
+              "integrity": { "enum": ["VERIFIED", "UNSIGNED", "VIOLATED", null] },
+              "steps": { "$ref": "#/$defs/count" },
+              "stepsSucceeded": { "$ref": "#/$defs/count" },
+              "anomalies": { "$ref": "#/$defs/count" },
+              "reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "required": ["invocations", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "invocations": { "$ref": "#/$defs/count" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["gate", "total", "PASS", "FAIL", "NOT_VERIFIED", "passRateOfVerified", "last", "durationMs", "mixedResultsOnCommit"],
+            "additionalProperties": false,
+            "properties": {
+              "gate": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/gateId" },
+              "total": { "$ref": "#/$defs/count" },
+              "PASS": { "$ref": "#/$defs/count" },
+              "FAIL": { "$ref": "#/$defs/count" },
+              "NOT_VERIFIED": { "$ref": "#/$defs/count" },
+              "passRateOfVerified": {
+                "description": "PASS / (PASS + FAIL); null when no run of the gate was verified. NOT_VERIFIED runs are never counted as passed.",
+                "oneOf": [{ "type": "number", "minimum": 0, "maximum": 1 }, { "type": "null" }]
+              },
+              "last": {
+                "type": "object",
+                "required": ["status", "at", "runId"],
+                "additionalProperties": false,
+                "properties": { "status": { "enum": ["PASS", "FAIL", "NOT_VERIFIED"] }, "at": { "type": "string" }, "runId": { "type": "string" } }
+              },
+              "durationMs": {
+                "description": "Measured durations of verified runs (PASS or FAIL); null when there are none.",
+                "oneOf": [
+                  { "type": "null" },
+                  {
+                    "type": "object",
+                    "required": ["median", "max"],
+                    "additionalProperties": false,
+                    "properties": { "median": { "type": "number", "minimum": 0 }, "max": { "type": "number", "minimum": 0 } }
+                  }
+                ]
+              },
+              "mixedResultsOnCommit": {
+                "description": "Commits on which the gate both passed and failed: flaky, or uncommitted changes between runs (the history cannot tell which).",
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "count": { "type": "integer", "minimum": 0 },
+    "runCounts": {
+      "type": "object",
+      "required": ["SUCCEEDED", "OUTCOME_VERIFIED", "FAILED", "CANCELLED", "NOT_VERIFIED", "UNREADABLE"],
+      "additionalProperties": false,
+      "properties": {
+        "SUCCEEDED": { "$ref": "#/$defs/count" },
+        "OUTCOME_VERIFIED": { "$ref": "#/$defs/count" },
+        "FAILED": { "$ref": "#/$defs/count" },
+        "CANCELLED": { "$ref": "#/$defs/count" },
+        "NOT_VERIFIED": { "$ref": "#/$defs/count" },
+        "UNREADABLE": { "$ref": "#/$defs/count" }
+      }
+    }
+  }
+}

@@ -323,11 +323,15 @@ export function resultChanges(previous: unknown, next: RunResult): string[] {
   return changes;
 }
 
+/** The run result from the event log, checked against the contract; nothing is written. */
+export function computeRunResult(root: string, runId: string, now: Date = new Date(), validator = new SchemaValidator(join(PACKAGE_ROOT, 'catalog', 'schemas'))): RunResult {
+  const { plan, state, signing } = loadRun(root, runId);
+  return checkedRunResult(reconcile(plan, state, now.toISOString(), signing), (value) => validator.validate(RUN_RESULT_SCHEMA, value));
+}
+
 /** Reconciles every step, checks the result against the contract and writes result.json. */
 export function reportRun(root: string, runId: string, now: Date = new Date()): RunReport {
-  const { plan, state, signing } = loadRun(root, runId);
-  const validator = new SchemaValidator(join(PACKAGE_ROOT, 'catalog', 'schemas'));
-  const result = checkedRunResult(reconcile(plan, state, now.toISOString(), signing), (value) => validator.validate(RUN_RESULT_SCHEMA, value));
+  const result = computeRunResult(root, runId, now);
   const file = files(root, runId).result;
   let previous: unknown = null;
   try {
