@@ -11,6 +11,11 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
 
 ### Added
+- Release readiness (W2.2-08): `npm run release:check` runs 13 measured gates (build, typecheck, lint,
+  tests with coverage, catalog, evaluation regressions, `npm audit`, CLI version, published file
+  list, secrets in published files, documentation links, tested Node range, CHANGELOG entry) and
+  reads the sign-off list in [docs/v2/13](docs/v2/13-release-checklist.md); READY needs both.
+  `prepublishOnly` now runs it, so `npm publish` stops unless the release is READY.
 - KPI report (W2.2-07): `report --kpi [--since date] [--json]` (`kpi-report` schema) reports every KPI of
   docs/v2/09 §6 with definition, source, sample size and status. Measured: task acceptance rate,
   regression rate over gate history, median completion time, human intervention, tokens per accepted
@@ -103,6 +108,9 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   macOS and Windows with Node 20, 22 and 24.
 
 ### Changed
+- The package no longer ships `templates/.claude` and `templates/.agents` (unused by V2; removed in
+  2.0 by docs/v2/07 §5): 76 fewer published files. They stay in the repository for the V1
+  scripts deprecated until 2.1.
 - `bin/cli.js` is a launcher for the TypeScript CLI in `dist/`; the package now ships `dist/` and
   `catalog/`.
 - The AI configuration is generated from the bundled catalog instead of being downloaded from GitHub

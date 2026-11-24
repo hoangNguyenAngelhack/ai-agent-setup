@@ -45,6 +45,8 @@
     "dist",
     "catalog",
     "templates",
+    "!templates/.claude",
+    "!templates/.agents",
     "README.md",
     "LICENSE"
   ],
@@ -59,11 +61,12 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "catalog:validate": "npm run build && node dist/cli/catalog-validate.js",
-    "prepublishOnly": "npm run build && npm test",
+    "prepublishOnly": "npm run release:check",
     "docs:summary": "npm run build && node scripts/update-readme-summary.cjs",
     "eval:routing": "npm run build && node dist/app/routing-eval-run.js",
     "eval:regressions": "npm run build && node dist/app/eval-regression.js",
-    "eval:baseline": "npm run build && node dist/app/eval-regression.js --record"
+    "eval:baseline": "npm run build && node dist/app/eval-regression.js --record",
+    "release:check": "npm run build && node dist/app/release-check.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

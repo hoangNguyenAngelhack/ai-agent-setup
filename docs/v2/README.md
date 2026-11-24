@@ -23,6 +23,7 @@
 | 10 | [Architecture Decisions](10-architecture-decisions.md) | ADR-001–009 and ADR-014–016 (accepted), conflicts, proposed ADRs, open questions |
 | 11 | [Runtime Threat Model](11-runtime-threat-model.md) | What protects approvals, events and evidence, and what does not |
 | 12 | [Runtime Isolation security report](12-runtime-isolation-security-report.md) | W2.2-09 security tests 1–12 on a real kernel sandbox: PASS / FAIL / NOT_VERIFIED |
+| 13 | [Release checklist](13-release-checklist.md) | W2.2-08 automated release gates (`npm run release:check`) and the sign-off list |
 
 User-facing upgrade steps: [Migrating from V1](../guides/migrating-from-v1.md).
 
