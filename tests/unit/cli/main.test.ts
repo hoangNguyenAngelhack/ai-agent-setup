@@ -240,7 +240,10 @@ describe('main — gates and runs', () => {
     configure(root, { 'gate.build': 'node ok.js', 'gate.unit-tests': 'node ok.js', 'gate.lint': 'node ok.js', 'gate.security-scan': 'node ok.js', 'gate.coverage-80': 'node cov.cjs' });
     const plan = JSON.parse((await cli(root, ['plan', 'Implement the orders API endpoint', '--json'])).out) as { id: string; steps: Array<{ id: string }> };
     const runId = /Created (run-\S+)/.exec((await cli(root, ['run', 'create', plan.id])).out)![1]!;
-    expect((await cli(root, ['run', 'approve', runId, '--by', 'tester'])).out).toContain('immutable');
+    const unattended = await cli(root, ['run', 'approve', runId]);
+    expect(unattended).toMatchObject({ code: 1, err: expect.stringContaining('needs an interactive terminal') as unknown });
+    expect((await cli(root, ['run', 'approve', runId], ['wrong'])).err).toContain(`not confirmed (expected ${runId})`);
+    expect((await cli(root, ['run', 'approve', runId, '--by', 'tester'], [runId])).out).toContain('immutable');
 
     const step = plan.steps[0]!.id;
     expect((await cli(root, ['run', 'event', runId, '--type', 'STEP_STARTED', '--step', step])).out).toBe('Recorded.\n');
@@ -277,17 +280,68 @@ describe('main — gates and runs', () => {
     await cli(root, ['setup', '--yes', '--profile', 'profile.starter']);
     const plan = JSON.parse((await cli(root, ['plan', 'Implement the orders API endpoint', '--approve-at', 'each-step', '--json'])).out) as { id: string; steps: Array<{ id: string }> };
     const runId = /Created (run-\S+)/.exec((await cli(root, ['run', 'create', plan.id])).out)![1]!;
-    await cli(root, ['run', 'approve', runId]);
+    await cli(root, ['run', 'approve', runId], [runId]);
     const step = plan.steps[0]!.id;
 
     await cli(root, ['run', 'event', runId, '--type', 'STEP_STARTED', '--step', step]);
-    expect((await cli(root, ['run', 'approve-step', runId, step])).out).toBe(`Approved ${step}.\n`);
+    expect((await cli(root, ['run', 'approve-step', runId, step])).err).toContain('needs an interactive terminal');
+    expect((await cli(root, ['run', 'approve-step', runId, step], [step])).out).toBe(`Approved ${step}.\n`);
     await cli(root, ['run', 'event', runId, '--type', 'APPROVAL_REQUIRED', '--step', step, '--reason', 'runs a migration']);
-    expect((await cli(root, ['run', 'approve-step', runId, step, '--decline'])).out).toBe(`Declined ${step}.\n`);
+    expect((await cli(root, ['run', 'approve-step', runId, step, '--decline'], [step])).out).toBe(`Declined ${step}.\n`);
     expect((await cli(root, ['run', 'approve-step', runId])).err).toContain('Usage: run approve-step');
     expect((await cli(root, ['run', 'event', runId, '--type', 'STEP_FAILED', '--step', step, '--reason', 'boom', '--evidence', 'a.log'])).out).toContain('not applied');
     expect((await cli(root, ['run', 'event', runId, '--type', 'STEP_BLOCKED', '--step', step, '--reason', 'no access'])).out).toContain('not applied');
 
     expect((await cli(root, ['run', 'status', runId])).out).toContain('SKIPPED');
+  });
+
+  it('should show order violations, waiting events and pending approvals in run status (ADR-015)', async () => {
+    const root = backend();
+    await cli(root, ['setup', '--yes']);
+    const plan = JSON.parse((await cli(root, ['plan', 'Implement the orders API endpoint and build the orders page in the React app', '--domain', 'backend,frontend', '--json'])).out) as { id: string; steps: Array<{ id: string }> };
+    const runId = /Created (run-\S+)/.exec((await cli(root, ['run', 'create', plan.id])).out)![1]!;
+    await cli(root, ['run', 'approve', runId], [runId]);
+    const [first, second] = plan.steps.map((item) => item.id) as [string, string];
+
+    await cli(root, ['run', 'event', runId, '--type', 'STEP_STARTED', '--step', second]);
+    await cli(root, ['run', 'event', runId, '--type', 'APPROVAL_REQUIRED', '--step', second, '--reason', 'needs a schema change']);
+    const status = await cli(root, ['run', 'status', runId]);
+
+    expect(status.code).toBe(2);
+    expect(status.out).toContain('approval pending: ');
+    expect(status.out).toContain(`${second}: NOT_VERIFIED (approval pending)`);
+    expect(status.out).toContain('DEPENDENCY_ORDER_VIOLATION STEP_STARTED');
+    expect(status.out).toContain(`waiting STEP_STARTED for ${second}`);
+    expect((await cli(root, ['run', 'verify', runId, second])).err).toContain(`depends on ${first}`);
+  });
+});
+
+describe('isolation check and deliver options (W2.2-09)', () => {
+  it('should show the platform matrix and refuse isolated with exit 2', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'iso-cli-'));
+    const isolated = await cli(root, ['isolation', 'check', '--isolation', 'isolated']);
+    expect(isolated.code).toBe(2);
+    expect(isolated.out).toContain('Platforms:');
+    expect(isolated.out).toMatch(/Linux\s+UNSUPPORTED/);
+    expect(isolated.out).toContain('Cannot start with this profile (nothing would run)');
+    expect(isolated.out).not.toMatch(/\bSecure\b/);
+
+    const json = await cli(root, ['isolation', 'check', '--isolation', 'restricted', '--network', 'deny', '--host', 'codex', '--json']);
+    const report = JSON.parse(json.out) as { profile: string; network: { mode: string }; problems: string[] };
+    expect(report).toMatchObject({ profile: 'restricted', network: { mode: 'deny-all' } });
+    expect(json.code).toBe(process.platform === 'darwin' ? 0 : 2);
+
+    const allowlist = await cli(root, ['isolation', 'check', '--network', 'allow:api.example.com']);
+    expect(allowlist.code).toBe(2);
+    expect(allowlist.out).toContain('network allowlist cannot be enforced');
+  });
+
+  it('should reject invalid isolation options before anything runs', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'iso-cli-'));
+    expect((await cli(root, ['isolation', 'list'])).code).toBe(1);
+    expect((await cli(root, ['isolation', 'check', '--isolation', 'sandboxed'])).err).toContain('--isolation must be one of');
+    expect((await cli(root, ['isolation', 'check', '--network', 'sometimes'])).code).toBe(1);
+    expect((await cli(root, ['run', 'deliver', 'run-20261124T100000Z-abcdef', '--host', 'codex', '--network', 'deny'])).err).toContain('--network and --pass-env need --isolation');
+    expect((await cli(root, ['run', 'deliver', 'run-20261124T100000Z-abcdef', '--host', 'codex', '--isolation', 'airgap'])).err).toContain('--isolation must be one of');
   });
 });

@@ -1,5 +1,6 @@
 {
   "schemaVersion": "run-result/v1",
+  "rulesVersion": 3,
   "runId": "run-20261124T100000Z-abcdef",
   "planId": "plan-20261124T095900Z-123abc",
   "planDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -27,7 +28,8 @@
       "reason": null,
       "approval": {
         "required": false,
-        "approved": false
+        "approved": false,
+        "pending": false
       },
       "gates": [
         {
@@ -56,7 +58,8 @@
       "reason": "dependency backend.api-design is FAILED",
       "approval": {
         "required": false,
-        "approved": false
+        "approved": false,
+        "pending": false
       },
       "gates": [],
       "evidence": [],
@@ -91,5 +94,11 @@
     },
     "stepsWithExecutionEvidence": 2
   },
-  "anomalies": []
+  "anomalies": [],
+  "deferred": [],
+  "integrity": {
+    "status": "VERIFIED",
+    "scheme": "hmac-sha256",
+    "violations": 0
+  }
 }

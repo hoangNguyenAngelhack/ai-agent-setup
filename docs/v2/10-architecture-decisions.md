@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | ADR-001–008 **Accepted** (approved in [EXECUTION-SPECIFICATION §3, §13](EXECUTION-SPECIFICATION.md)). ADR-009 and ADR-014 **Accepted** by the Product Owner on 2026-11-24. ADR-010–013 **Proposed, not approved.** |
+| Status | ADR-001–008 **Accepted** (approved in [EXECUTION-SPECIFICATION §3, §13](EXECUTION-SPECIFICATION.md)). ADR-009, ADR-014, ADR-015 and ADR-016 **Accepted** by the Product Owner on 2026-11-24. ADR-010–013 and ADR-017 **Proposed, not approved** (ADR-017 is implemented for review on a branch). |
 | Date | 2026-11-23 |
 | Related | [04 Product](04-product-specification.md) · [05 Architecture](05-architecture-specification.md) · [08 Roadmap](08-implementation-roadmap.md) |
 
@@ -11,7 +11,7 @@
 This document records the approved architecture decisions, the conflicts found between the approved
 direction and the current repository, the proposed (unapproved) decisions, and the open questions.
 
-No approval is implied for anything outside ADR-001–009 and ADR-014.
+No approval is implied for anything outside ADR-001–009 and ADR-014–016; ADR-017 waits for the Product Owner.
 
 ## 2. Accepted decisions
 
@@ -181,6 +181,147 @@ No approval is implied for anything outside ADR-001–009 and ADR-014.
     them.
 - **Status:** Accepted (Product Owner). **Date:** 2026-11-24. Resolves OQ-11.
 
+### ADR-015: Handling step events that arrive before their step is ready
+
+**Status:** Accepted (Product Owner), 2026-11-24: option C + B, with the three decisions below. Implemented in `src/core/execution/state.ts` (rules version 2).
+
+**Context.** The orchestrator enforces dependencies on *verified* state: a step becomes READY only
+when every dependency is SUCCEEDED, and that needs the orchestrator's gates (`run verify`). A host
+working headless does the steps in order without waiting for verification. Typical timeline for
+plan `A → B`:
+
+| # | Event (source) | Today |
+|---|---|---|
+| 1 | `STEP_STARTED A` (host) | A RUNNING |
+| 2 | `STEP_COMPLETED A` (host) | A NOT_VERIFIED, awaiting verification; B stays PENDING |
+| 3 | `STEP_STARTED B` (host) | **rejected**: "dependencies are not satisfied" (anomaly) |
+| 4 | `APPROVAL_REQUIRED B` (host) | **rejected**: the approval request is only visible as an anomaly |
+| 5 | `STEP_COMPLETED B` (host) | **rejected** |
+| 6 | `run verify A` (orchestrator) | A SUCCEEDED, B READY, but B has no execution evidence and its approval request is gone |
+
+The host respected the dependency order (it finished A before starting B); only verification
+lags. Steps 3–5 are lost, so the run ends at best as OUTCOME_VERIFIED and an approval the agent asked
+for never reaches the user as a pending approval. Events are never silently dropped (they are
+anomalies), but they no longer influence the state.
+
+**Decision drivers.**
+
+1. An approval request must never be lost or bypassed.
+2. Dependencies stay enforced: a step is never verified, and never counts as succeeded, before its
+   dependencies succeeded.
+3. No success inflation: early reports are execution evidence, not verification.
+4. Determinism: the state is still a pure function of the event log (replay after restart gives the
+   same result); idempotent by event id; tolerant of duplicates and reordering.
+5. A real ordering violation (the host starts B before it reported A finished) stays visible.
+
+**Options.**
+
+| Option | Description | Assessment |
+|---|---|---|
+| A. Keep rejecting (today) | Early events become anomalies | Violates drivers 1 and 3 (evidence lost); simplest |
+| B. Deferred queue | An event rejected only because the step is not ready yet is parked; after every state change, parked events are retried in log order; leftovers are reported at reconciliation | Keeps every event; the step state still follows verification. Approval requests wait in the queue, so they are pending but not visible as WAITING_FOR_APPROVAL until the step is ready |
+| C. Two readiness levels | Distinguish *host-ready* (every dependency SUCCEEDED or reported completed by the host) from *verified-ready* (every dependency SUCCEEDED). Host events are accepted on host-ready steps; verification needs verified-ready | Models the real situation; needs one more concept in the state machine |
+
+**Recommendation: C, with B as the fallback for events that are early even at host level.**
+
+- *Host-ready.* A PENDING step whose dependencies are all SUCCEEDED or host-completed
+  (NOT_VERIFIED after a host `STEP_COMPLETED`) accepts host events. They are recorded as execution
+  evidence (`reports`), and the step moves to RUNNING or WAITING_FOR_APPROVAL as today.
+- *Verification order.* An orchestrator `STEP_COMPLETED` (gate results) for a step is applied only
+  when every dependency is SUCCEEDED; otherwise it waits in the queue (driver 2).
+- *Approvals first.* `APPROVAL_REQUIRED` is accepted in any open state, including PENDING. It
+  records a pending approval that `run status` shows and that `run approve-step` can resolve. A step
+  with an unresolved request cannot complete (driver 1).
+- *Deferred queue (B).* Events for a step that is not even host-ready (the host started B before
+  reporting A finished) are parked, retried after each state change in log order, and recorded as
+  ordering anomalies. Events still parked at reconciliation are listed in the result as
+  `deferred` (not applied) with the reason.
+- *Failure propagation.* If a dependency is later verified FAILED, its host-ready dependants become
+  BLOCKED. Their reports stay as evidence, and the reason names the failed dependency.
+- *Unchanged.* The event log format, the ten step states, run statuses (including OUTCOME_VERIFIED)
+  and exit codes.
+
+**Consequences.**
+
+- (+) No approval request or execution report is lost. Headless runs can reach SUCCEEDED after
+  verification without the host replaying events.
+- (+) Real ordering violations stay visible as anomalies.
+- (−) One more concept (host-ready) and a queue in the reducer. Replay cost grows with the number of
+  parked events, bounded by the log size.
+- (−) Replaying an existing log under the new rules can change a stored result (for example
+  OUTCOME_VERIFIED → SUCCEEDED). `result.json` is regenerated by `run status`, so this is visible.
+
+**Test plan (before merging an implementation).** One test per row of the timeline above. Plus:
+- duplicate and reordered events (including the orchestrator verifying B before A);
+- an approval requested on a PENDING step, then approved and then declined;
+- a dependency verified FAILED after its dependant was host-completed;
+- a host start of B before A was reported finished (ordering anomaly, parked, applied later);
+- restart replay equality;
+- `run-result` contract validation for every scenario.
+
+**Decisions (Product Owner, 2026-11-24).**
+
+1. **C + B.** Two readiness levels, `host-ready` and `verified-ready`, plus a deferred queue that
+   keeps and replays early events. No event is dropped only because the previous step's gates have
+   not run yet.
+2. **Host starts B before A finished.** B's events and evidence are kept and applied once B becomes
+   host-ready; the anomaly `DEPENDENCY_ORDER_VIOLATION` is recorded. This alone does not make the run
+   NOT_VERIFIED. B is never gated or completed before A is verified SUCCEEDED; if A fails, B becomes
+   BLOCKED with its evidence kept.
+3. **Pending approval.** It blocks completion of its step and blocks run SUCCEEDED, but not
+   independent steps. Only the user resolves an approval.
+
+**As implemented.**
+
+- `run verify` refuses to run gates for a step whose dependencies are not SUCCEEDED or whose
+  approval is pending; an orchestrator result that arrives early anyway waits in the queue.
+- `run-result` gains `rulesVersion` (2), `deferred` (events never applied, with why), and
+  `approval.pending` per step; anomalies can carry `code`. `run status` prints what changed since the
+  previous `result.json`, so a log replayed under the new rules shows its new outcome (for example
+  `rules 1 → 2`, `status OUTCOME_VERIFIED → SUCCEEDED`).
+- Unchanged: event log format, the ten step states, run statuses and exit codes.
+
+### ADR-016: Local integrity of run artifacts
+
+- **Status:** Accepted by the Product Owner, 2026-11-24. Threat model: [11](11-runtime-threat-model.md).
+- **Scope of protection (as accepted):** **ADR-016 does not create a security boundary against an
+  agent or attacker that can run arbitrary code under the same operating-system account.** Such code
+  can read the key and sign anything. Neither the HMAC nor the hook is claimed to stop it. The
+  boundary for that case is Runtime Isolation (W2.2-09, planned).
+- **Context:** Run artifacts live in the project. An agent with write access could forge orchestrator
+  events, widen an approved plan and recompute its unkeyed digest, or replace evidence. A checksum
+  stored next to the data does not help when both can be rewritten.
+- **Decision:**
+  - A per-project HMAC-SHA256 key is created by the toolkit in the user's configuration directory
+    (`ai-agent-setup/keys`, mode 0600, never in the project or the repository).
+  - The toolkit signs the plan approval (run, revision, digest, approver, time), every event it
+    appends (position + exact line, in `integrity.jsonl` next to an unchanged `events.jsonl`) and
+    the checksums of the evidence it records with an event (gate records, gate logs, host transcript).
+    The log head (count, last signature) is kept with the key.
+  - On load, only signed events are applied; unsigned, changed, removed or truncated entries and
+    changed evidence become `INTEGRITY_VIOLATION` anomalies and rule out SUCCEEDED; a plan or approval
+    changed outside the toolkit, or a signed run without its key, is refused.
+  - Signed events must appear in the order they were written.
+  - Runs approved before the key existed stay readable as UNSIGNED (backward compatibility); their
+    list is recorded with the key when it is created, so nothing in the project can make a later run
+    count as unsigned.
+  - Mandatory policy and a built-in path check in the hook deny agents the key directory (shell,
+    writes, Claude Code read tools; resolved paths, case-insensitive where the OS is). A key
+    directory inside the project is refused.
+  - `run approve` and `run approve-step` need an interactive terminal and the id typed back.
+  - An independent security review on 2026-11-24 found two HIGH issues (a signed run could pass as
+    unsigned; signed events could be reordered) and two MEDIUM ones (key-path bypasses, approval via
+    an obfuscated command); all four are fixed with regression tests.
+- **Unchanged:** event log format, step states, run statuses, exit codes. `run-result` rules version 3
+  adds `integrity`.
+- **Alternatives considered:** checksums only (rejected: rewritable with the data); a remote or cloud
+  witness (rejected: local-first); an OS keychain (deferred: platform-specific and prompts the user);
+  a separate OS user or sandbox for the agent (the only real boundary; left to the user, see the
+  threat model §6).
+- **Consequences:** (+) tampering through host tools and ordinary scripts that do not read the key is
+  detected and cannot produce SUCCEEDED. (−) Not a boundary against code the agent runs under the
+  same OS account; the result reports what was verified, not more.
+
 ## 3. Conflicts between the specification and the repository
 
 None of these reopens an approved decision. Each one has a proposed resolution.
@@ -203,6 +344,97 @@ None of these reopens an approved decision. Each one has a proposed resolution.
 | ADR-011 | **Language:** migrate `src/` to TypeScript compiled to `dist/` | Typed contracts for a growing core; consistent with the rules the product ships | Start of V2.0. **Implemented as a working assumption** on `feature/v2-foundation` (2026-11-24); reversible until merged |
 | ADR-012 | **Bundled catalog, no runtime download:** catalog shipped in the npm package; `update` changes the version explicitly | Reproducibility and offline use (TD-02) | Start of V2.0 |
 | ADR-013 | **Hooks implemented in Node.js**, not shell | Cross-platform (NFR-02); no GNU-only tools (F-20) | Start of V2.0 |
+| ADR-017 | **Runtime Isolation:** provider contract; macOS Seatbelt for `restricted`; `isolated` (separate OS user) refused until set up with permission; host-side event inbox | The first OS-enforced boundary for code the agent runs (W2.2-09); details below | Product Owner review of W2.2-09 |
+
+### ADR-017: Runtime Isolation (W2.2-09)
+
+- **Status:** Proposed and implemented for review on branch `feature/w2.2-09-runtime-isolation`,
+  2026-11-24. **Not yet accepted by the Product Owner.** Threat model: [11 §6](11-runtime-threat-model.md#6-runtime-isolation-w22-09-adr-017);
+  test report: [12](12-runtime-isolation-security-report.md); usage: [guide](../guides/runtime-isolation.md).
+- **Context:** ADR-016 detects tampering but is not a boundary against code the agent runs under the
+  user's OS account: such code can read the integrity key and sign anything. W2.2-09 needs a boundary
+  the OS enforces, without installing software, creating OS users or changing system permissions
+  (each needs the user's separate permission), and without Docker as a default dependency.
+- **Four boundaries, kept apart:**
+
+  | Boundary | What it guarantees | Where |
+  |---|---|---|
+  | Integrity (ADR-016) | Changes to run artifacts made without the key are detected | HMAC key outside the project |
+  | Runtime isolation (this ADR) | The agent's processes cannot reach what the OS sandbox closes | Kernel sandbox around the host process |
+  | Host trust boundary | Approvals, verdicts and signatures come only from the toolkit process outside the sandbox | Orchestrator + event inbox |
+  | OS trust boundary | Processes of different OS users cannot read each other's files | Separate OS user (profile `isolated`, not available) |
+
+- **Options evaluated:**
+
+  | Option | Boundary | Why chosen or not |
+  |---|---|---|
+  | Hooks / policy / prompt rules in the host | None (same process, same user) | Rejected as a boundary; kept as a guard against mistakes |
+  | Host's own sandbox (Claude Code sandbox, Codex `workspace-write`) | Host-defined | Not controllable or verifiable by the toolkit; real CLIs not installed here (NOT_VERIFIED) |
+  | Separate OS user | Real (OS identity) | The only option that meets AC1; needs an administrator to create the user and set permissions. Not done without the user's permission: profile `isolated` refuses with that reason |
+  | Container or VM | Real (namespaces / hypervisor) | Needs a runtime; Docker must not be a default dependency or installed by the toolkit |
+  | OS sandbox around the host process: macOS Seatbelt (`/usr/bin/sandbox-exec`, built in) | Real (kernel), same OS user | **Chosen for `restricted` on macOS**: no installation, no admin rights, enforced on every child |
+  | Linux bubblewrap / Landlock; Windows AppContainer / restricted token + Job Object | Real (kernel) | Right designs for those platforms; not implemented: they cannot be verified on this machine, so they refuse |
+
+- **Decision:**
+  1. A provider-independent contract in `src/core/isolation` (profile, network policy, capabilities
+     per control, policy, prepared launch) and providers in `src/isolation`. `none` keeps today's
+     behaviour and claims nothing; `restricted` and `isolated` start only when every required control
+     is `SUPPORTED`; otherwise nothing starts (fail closed). A profile is never upgraded, downgraded or
+     replaced.
+  2. `restricted` on macOS: a Seatbelt profile generated per launch. Reads closed under the home and
+     temporary directories except the workspace, the toolkit and runtime, the host executable and the
+     host's own state; writes only to the workspace (not `.ai-agent-setup/`), a per-launch scratch
+     directory and the host state; no execution from the home, temporary or scratch areas; the key
+     directory, the toolkit's configuration directory and credential locations (`.ssh`, `.aws`,
+     `.azure`, `.kube`, `.docker`, `.gnupg`, `.netrc`, `.git-credentials`, `.npmrc`, `.config/gcloud`,
+     `.config/gh`, `Library/Keychains`) closed for read, write and execution; signals and process
+     information only within the sandbox; no Apple Events, LaunchServices (`open`) or clipboard;
+     network deny-all on request. A live probe proves a deny rule is enforced before `restricted` is
+     reported as supported.
+  3. The environment is an allowlist (`PATH`, `HOME`, `USER`, `LOGNAME`, `SHELL`, `LANG`, `TERM`, `TZ`,
+     `COLORTERM`, `NO_COLOR`, `LC_*`, `ANTHROPIC_*`, `CLAUDE_*`, `OPENAI_*`, `CODEX_*`, plus names the
+     user passes with `--pass-env`); the key directory variable and other tokens are dropped.
+  4. Approval boundary: inside the sandbox `run event` cannot read the key, so it queues the request in
+     a per-launch inbox. The orchestrator (outside) accepts only step reports (`STEP_STARTED`,
+     `STEP_PROGRESS`, `APPROVAL_REQUIRED`, `STEP_COMPLETED`, `STEP_FAILED`, `STEP_BLOCKED`) for this
+     run, copies known fields, forces `source: host`, drops gate results, and signs them; approvals and
+     run verdicts requested by the agent are refused and listed in the delivery outcome. Approvals stay
+     with `run approve-step` in the user's terminal (ADR-016).
+  5. Process tree: the orchestrator tracks every descendant from outside (parent links with start
+     times, plus a random per-launch mark in the environment) and, on normal end, timeout, cancellation
+     or Ctrl-C, freezes them all and kills them.
+  6. Evidence: an isolation report (requested and applied profile, provider, platform, network,
+     enforced and not enforced controls, environment variable names) is signed with `RUN_STARTED`.
+  7. `isolated` (separate OS user) is designed but not implemented; every platform reports it
+     UNSUPPORTED with the reason. Linux and Windows report `restricted` UNSUPPORTED.
+- **Unchanged:** ADR-015 and ADR-016 semantics, event format, step states, run statuses, exit codes;
+  `run deliver` without `--isolation` behaves as before.
+- **Assumptions:** the macOS kernel enforces Seatbelt profiles as tested on macOS 26.2 (25C56); Apple
+  documents `sandbox-exec` as **deprecated** (still functional), so the live probe runs before every
+  launch and a future macOS that drops it makes `restricted` UNSUPPORTED, never silent; launchd
+  refuses job submission from a sandboxed caller (tested); the user does not run the toolkit itself
+  inside the agent's sandbox.
+- **What remains unprotected:**
+  - Identity: the sandboxed agent runs as the user's OS account (AC1 not met).
+  - Readable outside the confined roots: system locations (`/etc`, `/usr`, `/Library`,
+    `/Applications`, `/Users/Shared`, other volumes) except the protected list.
+  - The workspace itself: the agent can change source files and run what it writes there (inside the
+    same sandbox).
+  - Network: allow-all by default (real hosts need their API); deny-all blocks all IP traffic, so a
+    real host cannot reach its model API with it; a domain allowlist is UNSUPPORTED (Seatbelt filters
+    addresses, not names). Local IPC to system services not listed above stays allowed.
+  - Keychain items reachable through the security daemon without a prompt: NOT_VERIFIED.
+  - A process that double-forks faster than the 100 ms scan and clears its environment can outlive
+    the run (test 12, adversarial: FAIL). It stays inside the sandbox (verified: it cannot read the key).
+  - A kernel or Seatbelt bug.
+  - Real Claude Code and Codex under the sandbox: NOT_VERIFIED (not installed). Codex's own sandbox
+    uses `sandbox-exec`, which cannot be nested (tested: `sandbox_apply: Operation not permitted`), so
+    Codex sandboxed commands may fail inside `restricted`.
+- **Consequences:** (+) on macOS, code the agent runs can no longer read the key, credentials, other
+  projects or the toolkit's runtime state, cannot forge approvals or verdicts, and cannot leave
+  processes behind in the tested cases; each claim has a kernel-level test. (−) Not an OS identity
+  boundary; macOS only; more host paths may need `--pass-env`/allow lists for real hosts; a
+  deprecated system tool.
 
 ## 5. Open questions
 

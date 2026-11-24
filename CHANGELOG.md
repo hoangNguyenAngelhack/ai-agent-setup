@@ -11,6 +11,13 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
 
 ### Added
+- Runtime Isolation (W2.2-09, ADR-017 proposed): `isolation check` and `run deliver --isolation
+  none|restricted|isolated --network allow|deny --pass-env names`. On macOS, `restricted` runs the host
+  in a Seatbelt kernel sandbox (key, credentials, home and temporary directories closed; workspace
+  only; `.ai-agent-setup/` read-only; no signals to other processes; optional network deny-all);
+  step events go through a host-side inbox signed by the orchestrator; every descendant is killed at
+  the end of the run. `isolated` (separate OS user), Linux and Windows are refused with the reason;
+  nothing falls back to a weaker profile. Security tests: docs/v2/12.
 - Versioned catalog (`catalog/`) validated by JSON Schemas: 12 capability domains, 123
   capabilities, 9 canonical agents, V1 rules, skills, agents and commands migrated unchanged, three
   profiles from the V1 tiers, MCP servers as opt-in tools, and a mandatory safety policy.
@@ -47,6 +54,22 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 - Development checks: `npm run lint` (ESLint 9 + typescript-eslint, type-aware, zero warnings) and
   `npm run test:coverage` (V8, 80% minimum for statements, branches, functions and lines), both in
   CI. `gate.coverage-80` / `-95` 1.1.0 now check all four metrics, not only lines.
+- Run integrity (ADR-016): approvals, events and recorded evidence are signed with a per-project key
+  kept outside the project; unsigned or changed events, replaced evidence and truncated logs are
+  reported as `INTEGRITY_VIOLATION` and rule out SUCCEEDED; agents are denied the key directory
+  (shell, writes, Claude Code `Read`/`Grep`/`Glob`). Threat model in `docs/v2/11`. Not a boundary
+  against code the agent runs under the same OS account.
+- `run deliver`: `--timeout`, cancellation with Ctrl-C (the host process tree is stopped),
+  `--event-command`, the redacted host transcript kept as signed evidence of the run. Tested with a
+  fake host; real Claude Code and Codex CLIs are not verified yet (W2.0-15).
+- `run approve` and `run approve-step` need an interactive terminal and the id typed back.
+- Planned: Runtime Isolation (W2.2-09), the boundary ADR-016 does not provide.
+- Installer and policy branch coverage enforced at 95% (98.84% and 96.88%).
+- Early step events (ADR-015): host work on a step whose dependencies the host finished is accepted
+  before the orchestrator verified them; earlier events are kept, replayed in log order and flagged
+  `DEPENDENCY_ORDER_VIOLATION`; gates run only after the dependencies succeeded; a pending approval is
+  never lost and keeps the run from SUCCEEDED. `run-result` rules version 2 (`deferred`,
+  `approval.pending`); `run status` reports what changed when an old log is replayed.
 - Runtime state protection: mandatory policy rules deny agent writes to `.ai-agent-setup/**` (file
   tools, Codex patches and shell writes) and ask before other shell access; policies can now match
   written paths (`match.paths`). A gate never passes on a command that checks nothing. A guard, not

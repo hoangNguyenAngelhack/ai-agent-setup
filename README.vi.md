@@ -60,7 +60,8 @@ node bin/cli.js rollback ../my-project      # hoàn tác lần cài gần nhất
 | `explain <plan-id>` | Xem lại kế hoạch đã lưu và phần giải thích |
 | `impact [file...]` *(bản xem trước V2.1)* | File thay đổi chạm vào đâu: module, vùng code, rủi ro, test liên quan, chủ sở hữu theo CODEOWNERS; không truyền file thì đọc thay đổi chưa commit trong git, `--since <ref>` để so với một ref. `plan --files`, `--changed`, `--since` dùng cùng phân tích này |
 | `gates list\|run\|history [thư mục]` *(bản xem trước V2.2)* | Quality gate có bằng chứng: `list` liệt kê mọi gate, mức hỗ trợ và lệnh sẽ chạy; `run` chạy các gate bắt buộc (profile + `.ai-agent-setup/gates.json`), ghi bằng chứng đã che dữ liệu nhạy cảm và có checksum; mã thoát 0 PASS, 1 FAIL, 2 NOT_VERIFIED. `--gate`, `--skip`, `--run`, `--profile`, `--json` |
-| `run <hành động>` *(bản xem trước V2.1)* | Lượt thực thi (ADR-009): `create <plan-id>`, `approve`, `deliver --host claude-code\|codex [--dry-run]`, `event`, `verify <run-id> <bước>`, `approve-step`, `cancel`, `status`. Lượt chỉ SUCCEEDED khi mọi bước được báo đã thực thi và qua gate; qua gate mà không có báo cáo thực thi thì là OUTCOME_VERIFIED (mã thoát 2) |
+| `run <hành động>` *(bản xem trước V2.1)* | Lượt thực thi (ADR-009): `create <plan-id>`, `approve` và `approve-step` (cần terminal tương tác, gõ lại id), `deliver --host claude-code\|codex [--dry-run] [--timeout giây]`, `event`, `verify <run-id> <bước>`, `cancel`, `status`. Lượt chỉ SUCCEEDED khi mọi bước được báo đã thực thi và qua gate; qua gate mà không có báo cáo thực thi thì là OUTCOME_VERIFIED (mã thoát 2). Lượt chạy được ký bằng khoá cục bộ (ADR-016). `deliver --isolation restricted [--network deny] [--pass-env a,b]` chạy host trong sandbox nhân hệ điều hành macOS ([hướng dẫn](docs/guides/runtime-isolation.md)) |
+| `isolation check` *(bản xem trước V2.2)* | Cô lập lúc chạy (ADR-017, đề xuất): bảng nền tảng và, theo từng biện pháp, hồ sơ (`none`, `restricted`, `isolated`) thực thi được gì trên máy này; mã thoát 2 khi không thực thi được |
 
 Tuỳ chọn của `create` giữ nguyên V1: `-t` (`backend`, `frontend`, `fullstack`, `mobile`), `-f`
 (backend: `express`, `nestjs` · frontend: `nextjs`, `vite` · mobile: `expo`, `cli`), `-u` (chỉ
@@ -107,7 +108,7 @@ nằm trong lộ trình.
 | Workflows | 9 |
 | Profiles | 3 |
 | Tools | 16 MCP servers (opt-in) + 1 other |
-| Policies | 2 (11 rules) |
+| Policies | 2 (12 rules) |
 | Adapters | claude-code, codex |
 <!-- catalog-summary:end -->
 
@@ -123,9 +124,11 @@ nằm trong lộ trình.
   mở OQ-07).
 - `--db mysql` / `sqlite` đổi provider Prisma; chưa kiểm chứng schema của từng template migrate được
   trên các CSDL đó.
-- **Bảo vệ trạng thái runtime** chặn agent ghi vào `.ai-agent-setup/` qua công cụ của host; đây không
-  phải ranh giới an ninh trước chương trình agent chạy bằng tài khoản của bạn.
-- **Giao kế hoạch và quality gate** mới được kiểm bằng lệnh giả lập và script host giả lập. Giao
+- **Bảo vệ trạng thái runtime** chặn agent ghi vào `.ai-agent-setup/` qua công cụ của host, và mỗi lượt
+  chạy được ký bằng khoá nằm trong thư mục cấu hình của bạn (`ai-agent-setup/keys`). Cả hai đều không
+  phải ranh giới an ninh trước chương trình agent chạy bằng tài khoản của bạn; xem
+  [docs/v2/11](docs/v2/11-runtime-threat-model.md).
+- **Giao kế hoạch và quality gate** mới được kiểm bằng lệnh giả lập và tiến trình host giả. Giao
   kế hoạch cho `claude` hay `codex` thật là NOT_VERIFIED; định dạng thông điệp của host lấy từ tài
   liệu công bố. Quét secret dựa trên mẫu, không chứng minh thay đổi sạch secret.
 - **Không có tuyên bố về hiệu năng:** tác động lên token, chi phí, tốc độ chưa được đo. Kế hoạch

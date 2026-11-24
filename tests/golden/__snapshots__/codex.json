@@ -225,11 +225,11 @@
   },
   {
     "path": ".codex/hooks/ai-agent-setup/policies.json",
-    "sha256": "595805942dfd09546060d766858168f7d8157621856673c61f8a1fccf769f0ee"
+    "sha256": "6aeca94af9a650aec2cd4fc52164057b5aab69fc52fbf977a4a5de067e0067dd"
   },
   {
     "path": ".codex/hooks/ai-agent-setup/policy-check.cjs",
-    "sha256": "7473cc052bdc2eebbfaff5f50fb0ff2b66aab2dde02384101aa93a7f5bd817a7"
+    "sha256": "30803642f5e760ac0d71385cb97871c80f064f0343bca36e0f9a8d26ddbd225b"
   },
   {
     "path": ".codex/hooks/ai-agent-setup/policy/command-matcher.cjs",
@@ -244,11 +244,15 @@
     "sha256": "7be2b47eb3b4360ff4184329ebb9faef5ed59afa100449577a240346ee08159e"
   },
   {
+    "path": ".codex/hooks/ai-agent-setup/policy/key-location.cjs",
+    "sha256": "14cb7e04c236dd2e25b5212e1336da6dba2a5a15408f96ff83777511a6dc56f7"
+  },
+  {
     "path": ".codex/hooks/ai-agent-setup/policy/policy-engine.cjs",
-    "sha256": "a155b154fd6eaa0c85c91d5b2897a18c69d5618ccf091db14c633f0b6ec395b0"
+    "sha256": "b430a3fea76a3f0028cf9204e03afc3486b241b66c7b2745f549a07f3554bd9d"
   },
   {
     "path": "AGENTS.md",
-    "sha256": "b22839b43be61affcb9573d2c5fc9cc95398c0b1605edb0dd35980e1cb2d0d13"
+    "sha256": "237d641dc7dcfd01d08a6318c9a79f040a3e4bc31e0ffc7f30e8ac9384d00771"
   }
 ]

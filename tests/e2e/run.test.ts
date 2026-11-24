@@ -3,6 +3,7 @@ import { cpSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { approveRun } from '../../src/app/runs';
 import { REPO_ROOT } from '../helpers/v1-cli';
 
 /** `gates` (V2.2) and `run` (ADR-009, W2.1-09/10) through bin/cli.js. */
@@ -56,7 +57,9 @@ describe('run CLI', () => {
     const created = cli(root, ['run', 'create', planId]);
     const runId = /Created (run-\S+)/.exec(created.stdout)![1]!;
     expect(cli(root, ['run', 'event', runId, '--type', 'STEP_STARTED', '--step', 'x']).status).toBe(1);
-    expect(cli(root, ['run', 'approve', runId]).stdout).toContain('The plan is now immutable');
+    // An agent's shell has no terminal: approving through the CLI is refused; the user approves.
+    expect(cli(root, ['run', 'approve', runId]).stderr).toContain('needs an interactive terminal');
+    approveRun(root, runId, 'user');
 
     const step = (JSON.parse(cli(root, ['run', 'status', runId, '--json']).stdout) as { steps: Array<{ id: string }> }).steps[0]!.id;
     expect(cli(root, ['run', 'event', runId, '--type', 'STEP_STARTED', '--step', step]).stdout).toBe('Recorded.\n');
@@ -75,7 +78,7 @@ describe('run CLI', () => {
     const root = installedProject();
     const planId = (JSON.parse(cli(root, ['plan', 'Implement the orders API endpoint', '--json']).stdout) as { id: string }).id;
     const runId = /Created (run-\S+)/.exec(cli(root, ['run', 'create', planId]).stdout)![1]!;
-    cli(root, ['run', 'approve', runId]);
+    approveRun(root, runId, 'user');
 
     const result = cli(root, ['run', 'deliver', runId, '--host', 'claude-code', '--dry-run']);
     expect(result.status).toBe(0);

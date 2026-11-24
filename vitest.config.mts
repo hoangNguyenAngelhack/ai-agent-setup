@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     include: ['tests/**/*.test.ts'],
     globalSetup: ['tests/global-setup.ts'],
+    setupFiles: ['tests/setup-env.ts'],
     testTimeout: 60_000,
     coverage: {
       provider: 'v8',
@@ -13,7 +14,15 @@ export default defineConfig({
       reporter: ['text-summary', 'json-summary', 'html'],
       reportsDirectory: 'coverage',
       // Standard profile (gate.coverage-80): every metric, not only lines. Vitest fails the run below it.
-      thresholds: { statements: 80, branches: 80, functions: 80, lines: 80 },
+      thresholds: {
+        statements: 80,
+        branches: 80,
+        functions: 80,
+        lines: 80,
+        // Safety-critical code (docs/v2/09 §3.1): the installer writes user files; policy decides what agents may do.
+        'src/installer/**': { branches: 95 },
+        'src/core/policy/**': { branches: 95 },
+      },
     },
   },
 });

@@ -1,0 +1,120 @@
+{
+  "schemaVersion": "run-result/v1",
+  "rulesVersion": 3,
+  "runId": "run-20261124T100000Z-abcdef",
+  "planId": "plan-20261124T095900Z-123abc",
+  "planDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "revision": 1,
+  "project": {
+    "name": "demo",
+    "commit": "5e88d7733f73f5559dfb73f477f5ea3ccf5b675b"
+  },
+  "profile": "profile.standard",
+  "generatedAt": "2026-11-24T10:30:00.000Z",
+  "approval": {
+    "by": "user",
+    "at": "2026-11-24T10:01:00.000Z"
+  },
+  "status": "NOT_VERIFIED",
+  "reason": "approval pending: frontend.component-engineering; unverified steps: frontend.component-engineering (NOT_VERIFIED)",
+  "run": "HOST_COMPLETED",
+  "steps": [
+    {
+      "id": "backend.api-design",
+      "capability": "backend.api-design",
+      "agent": "agent.implementer",
+      "state": "SUCCEEDED",
+      "final": "SUCCEEDED",
+      "reason": "all gates passed: gate.build, gate.unit-tests",
+      "approval": {
+        "required": false,
+        "approved": false,
+        "pending": false
+      },
+      "gates": [
+        {
+          "gate": "gate.build",
+          "status": "PASS",
+          "reason": null
+        },
+        {
+          "gate": "gate.unit-tests",
+          "status": "PASS",
+          "reason": null
+        }
+      ],
+      "evidence": [
+        ".ai-agent-setup/runs/run-20261124T100000Z-abcdef/gates/g1/gate.build.json"
+      ],
+      "execution": {
+        "evidenced": true,
+        "reports": [
+          "STEP_STARTED",
+          "STEP_COMPLETED"
+        ]
+      }
+    },
+    {
+      "id": "frontend.component-engineering",
+      "capability": "frontend.component-engineering",
+      "agent": "agent.implementer",
+      "state": "READY",
+      "final": "NOT_VERIFIED",
+      "reason": "no final result (state READY)",
+      "approval": {
+        "required": false,
+        "approved": false,
+        "pending": true
+      },
+      "gates": [],
+      "evidence": [],
+      "execution": {
+        "evidenced": false,
+        "reports": []
+      }
+    }
+  ],
+  "counts": {
+    "PENDING": 0,
+    "READY": 0,
+    "RUNNING": 0,
+    "WAITING_FOR_APPROVAL": 0,
+    "SUCCEEDED": 1,
+    "FAILED": 0,
+    "BLOCKED": 0,
+    "SKIPPED": 0,
+    "CANCELLED": 0,
+    "NOT_VERIFIED": 1
+  },
+  "verification": {
+    "stepsTotal": 2,
+    "stepsSucceeded": 1,
+    "gates": {
+      "PASS": 2,
+      "FAIL": 0,
+      "NOT_VERIFIED": 0
+    },
+    "stepsWithExecutionEvidence": 1
+  },
+  "anomalies": [
+    {
+      "eventId": "evt-3",
+      "type": "STEP_STARTED",
+      "code": "DEPENDENCY_ORDER_VIOLATION",
+      "reason": "STEP_STARTED for frontend.component-engineering before backend.api-design was reported finished"
+    }
+  ],
+  "deferred": [
+    {
+      "eventId": "evt-4",
+      "type": "STEP_COMPLETED",
+      "stepId": "frontend.component-engineering",
+      "reason": "verification waits until backend.api-design SUCCEEDED"
+    }
+  ],
+  "integrity": {
+    "status": "VERIFIED",
+    "scheme": "hmac-sha256",
+    "violations": 0
+  }
+}

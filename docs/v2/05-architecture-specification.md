@@ -808,6 +808,19 @@ is never confused with a single gate. A result that fails the schema or the tota
 reported as it stands: SUCCEEDED and OUTCOME_VERIFIED become NOT_VERIFIED with the errors, and a
 result that is still invalid is not written.
 
+### 12.4.1 Early events and approvals (ADR-015, implemented)
+
+Two readiness levels decide which events a step takes. **Host-ready:** every dependency SUCCEEDED or
+reported completed by the host; host work (start, progress, completion) is accepted and recorded as
+execution evidence. **Verified-ready:** every dependency SUCCEEDED; only then are gate results applied,
+and `run verify` refuses to run gates before it. Events that arrive before their step can take them
+wait in `deferred` and are retried in log order after every state change; host work on a step that is
+not even host-ready also records `DEPENDENCY_ORDER_VIOLATION` (the run is not downgraded for it). A
+stopped dependency (FAILED, BLOCKED, SKIPPED, CANCELLED) blocks every dependant that has not
+succeeded, keeping its evidence. `APPROVAL_REQUIRED` is accepted in any open state; until the user
+resolves it the step cannot complete and the run cannot be SUCCEEDED, while independent steps
+continue. The result records `rulesVersion: 2`, `deferred` and `approval.pending`.
+
 ### 12.5 Runtime state protection (implemented)
 
 `.ai-agent-setup/**` holds run artifacts, gate configuration and results, and the install manifest.
@@ -816,6 +829,52 @@ write, every write criterion of a rule must match). `policy.safety` denies file-
 there and asks before other shell access; the hook makes host paths project-relative (Claude Code
 sends absolute paths) and checks each file of a Codex patch. This is a guard against mistakes, not a
 security boundary against code the agent runs under the same account (docs/v2/08 §9.2).
+
+### 12.6 Run integrity (ADR-016, implemented)
+
+The toolkit signs what it writes about a run with a per-project HMAC-SHA256 key kept in the user's
+configuration directory (`ai-agent-setup/keys`, mode 0600), never in the project:
+
+| Artifact | Signed | Stored |
+|---|---|---|
+| Plan approval | run id, revision, digest, approver, time | `runs/<id>/integrity.json` |
+| Each event | position + exact line of `events.jsonl` (format unchanged) | `runs/<id>/integrity.jsonl` |
+| Evidence recorded with an event | sha256 of gate records, gate logs, host transcript | same entry |
+| Log head | count and last signature | key directory (outside the project) |
+
+Loading a signed run applies only signed events; anything else is an `INTEGRITY_VIOLATION`, and
+`run-result.integrity` (VERIFIED, UNSIGNED, VIOLATED) reports it. Policies gain `readPaths` and the
+Claude Code hook also sees `Read`, `Grep` and `Glob`, so the key directory can be denied to agents.
+Limits: [threat model §5](11-runtime-threat-model.md#5-residual-risks-why-this-is-partial).
+
+### 12.7 Host delivery (W2.1-10, implemented; real hosts not verified)
+
+`run deliver` starts the host CLI with the approved revision (plan path, digest, run and step ids,
+the event command). Run-level start and end come from the host's native stream; step events and
+approval requests come back through `run event`; the toolkit stops the host process tree on timeout
+or cancellation. The redacted transcript is kept as signed evidence of that run only.
+
+### 12.8 Runtime Isolation (W2.2-09, ADR-017 proposed, implemented for review)
+
+```
+run deliver --isolation p
+  resolve profile → detect (provider, live probe) → validate (every required control SUPPORTED,
+  else refuse: nothing starts) → prepare workspace and scratch → sandbox (Seatbelt profile,
+  environment allowlist, inbox, run mark) → launch host → monitor (inbox drained and signed,
+  descendants tracked) → approvals in the user's terminal → evidence (isolation report signed with
+  RUN_STARTED, transcript) → kill tree (normal end, timeout, cancel, Ctrl-C) → cleanup scratch
+```
+
+| Module | Role | May import |
+|---|---|---|
+| `src/core/isolation` | Contracts (profile, network policy, capability per control, policy, prepared launch) and `policyProblems` | nothing outside core |
+| `src/isolation` | Providers: `none`, `macos-seatbelt`, refusing providers (OS user, Linux, Windows), registry and platform matrix, `ProcessTree` | core, shared |
+| `src/app/isolation.ts` | Builds the policy for a project and host; prepares the launch; inbox validation | core, isolation, shared |
+
+Controls are reported one by one (`identity-separation`, `filesystem-read`, `filesystem-write`,
+`secret-isolation`, `process-exec`, `process-signal`, `network-deny`, `network-allowlist`,
+`approval-boundary`) as SUPPORTED, PARTIAL, UNSUPPORTED or NOT_VERIFIED. Limits:
+[threat model §6](11-runtime-threat-model.md#6-runtime-isolation-w22-09-adr-017).
 
 ## 13. Cross-cutting concerns
 

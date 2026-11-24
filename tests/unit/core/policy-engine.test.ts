@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { PolicyEngine, type PolicyAction } from '../../../src/core/policy';
+import { commandSegments, matchesTokenGlob, PolicyEngine, type PolicyAction } from '../../../src/core/policy';
 import { validateCatalog, type PolicyDocument } from '../../../src/registry';
 import { REPO_ROOT } from '../../helpers/v1-cli';
 
@@ -200,3 +200,24 @@ describe('PolicyEngine — runtime state is written by the toolkit only (docs/v2
   });
 });
 
+
+describe('command matching edge cases', () => {
+  it('should not treat a bare shell name as a wrapped script', () => {
+    expect(commandSegments('bash')).toEqual([['bash']]);
+    expect(engine.evaluate(command('bash')).effect).toBe('allow');
+  });
+
+  it('should compare literal and wildcard tokens case-insensitively only when asked', () => {
+    expect(matchesTokenGlob('git push * --force *', ['GIT', 'PUSH', 'origin', '--FORCE'], true)).toBe(true);
+    expect(matchesTokenGlob('git push * --force *', ['GIT', 'PUSH', 'origin', '--FORCE'], false)).toBe(false);
+    expect(matchesTokenGlob('rm -*r* *', ['RM', '-RF', 'x'], true)).toBe(true);
+    expect(matchesTokenGlob('rm -*r* *', ['RM', '-RF', 'x'], false)).toBe(false);
+  });
+
+  it('should match patterns with several wildcards over long token lists', () => {
+    const tokens = ['a', 'x', 'b', 'x', 'c', 'x', 'd', 'x', 'e'];
+
+    expect(matchesTokenGlob('* b * d * e', tokens)).toBe(true);
+    expect(matchesTokenGlob('* b * d * f', tokens)).toBe(false);
+  });
+});

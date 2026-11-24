@@ -81,6 +81,20 @@ rules:
     match:
       commandRegex:
         - "\\.ai-agent-setup[\\\\/]"
+  # Integrity key (ADR-016), kept in the user's configuration directory, outside the project.
+  - id: safety.integrity-key-access
+    description: The local integrity key (ai-agent-setup/keys in the user's configuration directory) is used by the toolkit only.
+    effect: deny
+    match:
+      ignoreCase: true
+      commandRegex:
+        # The configuration directory as a path segment (quotes, case and wildcards after it do not
+        # matter); not the project's ".ai-agent-setup/" and not the CLI name "create-ai-agent-setup".
+        - "(?<![.\\w-])ai-agent-setup[\"']?[\\\\/]"
+      paths:
+        - "**/ai-agent-setup/keys/**"
+      readPaths:
+        - "**/ai-agent-setup/keys/**"
 invariants:
   - id: safety.no-silent-overwrite
     description: Installer writes to user-modified or unmanaged files require a diff and recorded consent.

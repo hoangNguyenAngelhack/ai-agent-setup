@@ -5,6 +5,7 @@ import { commandSegments, matchesTokenGlob } from './command-matcher';
 export type PolicyAction =
   | { type: 'command'; command: string }
   | { type: 'write'; path: string; content: string }
+  | { type: 'read'; path: string }
   | { type: 'intent'; intent: string };
 
 export interface PolicyRuleMatch {
@@ -116,6 +117,8 @@ export class PolicyEngine {
       }
       case 'write':
         return writeMatches(rule, contentRegex, action);
+      case 'read':
+        return (rule.match.readPaths ?? []).some((glob) => matchesGlob(normalisePath(action.path), glob));
       case 'intent':
         return (rule.match.intents ?? []).some((intent) => intentMatches(intent, action.intent));
     }

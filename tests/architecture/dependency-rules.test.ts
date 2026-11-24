@@ -10,12 +10,14 @@ import { REPO_ROOT } from '../helpers/v1-cli';
 const SRC = join(REPO_ROOT, 'src');
 
 const FORBIDDEN: Record<string, string[]> = {
-  core: ['adapters', 'installer', 'cli', 'app'],
+  core: ['adapters', 'installer', 'cli', 'app', 'isolation'],
   registry: ['core', 'adapters', 'installer', 'cli', 'app', 'quality'],
   installer: ['adapters', 'core', 'cli', 'app'],
   quality: ['adapters', 'installer', 'cli', 'app'],
   adapters: ['installer', 'cli', 'app'],
-  shared: ['core', 'registry', 'adapters', 'installer', 'cli', 'app', 'quality', 'integrations'],
+  shared: ['core', 'registry', 'adapters', 'installer', 'cli', 'app', 'quality', 'integrations', 'isolation'],
+  // Isolation providers (W2.2-09) enforce a policy; they never decide it or reach into the app.
+  isolation: ['adapters', 'installer', 'cli', 'app', 'quality', 'registry'],
 };
 
 const HOST_FORMAT_MARKERS = [/\.claude\//, /\.codex\//, /CLAUDE\.md/, /AGENTS\.md/, /settings\.json/, /config\.toml/];
