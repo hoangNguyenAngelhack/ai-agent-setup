@@ -1,310 +1,147 @@
 <div align="center">
 
-# 🤖 AI Agent Setup
+# AI Agent Setup
 
-### Cấu hình Claude Code Production-Ready trong Vài Giây
-
-<p>
-  <strong>15 Agent</strong> · <strong>17 Rule</strong> · <strong>8 Command</strong> · <strong>7 Hook</strong> · <strong>7 Skill</strong>
-</p>
+### Cấu hình kỹ thuật AI dùng chung cho Claude Code và Codex
 
 [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=for-the-badge&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/create-ai-agent-setup)
-[![npm downloads](https://img.shields.io/npm/dm/create-ai-agent-setup?style=for-the-badge&logo=npm&logoColor=white&color=blue)](https://www.npmjs.com/package/create-ai-agent-setup)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
-[![Agent Skills](https://img.shields.io/badge/Agent%20Skills-Compatible-green?style=for-the-badge)](https://agentskills.io)
-[![Node](https://img.shields.io/badge/Node-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
-
-<br />
-
-```bash
-npx create-ai-agent-setup my-app
-```
-
-<sub>Hỗ trợ Express · NestJS · Next.js · Vite · Expo · React Native</sub>
-
-<br />
+[![Node](https://img.shields.io/badge/Node-20%20%7C%2022%20%7C%2024-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 
 **[English](README.md)** | **Tiếng Việt**
 
 </div>
 
-<br />
+> **Trạng thái: bản xem trước V2, chưa phát hành.** Bản trên npm (`npx create-ai-agent-setup`) vẫn
+> là **1.6.1 (V1)**. Nhánh này chứa nền tảng V2 mô tả bên dưới; muốn dùng thử thì build từ mã nguồn
+> (xem [Bắt đầu nhanh](#bắt-đầu-nhanh-v2-từ-mã-nguồn)). Người dùng V1: đọc
+> [Chuyển từ V1](docs/guides/migrating-from-v1.md) trước khi chạy V2 trong dự án V1.
 
----
+## Công cụ làm gì
 
-## ✨ Tại Sao Nên Dùng?
+- **Tạo dự án** từ bảy template (Express, NestJS, Next.js, Vite, Next.js fullstack, Expo, React
+  Native CLI), kèm cấu hình kỹ thuật AI.
+- **Thêm vào dự án sẵn có** một cách an toàn: dry-run, diff, backup, xử lý xung đột, rollback và
+  kiểm tra toàn vẹn. File bạn đã sửa không bao giờ bị ghi đè im lặng.
+- **Sinh cấu hình gốc cho từng host** từ một catalog có phiên bản: Claude Code (`.claude/`) và Codex
+  (`AGENTS.md`, `.agents/skills`, `.codex/`).
+- **Áp chính sách an toàn** bằng một hook chạy trước mỗi lệnh shell và mỗi lần ghi file. Lệnh phá
+  huỷ (`rm -rf`, `git push --force`, `DROP TABLE`, `npm publish`, …) cần được duyệt; ghi khoá bí mật
+  ở định dạng token đã biết thì bị chặn.
 
-| Không có AI Agent Setup | Có AI Agent Setup |
-|-------------------------|-------------------|
-| ❌ AI viết code không nhất quán | ✅ **17 rule bắt buộc** đảm bảo chuẩn |
-| ❌ Không có quy trình rõ ràng | ✅ **8 slash command** (`/spec` → `/deploy`) |
-| ❌ AI trả lời chung chung | ✅ **15 agent chuyên biệt** cho từng lĩnh vực |
-| ❌ Review code thủ công | ✅ **Five-axis review** (đúng, bảo mật, hiệu năng...) |
-| ❌ Không có quality gate | ✅ **7 hook** tự động kiểm tra trước/sau action |
-| ❌ Setup từ đầu | ✅ **Một lệnh** là có config production-ready |
-
----
-
-## 🚀 Bắt Đầu Nhanh
-
-```bash
-# Setup tương tác (khuyên dùng)
-npx create-ai-agent-setup my-app
-```
-
-### Ví Dụ Một Dòng
+## Bắt đầu nhanh (V2 từ mã nguồn)
 
 ```bash
-# Backend
-npx create-ai-agent-setup my-api -t backend                    # Express
-npx create-ai-agent-setup my-api -t backend -f nestjs          # NestJS
+git clone https://github.com/hoangNguyenAngelhack/ai-agent-setup.git
+cd ai-agent-setup && git checkout feature/v2-foundation
+npm ci && npm run build
 
-# Frontend
-npx create-ai-agent-setup my-site -t frontend -f nextjs        # Next.js + shadcn
-npx create-ai-agent-setup my-admin -t frontend -f vite -u antd # Vite + Ant Design
+# Tạo dự án mới (cờ V1 vẫn dùng được)
+node bin/cli.js my-api -t backend -f nestjs -y
 
-# Mobile
-npx create-ai-agent-setup my-app -t mobile -f expo             # Expo
-
-# Tích hợp thêm
-npx create-ai-agent-setup my-app --codegraph                   # Giảm 57% token
-npx create-ai-agent-setup my-app --honesty                     # Giảm hallucination
+# Thêm cấu hình vào dự án sẵn có: xem trước, rồi áp dụng
+node bin/cli.js diff ../my-project
+node bin/cli.js setup ../my-project --yes
+node bin/cli.js doctor ../my-project
+node bin/cli.js rollback ../my-project      # hoàn tác lần cài gần nhất
 ```
 
-<details>
-<summary>📋 <strong>Tất Cả CLI Options</strong></summary>
+## Lệnh
 
-```
-Options:
-  -t, --type <type>      Loại project: backend, frontend, fullstack, mobile
-  -f, --framework <fw>   Framework: express, nestjs, nextjs, vite, expo, cli
-  -u, --ui <library>     UI library: shadcn, antd, chakra, semantic
-  -T, --tier <tier>      Rule tier: starter, standard, strict
-  -d, --db <database>    Database: postgresql, mysql, sqlite, none
-  -c, --codegraph        Setup CodeGraph MCP server
-  -H, --honesty          Thêm honesty rule (giảm hallucination)
-  -y, --yes              Bỏ qua prompt, dùng mặc định
-```
+| Lệnh | Tác dụng |
+|---|---|
+| `[tên] [tuỳ chọn]` hoặc `create <tên>` | Tạo dự án từ template và cài cấu hình AI |
+| `setup [thư mục]` | Thêm cấu hình vào dự án sẵn có; hỏi trước khi ghi (`--yes` để bỏ hỏi, `--dry-run` chỉ lập kế hoạch) |
+| `diff [thư mục]` | Hiện kế hoạch và diff của mọi thay đổi; không ghi gì |
+| `doctor [thư mục]` | Đối chiếu file và section được quản lý với `.ai-agent-setup/manifest.json` |
+| `rollback [thư mục] [--force]` | Trả lại đúng từng byte trạng thái trước lần cài gần nhất |
+| `catalog validate [thư mục]` | Kiểm tra catalog (schema, tham chiếu, policy, ngân sách context) |
 
-</details>
+Tuỳ chọn của `create` giữ nguyên V1: `-t` (`backend`, `frontend`, `fullstack`, `mobile`), `-f`
+(backend: `express`, `nestjs` · frontend: `nextjs`, `vite` · mobile: `expo`, `cli`), `-u` (chỉ
+frontend: `shadcn`, `antd`, `chakra`, `semantic`), `-T` (`starter`, `standard`, `strict`, chọn
+profile), `-d` (`postgresql`, `mysql`, `sqlite`, `none`), `-H` (rule honesty), `-c` (CodeGraph, cần
+mạng), `-y` (dùng mặc định, không hỏi).
 
----
+Tuỳ chọn của `setup`: `-a claude-code,codex` (mặc định: các host đã cấu hình sẵn, nếu không có thì
+Claude Code), `--profile <id>`, `--strategy write-new|skip|backup-overwrite` (mặc định `write-new`:
+ghi `<file>.ai-agent-setup.new` cạnh file của bạn), `--enable-tool <id>` (bật một MCP server, ví dụ
+`tool.mcp-github`).
 
-## 📦 Bao Gồm Những Gì
+## Cài những gì
 
-<table>
-<tr>
-<td width="50%">
+| | Claude Code | Codex |
+|---|---|---|
+| Chỉ dẫn | section được quản lý trong `.claude/CLAUDE.md` | section được quản lý trong `AGENTS.md` (giữ dưới 24 KiB) |
+| Rule | `.claude/rules/` (rule theo đường dẫn dùng `paths:`) | trong `AGENTS.md`; rule có phạm vi thành skill |
+| Skill | `.claude/skills/` | `.agents/skills/` |
+| Agent | `.claude/agents/` (giữ tên agent V1) | `.codex/agents/*.toml` |
+| Workflow | `/spec`, `/plan`, `/build`, `/test`, `/review`, … trong `.claude/commands/` | skill gọi bằng `$spec`, `$plan`, … |
+| An toàn | quyền `ask`/`deny` + hook chính sách trong `.claude/settings.json` | hook chính sách trong `.codex/hooks.json`; sandbox `workspace-write`, duyệt `on-request` |
+| MCP | `.mcp.json`, chỉ server bạn bật | `[mcp_servers]` trong `.codex/config.toml`, chỉ server bạn bật |
 
-### 🎯 Slash Commands (8)
+Mọi thứ bộ cài ghi ra được lưu trong `.ai-agent-setup/manifest.json` (nên commit). Bản backup và
+nhật ký giao dịch chỉ nằm trên máy, trong `.ai-agent-setup/backups/` và `.ai-agent-setup/transactions/`.
 
-| Command | Mục đích |
-|---------|----------|
-| `/spec` | Tạo PRD với scope |
-| `/plan` | Chia thành vertical slice |
-| `/build` | Implement theo TDD |
-| `/test` | RED-GREEN-REFACTOR |
-| `/review` | Review code 5 trục |
-| `/deploy` | Build & ship |
-| `/debug` | Phân tích root cause |
-| `/simplify` | Giảm độ phức tạp |
+## Catalog
 
-</td>
-<td width="50%">
+Toàn bộ cấu hình đến từ `catalog/`: các mục YAML được kiểm bằng JSON Schema, chia thành 12 domain
+(sản phẩm, thiết kế, frontend, backend, mobile, dữ liệu và AI, DevOps, chất lượng, bảo mật, kiến
+trúc, tài liệu và trải nghiệm lập trình viên, tích hợp). Mọi domain và capability đều đã được định
+nghĩa; phần lớn nội dung hướng dẫn vẫn lấy từ rule, skill, agent của V1, nội dung chuyên sâu hơn
+nằm trong lộ trình.
 
-### 🤖 Agent Chuyên Biệt (15)
+<!-- catalog-summary:begin (generated by `npm run docs:summary`; do not edit) -->
+| Catalog | Count |
+|---|---|
+| Domains | 12 |
+| Capabilities | 123 |
+| Agents | 9 canonical + 10 V1 aliases |
+| Skills | 14 |
+| Rules | 17 (6 always-scoped, 7 path-scoped, 4 capability-scoped) |
+| Workflows | 9 |
+| Profiles | 3 |
+| Tools | 16 MCP servers (opt-in) + 1 other |
+| Policies | 2 (7 rules) |
+| Adapters | claude-code, codex |
+<!-- catalog-summary:end -->
 
-| Nhóm | Agent |
-|------|-------|
-| **Dev** | Frontend, Backend, Mobile, Architect |
-| **Quality** | Reviewer, Tester, Security, QA |
-| **Product** | PM, Designer, Copywriter |
-| **Resolver** | React, RN, Node, Prisma |
+## Giới hạn đã biết
 
-</td>
-</tr>
-<tr>
-<td>
+- **Chưa kiểm trong host thật:** file sinh ra theo tài liệu của Claude Code và Codex (đối chiếu
+  24/11/2026) và có golden test, nhưng chưa được nạp vào `claude` hay `codex` đang chạy.
+- **Codex** chỉ nạp `.codex/` (config, agent, hook) trong dự án đã được tin cậy, và chỉ chạy hook
+  sau khi bạn duyệt bằng `/hooks`.
+- **Dự án V1** giữ nguyên các rule `allow` cũ trong `.claude/settings.json`, kể cả `Bash(rm *)`;
+  `setup` cảnh báo nhưng không xoá cấu hình của bạn.
+- **Node.js:** CI kiểm Node 20, 22, 24. `package.json` vẫn khai `>=18` nhưng chưa được kiểm (câu hỏi
+  mở OQ-07).
+- `--db mysql` / `sqlite` đổi provider Prisma; chưa kiểm chứng schema của từng template migrate được
+  trên các CSDL đó.
+- **Không có tuyên bố về hiệu năng:** tác động lên token, chi phí, tốc độ chưa được đo. Kế hoạch
+  benchmark ở [docs/v2/09](docs/v2/09-testing-and-benchmark-strategy.md). Số liệu công bố của
+  CodeGraph là của nhà cung cấp, không được đo ở đây.
 
-### 📏 Rule Bắt Buộc (17)
+## Tài liệu
 
-- **Code**: clean-code, code-style, error-handling
-- **Kiến trúc**: tech-stack, system-design, api-conventions
-- **Data**: naming-conventions, database
-- **Ops**: security, monitoring, testing, git-workflow
-- **Ngôn ngữ**: typescript, python, sql patterns
+- [Chuyển từ V1](docs/guides/migrating-from-v1.md)
+- [Tài liệu thiết kế V2](docs/v2/README.md): audit, đặc tả sản phẩm và kiến trúc, lộ trình kèm trạng
+  thái hiện tại ([08 §9](docs/v2/08-implementation-roadmap.md#9-implementation-status)), chiến lược
+  kiểm thử, quyết định kiến trúc.
+- [Changelog](CHANGELOG.md)
 
-</td>
-<td>
-
-### 🪝 Hooks System (7)
-
-| Loại | Hook |
-|------|------|
-| **Pre** | security-scan, lint-check |
-| **Post** | auto-format, ts-check, console-warn |
-| **Life** | session-summary, cost-tracker |
-
-</td>
-</tr>
-</table>
-
----
-
-## 🔄 Quy Trình Phát Triển
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                                                                     │
-│   📝 /spec  →  📋 /plan  →  🔨 /build  →  🧪 /test  →  👀 /review  │
-│                                                                     │
-│   Định nghĩa   Lên kế hoạch   Build      Test       Review  → Ship  │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Five-Axis Code Review
-
-| Trục | Câu hỏi |
-|------|---------|
-| ✅ **Correctness** | Code có chạy đúng không? |
-| 📖 **Readability** | Người khác có hiểu được không? |
-| 🏗️ **Architecture** | Có theo pattern và principle không? |
-| 🔒 **Security** | Input đã validate? Auth đã check? |
-| ⚡ **Performance** | N+1 query? Pagination đúng cách? |
-
----
-
-## 🛠️ Cách Cài Đặt
-
-### Cách 1: CLI (Khuyên dùng)
+## Phát triển
 
 ```bash
-npx create-ai-agent-setup my-app
+npm ci
+npm run typecheck
+npm test                  # unit, contract, golden, installer và end-to-end
+npm run catalog:validate  # in kèm số byte context luôn nạp đo được theo profile
+npm run docs:summary      # cập nhật bảng catalog trong cả hai README
 ```
 
-Prompt tương tác sẽ hướng dẫn bạn chọn loại project, framework, UI library, và tích hợp.
+CI chạy trên Linux, macOS và Windows với Node 20, 22 và 24.
 
-### Cách 2: Copy vào Project Có Sẵn
+## Giấy phép
 
-```bash
-# Copy config .claude
-npx degit hoangNguyenAngelhack/ai-agent-setup/.claude .claude
-
-# Copy Agent Skills
-npx degit hoangNguyenAngelhack/ai-agent-setup/.agents .agents
-```
-
-### Cách 3: Clone Full Repository
-
-```bash
-npx degit hoangNguyenAngelhack/ai-agent-setup my-project
-cd my-project && ./scripts/init.sh
-```
-
----
-
-## 🔌 Tích Hợp
-
-### CodeGraph — Giảm 57% Token
-
-[CodeGraph](https://github.com/colbymchenry/codegraph) xây dựng knowledge graph ngữ nghĩa để AI explore code nhanh hơn.
-
-| Chỉ số | Cải thiện |
-|--------|-----------|
-| Token | **Giảm 57%** |
-| Chi phí | **Giảm 35%** |
-| Tốc độ | **Nhanh hơn 46%** |
-| Tool calls | **Giảm 71%** |
-
-```bash
-npx create-ai-agent-setup my-app --codegraph
-```
-
-### MCP Server Configs
-
-Server được cấu hình sẵn cho các dịch vụ phổ biến:
-
-| Server | Mục đích |
-|--------|----------|
-| **Supabase** | PostgreSQL, auth, storage |
-| **Vercel** | Deploy & preview |
-| **Playwright** | Tự động hóa browser |
-| **GitHub** | Git operations nâng cao |
-| **Sentry** | Theo dõi lỗi |
-
----
-
-## 🎨 Hỗ Trợ UI Library
-
-| Library | Mô tả | Phù hợp cho |
-|---------|-------|-------------|
-| **shadcn/ui** | Radix + Tailwind | App hiện đại, toàn quyền kiểm soát |
-| **Ant Design** | Enterprise UI | Admin panel |
-| **Chakra UI** | Đơn giản, accessible | Prototype nhanh |
-| **Semantic UI** | Framework cổ điển | App truyền thống |
-
-```bash
-npx create-ai-agent-setup my-app -t frontend -f nextjs -u chakra
-```
-
----
-
-## 📱 Agent Skills (Open Standard)
-
-Tương thích với **30+ AI coding agent** qua [agentskills.io](https://agentskills.io):
-
-| Skill | Stack |
-|-------|-------|
-| `nodejs-backend` | Express, Prisma, Redis, BullMQ |
-| `nestjs-backend` | NestJS, TypeORM, Guards, DI |
-| `react-frontend` | Next.js/Vite, Tailwind, Zustand |
-| `react-native-mobile` | Expo/RN CLI, NativeWind |
-| `code-review` | Framework review 5 trục |
-| `tdd` | Quy trình RED-GREEN-REFACTOR |
-| `data-transform` | Chuyển đổi CSV, JSON, Excel, XML không mất dữ liệu |
-
-**Hoạt động với:** Claude Code, Cursor, VS Code Copilot, Windsurf, Cline, Aider, OpenHands...
-
----
-
-## 💻 Tech Stack
-
-| Layer | Công nghệ |
-|-------|-----------|
-| **Frontend** | Next.js 14 · React + Vite · Tailwind + shadcn |
-| **Backend** | Express · NestJS · Prisma · Redis |
-| **Mobile** | Expo · React Native · NativeWind |
-| **Database** | PostgreSQL · Redis |
-| **Testing** | Vitest · Playwright |
-| **Auth** | NextAuth.js · JWT + bcrypt |
-
----
-
-## 🔗 Dự Án Liên Quan
-
-| Dự án | Mô tả |
-|-------|-------|
-| [CodeGraph](https://github.com/colbymchenry/codegraph) | Knowledge graph ngữ nghĩa cho code |
-| [Agent Skills](https://agentskills.io) | Open standard cho AI agent |
-| [shadcn/ui](https://github.com/shadcn-ui/ui) | shadcn/ui skill chính thức |
-| [Supabase](https://github.com/supabase/supabase) | Supabase skill chính thức |
-
----
-
-## 🤝 Đóng Góp
-
-1. Theo quy trình (`/spec` → `/plan` → `/build`)
-2. Đảm bảo tất cả test pass
-3. Chạy `/review` trước khi submit PR
-4. Dùng conventional commit format
-
----
-
-<div align="center">
-
-**Made with ❤️ by [Hoang Nguyen](mailto:hoang.nguyen@angelhack.com)**
-
-<sub>⭐ Star repo này nếu bạn thấy hữu ích!</sub>
-
-</div>
+MIT
