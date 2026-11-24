@@ -16,6 +16,7 @@ import type {
 import { buildExecutionGraph, PHASES, phaseOf } from '../orchestration';
 import { PolicyEngine } from '../policy';
 import { mergeImpact } from './impact-merge';
+import { assessSensitivity, REVIEW_CAPABILITY, type SensitiveFinding } from './sensitivity';
 
 export interface RouteInput {
   id: string;
@@ -77,6 +78,7 @@ class RouteState {
     overrides: [],
     conflicts: [],
     context: [],
+    sensitivity: [],
     impact: null,
   };
   blocking = false;
@@ -326,11 +328,32 @@ function effectiveType(input: RouteInput, capabilities: CapabilityEntry[], assig
   return inferred;
 }
 
-function addRiskReview(input: RouteInput, capabilities: CapabilityEntry[]): CapabilityEntry | null {
-  if (input.classification.risk !== 'high' || !CODE_CHANGING.has(input.classification.type)) return null;
-  const securityRelated = input.classification.domains.some((domain) => domain.id === 'security-compliance') || input.classification.riskReasons.some((reason) => /secret|credential|password|authentication|personal/.test(reason));
-  const reviewId = securityRelated ? 'security-compliance.vulnerability-assessment' : 'architecture-leadership.code-review';
-  return capabilities.some((capability) => capability.id === reviewId) ? null : capabilityOf(input.registry, reviewId);
+/** Mandatory sensitive reviews raise risk to high and are recorded with their reasons (ADR-014). */
+function withSensitivity(input: RouteInput, findings: SensitiveFinding[], state: RouteState): RouteInput {
+  state.explain.sensitivity = findings.map(({ category, basis, mandatory, ignored, reason }) => ({ category, basis, mandatory, ignored, reason }));
+  for (const finding of findings.filter((item) => !item.mandatory && !item.ignored)) {
+    state.explain.assumptions.push(`Requires assessment: ${finding.reason}`);
+    state.needsApproval = true;
+  }
+  const mandatory = findings.filter((finding) => finding.mandatory);
+  if (mandatory.length === 0) return input;
+  const reasons = mandatory.map((finding) => `mandatory ${finding.category} review: ${finding.reason}`);
+  return { ...input, classification: { ...input.classification, risk: 'high', riskReasons: [...input.classification.riskReasons, ...reasons], simple: false } };
+}
+
+/**
+ * Review steps: a specialist review per mandatory sensitive category (unless the plan already has a
+ * security-compliance step), otherwise an independent code review for other high-risk changes.
+ */
+const SECURITY_AUDITOR = 'agent.security-auditor';
+
+function addReviews(input: RouteInput, capabilities: CapabilityEntry[], findings: SensitiveFinding[]): CapabilityEntry[] {
+  const present = new Set(capabilities.map((capability) => capability.id));
+  const hasSecurityStep = capabilities.some((capability) => capability.domain === 'security-compliance' && capability.defaultAgents.includes('agent.security-auditor'));
+  const sensitive = [...new Set(findings.filter((finding) => finding.mandatory).map((finding) => REVIEW_CAPABILITY[finding.category]))];
+  if (sensitive.length > 0) return hasSecurityStep ? [] : sensitive.filter((id) => !present.has(id)).map((id) => capabilityOf(input.registry, id));
+  if (input.classification.risk !== 'high' || !CODE_CHANGING.has(input.classification.type)) return [];
+  return present.has('architecture-leadership.code-review') ? [] : [capabilityOf(input.registry, 'architecture-leadership.code-review')];
 }
 
 function stepApproval(input: RouteInput, approveAt: ReadonlySet<string>, gates: string[], first: boolean, last: boolean): PlanStep['approval'] {
@@ -401,14 +424,37 @@ function rankContext(input: RouteInput, rules: string[], pathMatched: ReadonlySe
   return [...ruleItems.sort((a, b) => byPathFirst(a) - byPathFirst(b)), ...skillItems];
 }
 
-function explainAgents(input: RouteInput, capabilities: CapabilityEntry[], assignment: Map<string, string>, review: CapabilityEntry | null, state: RouteState): void {
+function explainAgents(input: RouteInput, capabilities: CapabilityEntry[], assignment: Map<string, string>, reviews: CapabilityEntry[], state: RouteState): void {
+  const reviewIds = new Set(reviews.map((review) => review.id));
   for (const agentId of new Set(assignment.values())) {
     const owns = capabilities.filter((capability) => assignment.get(capability.id) === agentId).map((capability) => capability.id);
-    const why = review && owns.includes(review.id) ? `independent review: risk is high (${input.classification.riskReasons.join('; ')})` : `performs ${owns.join(', ')}`;
+    const why = owns.some((id) => reviewIds.has(id)) ? `independent review: risk is high (${input.classification.riskReasons.join('; ')})` : `performs ${owns.join(', ')}`;
     state.explain.agents.push({ id: agentId, why });
   }
   if (input.classification.risk !== 'high') {
     state.explain.excluded.push({ id: 'agent.reviewer / agent.security-auditor', why: `no separate review step: risk is ${input.classification.risk}` });
+  }
+}
+
+/**
+ * Ordinary overrides cannot remove or take over a mandatory sensitive review (ADR-014): excluding
+ * the security auditor makes the plan invalid, and a forced agent never replaces the reviewer.
+ */
+function guardMandatoryReviews(input: RouteInput, findings: SensitiveFinding[], capabilities: CapabilityEntry[], assignment: Map<string, string>, state: RouteState): void {
+  const mandatory = findings.filter((item) => item.mandatory);
+  if (mandatory.length === 0) return;
+  const excluded = new Set((input.overrides.excludeAgents ?? []).map((id) => resolveAgentId(input.registry, id) ?? id));
+  if (excluded.has(SECURITY_AUDITOR)) {
+    for (const finding of mandatory) state.conflict(`The mandatory ${finding.category} review cannot be removed by an override (${finding.reason})`, true);
+    return;
+  }
+  // The specialist steps are the security-compliance steps the auditor owns (addReviews keeps one).
+  const reviewSteps = capabilities.filter((capability) => capability.domain === 'security-compliance' && capability.defaultAgents.includes(SECURITY_AUDITOR));
+  for (const { id } of reviewSteps) {
+    const assigned = assignment.get(id);
+    if (assigned === undefined || assigned === SECURITY_AUDITOR) continue;
+    assignment.set(id, SECURITY_AUDITOR);
+    state.override('agents', input.overrides.agents ?? [], `not applied to ${id}: a mandatory review stays with ${SECURITY_AUDITOR} (was ${assigned})`);
   }
 }
 
@@ -429,7 +475,7 @@ function planStatus(input: RouteInput, state: RouteState, approveAt: ReadonlySet
  * explanation. Overrides narrow the plan; conflicts are reported, never resolved silently.
  */
 export function routeTask(rawInput: RouteInput): Plan {
-  const input: RouteInput = { ...rawInput, classification: mergeImpact(rawInput.classification, rawInput.impact) };
+  let input: RouteInput = { ...rawInput, classification: mergeImpact(rawInput.classification, rawInput.impact) };
   const state = new RouteState();
   const profileIds = inProfile(input);
   if (input.impact) {
@@ -445,12 +491,15 @@ export function routeTask(rawInput: RouteInput): Plan {
 
   const domains = domainsFor(input, state);
   const capabilities = selectCapabilities(input, domains, state);
-  const review = addRiskReview(input, capabilities);
-  if (review) capabilities.push(review);
+  const findings = assessSensitivity({ task: input.task, type: input.classification.type, capabilities: capabilities.map((capability) => capability.id), impact: input.impact });
+  input = withSensitivity(input, findings, state);
+  const reviews = addReviews(input, capabilities, findings);
+  capabilities.push(...reviews);
   const assignment = assignAgents(input, capabilities, state);
+  guardMandatoryReviews(input, findings, capabilities, assignment, state);
   const agents = [...new Set(assignment.values())];
   const type = effectiveType(input, capabilities, assignment, state);
-  explainAgents(input, capabilities, assignment, review, state);
+  explainAgents(input, capabilities, assignment, reviews, state);
 
   const skills = selectSkills(input, capabilities, profileIds, state);
   const { rules, pathMatched } = selectRules(input, capabilities, profileIds, state);

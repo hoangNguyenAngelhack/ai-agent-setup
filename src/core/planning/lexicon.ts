@@ -298,16 +298,13 @@ export const TYPE_CUES: Record<TaskType, Record<string, number>> = {
 
 export const TYPE_PRECEDENCE: TaskType[] = ['bug', 'review', 'test', 'ops', 'docs', 'refactor', 'analysis', 'feature'];
 
-/** Words that raise risk regardless of the capability's own risk level. */
+/**
+ * Words that raise risk regardless of the capability's own risk level. Payment, credential and
+ * personal-data words are not here: ADR-014 decides those from impact (core/routing/sensitivity.ts).
+ */
 export const HIGH_RISK_CUES: Record<string, string> = {
   production: 'touches production',
-  payment: 'involves payments',
-  secret: 'involves secrets',
-  password: 'involves passwords',
-  'personal data': 'involves personal data',
-  'delete': 'deletes data',
-  token: 'involves credentials',
-  auth: 'touches authentication',
+  delete: 'deletes data',
 };
 
 /** Words that suggest a large task. */

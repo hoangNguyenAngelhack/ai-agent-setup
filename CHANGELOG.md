@@ -32,6 +32,18 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   owners. `plan --files`, `--changed` and `--since` use the result: risk follows touched areas,
   path-scoped rules load only for matching files, and steps are ordered by execution phase with
   dependencies.
+- `gates list|run|history` (V2.2 preview): Quality Gate Engine with 14 gates over 11 categories,
+  each with an explicit support status. PASS needs executed evidence; missing commands, missing
+  tools, timeouts, cancellation, stale coverage and skipped required gates are NOT_VERIFIED. Evidence
+  logs are redacted and checksummed; records, reports and history stay in git-ignored folders.
+  Exit codes: 0 PASS, 1 FAIL, 2 NOT_VERIFIED.
+- `run` (V2.1 preview, ADR-009): canonical execution plans with immutable approved revisions, an
+  event log, step states, dependency and approval enforcement, gate-based step verification,
+  reconciliation, and plan delivery to `claude` / `codex` (not yet verified against a real host).
+- Impact-based reviews (ADR-014): payment, credential and personal-data work gets a mandatory
+  specialist review with a recorded reason; words in unrelated contexts (design tokens, token usage,
+  fixtures, UI copy, docs) no longer trigger one. Policy rule `project.run-approval` makes an agent
+  ask before approving or cancelling a run.
 - Test suite (unit, contract, golden, installer, end-to-end, V1 characterization) and CI on Linux,
   macOS and Windows with Node 20, 22 and 24.
 

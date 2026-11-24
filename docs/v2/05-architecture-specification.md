@@ -698,7 +698,7 @@ Implemented in `src/installer/` (installer core) and `src/app/setup.ts` (setup u
 
 ```yaml
 gate: gate.unit-tests
-category: unit            # build|unit|integration|e2e|security|performance|accessibility|documentation|deployment-readiness
+category: unit            # build|unit|integration|e2e|static-analysis|security|dependency-audit|performance|accessibility|documentation|deployment-readiness
 status: PASS              # PASS|FAIL|NOT_VERIFIED
 measured: true            # false => estimate or not executed
 evidence:
@@ -738,6 +738,42 @@ Rules:
 Profiles map V1 tiers: `starter` requires build + unit; `standard` adds lint, security and coverage
 ≥ 80% when measurable; `strict` adds integration, coverage ≥ 95% and documentation. These thresholds
 come from V1 `TIERS.md`; the profile names are kept for compatibility.
+
+### 12.3 Gate execution record (V2.2, implemented)
+
+The Quality Gate Engine (`src/quality/`) stores one record per gate and run, contract
+`urn:ai-agent-setup:contracts:v1:gate-record`: the gate-result fields plus `runId`, `gateVersion`,
+`project` (name, commit, dirty), `command` (redacted), `environment` (platform, arch, Node, CI),
+`startedAt`, `endedAt`, `durationMs`, `exitCode` and `checksum` (sha256 of the stored evidence log).
+Artifact evidence carries its own checksum.
+
+| Status | Definition |
+|---|---|
+| PASS | The gate ran in this run and its check succeeded, with command or artifact evidence; the record validates against the contract |
+| FAIL | The gate ran and its check failed (non-zero exit, findings, threshold missed) |
+| NOT_VERIFIED | No trustworthy result: no command, tool missing, timeout, cancellation, unreadable output, stale artifact, skipped, unknown gate, or an invalid record |
+
+Required gates are the profile's gates plus `required` in `.ai-agent-setup/gates.json` (the file can
+add gates and commands, never remove a required gate). The overall status is PASS only when every
+required gate is PASS, FAIL when any required gate failed, NOT_VERIFIED otherwise — including when
+nothing is required. Records and reports live under `.ai-agent-setup/runs/<run-id>/gates/g<n>/`, one
+folder per invocation so earlier evidence is never overwritten, with logs in `evidence/g<n>/`; history
+is `.ai-agent-setup/gates/history.jsonl`. Both top folders carry a `.gitignore` of `*`. A configured
+command may replace a built-in check (secret scan, audit), and the record then says so in its reason.
+
+| Category | Gate (support) |
+|---|---|
+| build | `gate.build` (project command) |
+| unit | `gate.unit-tests` (project command); `gate.coverage-80`, `gate.coverage-95` (built-in threshold on an Istanbul json-summary written by this run) |
+| integration | `gate.integration-tests` (project command) |
+| e2e | `gate.e2e-tests` (project command) |
+| static-analysis | `gate.lint`, `gate.typecheck` (project command) |
+| security | `gate.security-scan` (built-in scan of uncommitted and untracked changes) |
+| dependency-audit | `gate.dependency-audit` (built-in for npm lockfiles; other ecosystems need a configured command) |
+| performance | `gate.performance` (project command) |
+| accessibility | `gate.accessibility` (project command) |
+| documentation | `gate.documentation` (project command) |
+| deployment-readiness | `gate.deployment-readiness` (composite: build, unit tests, security scan) |
 
 ## 13. Cross-cutting concerns
 

@@ -10,6 +10,7 @@ import type { ApprovalPoint, PlanMode, PlanOverrides } from '../core/contracts';
 import { ADAPTER_IDS, type AdapterId } from '../registry';
 import { oneOf, parseArgs, single, UsageError, type ParsedArgs } from './args';
 import { runCatalogValidate } from './catalog-validate';
+import { commandGates, commandRun } from './run-commands';
 import { renderImpact, renderPlan } from './plan-output';
 import { resolveCreateConfig, type Ask } from './create-config';
 
@@ -38,6 +39,9 @@ Usage:
   ${BIN} plan "<task>" [options]         Propose a plan: domains, agents, skills, gates, cost (V2.1 preview)
   ${BIN} explain <plan-id>               Show the explanation of a saved plan
   ${BIN} impact [files...] [--since ref] What changed files touch: areas, risk, tests, owners
+  ${BIN} gates list|run|history [dir]    Quality gates: support status, run with evidence, history (V2.2)
+  ${BIN} run <action> …                  Execution runs (V2.1 preview): create <plan-id>, approve, deliver,
+                                         event, verify, approve-step, cancel, status <run-id>
 
 Create options (V1):
   -t, --type <type>        backend, frontend, fullstack, mobile
@@ -69,6 +73,17 @@ Plan options:
       --changed            Use uncommitted git changes as the changed files
       --since <ref>        Use git changes since a ref
       --json               Print the plan as JSON
+
+Gate options:
+      --gate <ids>         Gates to run in addition to the required ones
+      --skip <ids>         Skip gates (a skipped required gate is NOT_VERIFIED, never PASS)
+      --run <run-id>       Attach the results to an existing run
+  Exit codes: 0 PASS, 1 FAIL, 2 NOT_VERIFIED.
+
+Run options:
+      --host <id>          deliver: claude-code or codex (needs the CLI on PATH; --dry-run prints it)
+      --type, --step, --reason, --message, --evidence   event: what the agent reports
+      --decline            approve-step: decline instead of approve
 
   -h, --help               Show this help
   -v, --version            Show the version
@@ -241,6 +256,10 @@ export async function main(argv: readonly string[], io: CliIO): Promise<number> 
         return commandExplain(args, io);
       case 'impact':
         return commandImpact(args, io);
+      case 'gates':
+        return await commandGates(args, io);
+      case 'run':
+        return await commandRun(args, io);
       case 'catalog':
         if (args.positionals[0] !== 'validate') throw new UsageError('Usage: catalog validate [catalog-dir]');
         return runCatalogValidate(resolve(io.cwd, args.positionals[1] ?? join(PACKAGE_ROOT, 'catalog')), (line) => io.write(`${line}\n`));

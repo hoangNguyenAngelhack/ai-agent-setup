@@ -14,7 +14,7 @@ const FLOORS = {
   topDomainAccuracy: 0.98,
   multiDomainRecall: 0.73,
   typeAccuracy: 0.84,
-  minimality: 0.9,
+  minimality: 0.91,
 };
 
 describe('routing evaluation (development set)', () => {

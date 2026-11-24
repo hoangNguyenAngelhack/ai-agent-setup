@@ -11,7 +11,9 @@ export type GateCategory =
   | 'unit'
   | 'integration'
   | 'e2e'
+  | 'static-analysis'
   | 'security'
+  | 'dependency-audit'
   | 'performance'
   | 'accessibility'
   | 'documentation'
@@ -144,6 +146,8 @@ export interface ExplainRecord {
   conflicts: string[];
   /** Ranked task context beyond the always-loaded tier (W2.1-04). */
   context: ContextItem[];
+  /** Payment, credential and personal-data findings and their basis (ADR-014). */
+  sensitivity: Array<{ category: string; basis: string; mandatory: boolean; ignored: boolean; reason: string }>;
   impact: {
     files: string[];
     areas: string[];

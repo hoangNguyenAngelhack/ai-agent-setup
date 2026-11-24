@@ -59,6 +59,8 @@ node bin/cli.js rollback ../my-project      # undo the last install
 | `plan "<task>"` *(V2.1 preview)* | Propose a plan: domains, agents, skills, gates and estimated cost, with an explanation; `--mode`, `--domain`, `--agent`, `--exclude-agent`, `--allow-tools`, `--budget`, `--approve-at`, `--json` |
 | `explain <plan-id>` | Show a saved plan with its explanation |
 | `impact [files...]` *(V2.1 preview)* | What changed files touch: modules, areas, risk, related tests, CODEOWNERS owners; without files it reads uncommitted git changes, `--since <ref>` diffs against a ref. `plan --files`, `--changed` and `--since` use the same analysis |
+| `gates list\|run\|history [dir]` *(V2.2 preview)* | Quality gates with evidence: `list` shows every gate, its support status and the command it would run; `run` executes the required gates (profile + `.ai-agent-setup/gates.json`) and writes redacted, checksummed evidence; exit 0 PASS, 1 FAIL, 2 NOT_VERIFIED. `--gate`, `--skip`, `--run`, `--profile`, `--json` |
+| `run <action>` *(V2.1 preview)* | Execution runs (ADR-009): `create <plan-id>`, `approve`, `deliver --host claude-code\|codex [--dry-run]`, `event`, `verify <run-id> <step>`, `approve-step`, `cancel`, `status`. A run succeeds only when every step passed its gates |
 
 ### Create options (same as V1)
 
@@ -116,7 +118,7 @@ is on the roadmap.
 | Workflows | 9 |
 | Profiles | 3 |
 | Tools | 16 MCP servers (opt-in) + 1 other |
-| Policies | 2 (7 rules) |
+| Policies | 2 (8 rules) |
 | Adapters | claude-code, codex |
 <!-- catalog-summary:end -->
 
@@ -133,6 +135,10 @@ is on the roadmap.
   (open question OQ-07).
 - `--db mysql` / `sqlite` switch the Prisma provider; migrating each template's schema on those
   databases has not been verified.
+- **Run delivery and quality gates** have been tested with synthetic commands and a synthetic host
+  script only. Delivering a plan to a real `claude` or `codex` CLI is NOT_VERIFIED; the host message
+  formats come from their published docs. The secret scan is pattern-based and does not prove that
+  a change is free of secrets.
 - **No performance claims:** token, cost and speed effects have not been measured yet. The benchmark
   plan is in [docs/v2/09](docs/v2/09-testing-and-benchmark-strategy.md). CodeGraph's own published
   figures are the vendor's claims and were not measured here.

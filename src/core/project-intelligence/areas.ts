@@ -28,6 +28,12 @@ export const AREA_RULES: readonly AreaRule[] = [
     capabilities: ['integration-automation.external-service-integration'],
     risk: { level: 'high', reason: 'payment code' },
   },
+  {
+    id: 'personal-data',
+    patterns: ['**/privacy/**', '**/gdpr/**', '**/consent/**', '**/*pii*', '**/personal-data/**'],
+    capabilities: ['security-compliance.privacy-assessment'],
+    risk: { level: 'high', reason: 'personal data handling' },
+  },
   { id: 'middleware', patterns: ['**/middleware/**', '**/interceptors/**', '**/filters/**'], capabilities: ['backend.service-architecture'] },
   {
     id: 'ui',

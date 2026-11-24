@@ -49,3 +49,5 @@ export const claudeCodeAdapter: Adapter = {
     return { adapter: 'claude-code', present: artifacts.length > 0, artifacts, v1Fingerprint: hasV1Fingerprint(root) };
   },
 };
+
+export { claudeCodeDelivery } from './delivery';

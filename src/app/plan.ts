@@ -5,13 +5,13 @@ import { measureContext, selectProfileEntries } from '../core/context';
 import type { ImpactReport, Plan, PlanMode, PlanOverrides, ProjectProfile } from '../core/contracts';
 import { TaskClassifier } from '../core/planning';
 import { runImpact } from './impact';
+import { ensureIgnoredDir, RUNS_DIR } from './run-files';
 import { detectProject } from '../core/project-detection';
 import { routeTask } from '../core/routing';
-import { MANIFEST_PATH, STATE_DIR } from '../installer';
+import { MANIFEST_PATH } from '../installer';
 import { KnowledgeIndex, Registry, validateCatalog, type ProfileEntry } from '../registry';
 
 const PACKAGE_ROOT = join(__dirname, '..', '..');
-const RUNS_DIR = `${STATE_DIR}/runs`;
 
 export interface PlanOptions {
   root: string;
@@ -77,7 +77,7 @@ export function runPlan(options: PlanOptions): PlanOutcome {
 
   if (!existsSync(join(options.root, MANIFEST_PATH))) return { plan, savedTo: null };
   const savedTo = `${RUNS_DIR}/${plan.id}/plan.json`;
-  mkdirSync(join(options.root, RUNS_DIR, plan.id), { recursive: true });
+  mkdirSync(join(ensureIgnoredDir(options.root, RUNS_DIR), plan.id), { recursive: true });
   writeFileSync(join(options.root, savedTo), `${JSON.stringify(plan, null, 2)}\n`);
   return { plan, savedTo };
 }

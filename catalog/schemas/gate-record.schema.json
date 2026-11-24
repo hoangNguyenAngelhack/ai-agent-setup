@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:contracts:v1:gate-record",
+  "title": "Quality gate execution record",
+  "description": "A gate result with the identity of the run, project, command and environment that produced it (V2.2, docs/v2/05 §12). Same PASS/FAIL/NOT_VERIFIED rules as gate-result.",
+  "type": "object",
+  "required": ["schemaVersion", "runId", "gate", "gateVersion", "category", "project", "command", "environment", "startedAt", "endedAt", "durationMs", "exitCode", "status", "measured", "reason", "evidence", "checksum"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "gate-record/v1" },
+    "runId": { "type": "string", "pattern": "^run-[0-9TZ]+-[0-9a-f]{6}$" },
+    "gate": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/gateId" },
+    "gateVersion": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/semver" },
+    "category": {
+      "enum": ["build", "unit", "integration", "e2e", "static-analysis", "security", "dependency-audit", "performance", "accessibility", "documentation", "deployment-readiness"]
+    },
+    "project": {
+      "type": "object",
+      "required": ["name", "commit"],
+      "additionalProperties": false,
+      "properties": { "name": { "type": "string", "minLength": 1 }, "commit": { "type": ["string", "null"] }, "dirty": { "type": "boolean" } }
+    },
+    "command": { "type": ["string", "null"] },
+    "environment": {
+      "type": "object",
+      "required": ["platform", "arch", "node", "ci"],
+      "additionalProperties": false,
+      "properties": { "platform": { "type": "string" }, "arch": { "type": "string" }, "node": { "type": "string" }, "ci": { "type": "boolean" } }
+    },
+    "startedAt": { "$ref": "#/$defs/timestamp" },
+    "endedAt": { "$ref": "#/$defs/timestamp" },
+    "durationMs": { "type": "integer", "minimum": 0 },
+    "exitCode": { "type": ["integer", "null"] },
+    "status": { "enum": ["PASS", "FAIL", "NOT_VERIFIED"] },
+    "measured": { "type": "boolean" },
+    "reason": { "type": ["string", "null"] },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "enum": ["command", "artifact", "review-note"] },
+          "command": { "type": "string", "minLength": 1 },
+          "exitCode": { "type": "integer" },
+          "startedAt": { "$ref": "#/$defs/timestamp" },
+          "durationMs": { "type": "integer", "minimum": 0 },
+          "artifact": { "type": "string", "minLength": 1 },
+          "checksum": { "$ref": "#/$defs/checksum" },
+          "summary": { "type": "object" }
+        },
+        "allOf": [
+          { "if": { "properties": { "type": { "const": "command" } } }, "then": { "required": ["command", "exitCode"] } },
+          { "if": { "properties": { "type": { "const": "artifact" } } }, "then": { "required": ["artifact", "checksum"] } }
+        ]
+      }
+    },
+    "checksum": { "oneOf": [{ "$ref": "#/$defs/checksum" }, { "type": "null" }] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "PASS" } } },
+      "then": {
+        "properties": {
+          "measured": { "const": true },
+          "evidence": { "type": "array", "contains": { "type": "object", "properties": { "type": { "enum": ["command", "artifact"] } }, "required": ["type"] } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "enum": ["FAIL", "NOT_VERIFIED"] } } },
+      "then": { "properties": { "reason": { "type": "string", "minLength": 1 } } }
+    }
+  ],
+  "$defs": {
+    "timestamp": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$" },
+    "checksum": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  }
+}
