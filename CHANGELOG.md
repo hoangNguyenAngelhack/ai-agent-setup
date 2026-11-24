@@ -11,6 +11,12 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
 
 ### Added
+- KPI report (W2.2-07): `report --kpi [--since date] [--json]` (`kpi-report` schema) reports every KPI of
+  docs/v2/09 §6 with definition, source, sample size and status. Measured: task acceptance rate,
+  regression rate over gate history, median completion time, human intervention, tokens per accepted
+  task, tool calls (now counted from the host stream, each id once); estimated: cost per accepted task
+  (host figure). NOT_VERIFIED with the reason: test pass rate, security findings, installation
+  reliability. The C-vs-B hypotheses stay NOT_VERIFIED until the benchmark runs.
 - Regression detection on the evaluation set (W2.2-06): `benchmarks/eval/baseline.json` records every
   case's checks and metrics; `npm run eval:regressions` reports REGRESSED (a passing check now fails,
   or a metric got worse; sensitive-impact regressions are a veto), STALE (the set changed) or PASS,

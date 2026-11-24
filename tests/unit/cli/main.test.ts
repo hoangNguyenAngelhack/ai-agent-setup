@@ -357,4 +357,15 @@ describe('report (W2.2-05)', () => {
     expect(existsSync(join(root, '.ai-agent-setup'))).toBe(false);
     expect((await cli(root, ['report', '--since', 'soon'])).code).toBe(1);
   });
+
+  it('should print the KPI report with --kpi (W2.2-07)', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'report-kpi-'));
+    const markdown = await cli(root, ['report', '--kpi']);
+    expect(markdown.code).toBe(0);
+    expect(markdown.out).toContain('# KPI report:');
+    const json = JSON.parse((await cli(root, ['report', '--kpi', '--json', '--since', '2026-11-01'])).out) as { schemaVersion: string; kpis: unknown[] };
+    expect(json).toMatchObject({ schemaVersion: 'kpi-report/v1', since: '2026-11-01T00:00:00.000Z' });
+    expect(json.kpis).toHaveLength(10);
+    expect(existsSync(join(root, '.ai-agent-setup'))).toBe(false);
+  });
 });

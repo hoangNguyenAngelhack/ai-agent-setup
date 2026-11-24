@@ -2,6 +2,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { buildKpiReport } from '../../src/app/kpi-report';
 import { buildExecutionReport } from '../../src/app/reports';
 import { approveRun, createRun, deliverRun, loadRun, recordEvent, reportRun, signedEvidence, verifyStep } from '../../src/app/runs';
 import { renderExecutionPlan, type ExecutionPlan } from '../../src/core/execution';
@@ -79,7 +80,8 @@ describe.skipIf(process.platform === 'win32')('host delivery end to end (fake ho
     const delivery = await deliver(root, plan, host, 'success');
     // Claude repeats message msg_a on two lines: counted once. Its session total (999) is not used
     // because per-message usage was seen.
-    expect(delivery.usage).toMatchObject({ tokens, label: 'measured', cost: costUsd === null ? null : { usd: costUsd, label: 'estimated' } });
+    // Two distinct tool calls; the repeated one (same id) is counted once, a non-tool item not at all.
+    expect(delivery.usage).toMatchObject({ tokens, label: 'measured', toolCalls: 2, cost: costUsd === null ? null : { usd: costUsd, label: 'estimated' } });
     expect(signedEvidence(root, plan.runId)).toContain(delivery.usage!.file);
     // Why usage is read from the raw stream: the stored transcript has every *_tokens value redacted.
     expect(readFileSync(join(root, delivery.transcript!), 'utf8')).toContain('[REDACTED:assignment]');
@@ -94,6 +96,30 @@ describe.skipIf(process.platform === 'win32')('host delivery end to end (fake ho
     const tampered = buildExecutionReport(root);
     expect(tampered.runs.items[0]).toMatchObject({ integrity: 'VIOLATED', deliveries: [{ status: 'UNSIGNED', tokens: null }] });
     expect(tampered.usage.hosts[0]).toMatchObject({ complete: false, perAcceptedOutcome: null, cost: null, reason: expect.stringContaining('1 UNSIGNED') as unknown });
+  }, 60000);
+
+  it('should report every KPI from the runs, measured where proved and NOT_VERIFIED otherwise (W2.2-07)', async () => {
+    const accepted = approvedRun();
+    const root = accepted.root;
+    process.env.FAKE_HOST_USAGE = '1';
+    await deliver(root, accepted.plan, 'claude-code', 'success');
+    await verifyAll(root, accepted.plan);
+    const waiting = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
+    await deliver(root, waiting, 'codex', 'approval');
+
+    const kpis = Object.fromEntries(buildKpiReport(root).kpis.map((item) => [item.id, item]));
+    expect(kpis['task-acceptance-rate']).toMatchObject({ status: 'MEASURED', values: [{ scope: 'all runs', value: 0.5, unit: 'ratio', n: 2 }] });
+    expect(kpis['median-completion-time']!.values.map((value) => [value.scope, value.n])).toEqual([
+      ['delivered runs', 2],
+      ['accepted runs', 1],
+    ]);
+    expect(kpis['tokens-per-accepted-task']).toMatchObject({ status: 'MEASURED', notes: ['codex: no accepted outcome (SUCCEEDED run) in the period'] });
+    expect(kpis['tokens-per-accepted-task']!.values).toContainEqual({ scope: 'claude-code output', value: 50, unit: 'tokens', n: 1 });
+    expect(kpis['cost-per-accepted-task']).toMatchObject({ status: 'ESTIMATED', label: 'estimated', values: [{ scope: 'claude-code', value: 0.0125, unit: 'USD', n: 1 }] });
+    expect(kpis['tool-calls']).toMatchObject({ status: 'MEASURED', values: [{ value: 2, n: 2 }] });
+    expect(kpis['human-intervention']).toMatchObject({ status: 'MEASURED', values: [{ scope: 'mean per run', value: 0.5, n: 2 }] });
+    expect(kpis['regression-rate']).toMatchObject({ status: 'MEASURED', values: [{ value: 0 }] });
+    expect(['test-pass-rate', 'security-findings', 'installation-reliability'].map((id) => kpis[id]!.status)).toEqual(['NOT_VERIFIED', 'NOT_VERIFIED', 'NOT_VERIFIED']);
   }, 60000);
 
   it('should print the measured usage in run deliver and the per-host table in report', () => {

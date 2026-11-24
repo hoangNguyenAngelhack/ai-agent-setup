@@ -25,12 +25,24 @@ const start = () => say(host === 'claude' ? { type: 'system', subtype: 'init', s
 // FAKE_HOST_USAGE=1: the stream carries token usage in each host's shape. Claude repeats one message
 // id over two lines (as its transcripts do), so a meter that counts lines would double it.
 const withUsage = process.env.FAKE_HOST_USAGE === '1';
+// Tool calls: two distinct calls; one is printed twice (Claude: same tool_use id; Codex: started and
+// completed events of the same item), plus a Codex item that is not a tool call.
 const usage = () => {
-  if (!withUsage || host !== 'claude') return;
-  const message = (id, input, output) => ({ type: 'assistant', message: { id, model: 'claude-test-1', usage: { input_tokens: input, output_tokens: output, cache_read_input_tokens: 100, cache_creation_input_tokens: 10 } } });
-  say(message('msg_a', 5, 20));
-  say(message('msg_a', 5, 20));
-  say(message('msg_b', 7, 30));
+  if (!withUsage) return;
+  if (host !== 'claude') {
+    say({ type: 'item.started', item: { id: 'item_1', type: 'command_execution' } });
+    say({ type: 'item.completed', item: { id: 'item_1', type: 'command_execution' } });
+    say({ type: 'item.completed', item: { id: 'item_2', type: 'file_change' } });
+    say({ type: 'item.completed', item: { id: 'item_3', type: 'agent_message' } });
+    return;
+  }
+  const message = (id, input, output, tool) => ({
+    type: 'assistant',
+    message: { id, model: 'claude-test-1', content: [{ type: 'tool_use', id: tool, name: 'Bash', input: {} }], usage: { input_tokens: input, output_tokens: output, cache_read_input_tokens: 100, cache_creation_input_tokens: 10 } },
+  });
+  say(message('msg_a', 5, 20, 'toolu_1'));
+  say(message('msg_a', 5, 20, 'toolu_1'));
+  say(message('msg_b', 7, 30, 'toolu_2'));
 };
 const done = () => {
   usage();

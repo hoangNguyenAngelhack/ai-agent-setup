@@ -225,6 +225,10 @@ non-Node stacks).
 | Human intervention | prompts requiring user input per run | Harness |
 | Installation reliability | successful installs ÷ attempts over the installer matrix | §3.3 |
 
+`report --kpi` (W2.2-07) reports each KPI above for one project from its local artifacts, labelled
+`measured` or `estimated`, with sample size; a KPI that needs the benchmark, a scanner or the CI
+installer matrix is NOT_VERIFIED with the reason, and no other figure is reported under its name.
+
 **Target hypotheses** (not achieved; to be tested in V2.2):
 
 | KPI | Hypothesis (C vs B) |

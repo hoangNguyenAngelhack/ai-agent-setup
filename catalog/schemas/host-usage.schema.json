@@ -12,6 +12,7 @@
     "samples": { "description": "Usage records read from the stream; 0 means the stream carried no usage.", "$ref": "#/$defs/count" },
     "tokens": { "$ref": "#/$defs/tokens" },
     "byModel": { "type": "object", "additionalProperties": { "$ref": "#/$defs/tokens" } },
+    "toolCalls": { "description": "Distinct tool calls the host started (W2.2-07); absent in files written before it.", "$ref": "#/$defs/count" },
     "label": { "const": "measured" },
     "basis": { "type": "string", "minLength": 1 },
     "cost": {

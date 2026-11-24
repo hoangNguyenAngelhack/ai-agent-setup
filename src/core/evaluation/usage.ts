@@ -21,6 +21,8 @@ export interface UsageSample {
   costUsd?: number;
   /** A session total (Claude Code `result`): its tokens count only when no per-message usage was seen. */
   total?: boolean;
+  /** Ids of tool calls started on this line (W2.2-07); each id is counted once. */
+  toolCalls?: string[];
 }
 
 export interface HostUsage {
@@ -34,6 +36,8 @@ export interface HostUsage {
   label: 'measured';
   basis: string;
   cost: { usd: number; label: 'estimated'; basis: string } | null;
+  /** Distinct tool calls the host started (W2.2-07); absent in files written before it. */
+  toolCalls?: number;
 }
 
 export const TOKEN_KINDS = ['input', 'output', 'cacheRead', 'cacheWrite'] as const;
@@ -63,10 +67,13 @@ export class UsageMeter {
   private samples = 0;
   private costUsd = 0;
   private costSeen = false;
+  private readonly toolCalls = new Set<string>();
 
   constructor(private readonly host: string) {}
 
   add(sample: UsageSample): void {
+    for (const id of sample.toolCalls ?? []) this.toolCalls.add(id);
+    if (!sample.tokens && sample.costUsd === undefined) return;
     this.samples += 1;
     if (sample.costUsd !== undefined) {
       this.costUsd += sample.costUsd;
@@ -104,6 +111,7 @@ export class UsageMeter {
       label: 'measured',
       basis,
       cost: this.costSeen ? { usd: roundUsd(this.costUsd), label: 'estimated', basis: `${this.host}'s own price calculation; not an invoice` } : null,
+      toolCalls: this.toolCalls.size,
     };
   }
 }

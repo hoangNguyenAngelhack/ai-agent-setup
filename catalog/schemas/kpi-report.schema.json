@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:contracts:v1:kpi-report",
+  "title": "KPI report",
+  "description": "Every KPI of docs/v2/09 §6 for one project, from local artifacts (V2.2, W2.2-07). A KPI without a figure is NOT_VERIFIED with the reason, and nothing else is reported under its name. Hypotheses compare arm C with arm B and are NOT_VERIFIED until the benchmark runs.",
+  "type": "object",
+  "required": ["schemaVersion", "generatedAt", "project", "since", "kpis"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "kpi-report/v1" },
+    "generatedAt": { "$ref": "urn:ai-agent-setup:contracts:v1:gate-record#/$defs/timestamp" },
+    "project": {
+      "type": "object",
+      "required": ["name", "commit", "dirty"],
+      "additionalProperties": false,
+      "properties": { "name": { "type": "string", "minLength": 1 }, "commit": { "type": ["string", "null"] }, "dirty": { "type": "boolean" } }
+    },
+    "since": { "oneOf": [{ "$ref": "urn:ai-agent-setup:contracts:v1:gate-record#/$defs/timestamp" }, { "type": "null" }] },
+    "kpis": { "type": "array", "items": { "$ref": "#/$defs/kpi" } }
+  },
+  "$defs": {
+    "kpi": {
+      "type": "object",
+      "required": ["id", "name", "definition", "source", "status", "label", "values", "notes", "hypothesis"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z-]*$" },
+        "name": { "type": "string", "minLength": 1 },
+        "definition": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["MEASURED", "ESTIMATED", "NOT_VERIFIED"] },
+        "label": { "enum": ["measured", "estimated", null] },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["scope", "value", "unit", "n"],
+            "additionalProperties": false,
+            "properties": {
+              "scope": { "type": "string", "minLength": 1 },
+              "value": { "type": "number" },
+              "unit": { "type": "string", "minLength": 1 },
+              "n": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "notes": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "hypothesis": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["target", "status", "reason"],
+              "additionalProperties": false,
+              "properties": { "target": { "type": "string", "minLength": 1 }, "status": { "const": "NOT_VERIFIED" }, "reason": { "type": "string", "minLength": 1 } }
+            },
+            { "type": "null" }
+          ]
+        }
+      },
+      "allOf": [
+        { "if": { "properties": { "status": { "const": "NOT_VERIFIED" } } }, "then": { "properties": { "label": { "const": null }, "values": { "type": "array", "maxItems": 0 }, "notes": { "type": "array", "minItems": 1 } } } },
+        { "if": { "properties": { "status": { "const": "MEASURED" } } }, "then": { "properties": { "label": { "const": "measured" }, "values": { "type": "array", "minItems": 1 } } } },
+        { "if": { "properties": { "status": { "const": "ESTIMATED" } } }, "then": { "properties": { "label": { "const": "estimated" }, "values": { "type": "array", "minItems": 1 } } } }
+      ]
+    }
+  }
+}

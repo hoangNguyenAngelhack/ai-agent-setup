@@ -24,6 +24,8 @@ export interface ReportDelivery {
   tokens: TokenCounts | null;
   /** The host's own cost figure (estimated); null when it reports none. */
   costUsd: number | null;
+  /** Distinct tool calls from a signed usage file (W2.2-07); null when unproved or not recorded. */
+  toolCalls: number | null;
 }
 
 export interface HostUsageSummary {
@@ -65,11 +67,12 @@ function deliveryUsage(
   context: { started: boolean; verified: boolean; signed: Set<string>; validator: SchemaValidator },
 ): ReportDelivery {
   const { started, verified, signed, validator } = context;
-  const delivery = (status: DeliveryUsageStatus, usage: HostUsage | null = null): ReportDelivery => ({
+  const delivery = (status: DeliveryUsageStatus, usage: HostUsage | null = null, toolCalls = usage?.toolCalls ?? null): ReportDelivery => ({
     host,
     status,
     tokens: status === 'NOT_STARTED' ? zeroTokens() : (usage?.tokens ?? null),
     costUsd: status === 'NOT_STARTED' ? 0 : (usage?.cost?.usd ?? null),
+    toolCalls: status === 'NOT_STARTED' ? 0 : toolCalls,
   });
   // An empty transcript in a verified run: the host never printed anything, so it used nothing.
   const notStarted = !started && verified;
@@ -84,7 +87,8 @@ function deliveryUsage(
   if (usage.samples === 0 && notStarted) return delivery('NOT_STARTED');
   // Figures nothing proves are never shown: they could be the ones that were changed.
   if (!signed.has(usageFile)) return delivery('UNSIGNED');
-  return usage.samples === 0 ? delivery('NOT_REPORTED') : delivery('MEASURED', usage);
+  // A stream without token usage can still show its tool calls.
+  return usage.samples === 0 ? delivery('NOT_REPORTED', null, usage.toolCalls ?? null) : delivery('MEASURED', usage);
 }
 
 const perOutcome = (value: number, outcomes: number) => Math.round((value / outcomes) * 10) / 10;

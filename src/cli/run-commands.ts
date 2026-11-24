@@ -5,6 +5,7 @@ import { renderGateReport } from '../quality';
 import { single, UsageError, type ParsedArgs } from './args';
 import type { Ask } from './create-config';
 import { buildExecutionReport, renderExecutionReport } from '../app/reports';
+import { buildKpiReport, renderKpiReport } from '../app/kpi-report';
 import { buildIsolationPolicy, INBOX_ENV, queueInboxRequest, resolveExecutable } from '../app/isolation';
 import { policyProblems, type IsolationProfile, type NetworkPolicy } from '../core/isolation';
 import { capabilitiesFor, platformMatrix } from '../isolation';
@@ -237,7 +238,14 @@ function isolationOption(args: ParsedArgs): { profile: IsolationProfile; network
 export function commandReport(args: ParsedArgs, io: IO): number {
   const [dir] = args.positionals;
   const since = single(args, 'since');
-  const report = buildExecutionReport(root(args, io, dir), since === undefined ? {} : { since });
+  const options = since === undefined ? {} : { since };
+  if (args.switches.has('kpi')) {
+    const kpis = buildKpiReport(root(args, io, dir), options);
+    if (args.switches.has('json')) json(io, kpis);
+    else io.write(renderKpiReport(kpis));
+    return 0;
+  }
+  const report = buildExecutionReport(root(args, io, dir), options);
   if (args.switches.has('json')) json(io, report);
   else io.write(renderExecutionReport(report));
   return 0;
