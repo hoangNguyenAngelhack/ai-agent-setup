@@ -22,6 +22,8 @@
 | 09 | [Testing & Benchmark Strategy](09-testing-and-benchmark-strategy.md) | How the toolkit is tested and how baseline, V1 and V2 are compared |
 | 10 | [Architecture Decisions](10-architecture-decisions.md) | ADR-001–008 (accepted), conflicts, proposed ADRs, open questions |
 
+User-facing upgrade steps: [Migrating from V1](../guides/migrating-from-v1.md).
+
 ## Conventions
 
 - **Status labels:** `EXISTING`, `PARTIAL`, `MISSING`, `PLANNED`, `UNVERIFIED` ([01 §1.1](01-current-state-audit.md#11-status-vocabulary)).

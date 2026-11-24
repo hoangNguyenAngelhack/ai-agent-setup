@@ -1,7 +1,7 @@
 {
   "name": "create-ai-agent-setup",
   "version": "1.6.1",
-  "description": "CLI to create production-ready projects with Claude Code AI agent configuration",
+  "description": "Universal AI engineering configuration for Claude Code and Codex: create or set up projects from a versioned catalog with a safety policy and a safe installer",
   "author": "Hoang Nguyen <hoang.nguyen@angelhack.com>",
   "license": "MIT",
   "repository": {
@@ -31,7 +31,11 @@
     "mobile",
     "boilerplate",
     "codegraph",
-    "mcp"
+    "mcp",
+    "codex",
+    "agents-md",
+    "agent-skills",
+    "claude-code"
   ],
   "bin": {
     "create-ai-agent-setup": "bin/cli.js"
@@ -53,7 +57,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "catalog:validate": "npm run build && node dist/cli/catalog-validate.js",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run build && npm test",
+    "docs:summary": "npm run build && node scripts/update-readme-summary.cjs"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",

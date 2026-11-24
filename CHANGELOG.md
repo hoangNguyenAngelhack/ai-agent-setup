@@ -5,6 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2.0.0 (preview)
+
+V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
+[docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
+
+### Added
+- Versioned catalog (`catalog/`) validated by JSON Schemas: 12 capability domains, 123
+  capabilities, 9 canonical agents, V1 rules, skills, agents and commands migrated unchanged, three
+  profiles from the V1 tiers, MCP servers as opt-in tools, and a mandatory safety policy.
+- Native adapters for **Claude Code** and **Codex** (`AGENTS.md`, `.agents/skills`, `.codex/`).
+- Policy hook for both hosts: asks before destructive commands and blocks writing credentials in
+  known token formats.
+- Safe installer: dry-run, unified diff, conflict strategies, journaled atomic apply with backups,
+  automatic rollback on failure, `rollback`, `doctor`, and `.ai-agent-setup/manifest.json`.
+- Commands `setup`, `diff`, `doctor`, `rollback` and `catalog validate`, plus `--adapter`, `--profile`,
+  `--strategy` and `--enable-tool`.
+- Project detection for JavaScript/TypeScript, Python, Java/Kotlin, Go, .NET, Rust, Ruby, PHP,
+  Flutter, native mobile, CI providers and monorepo workspaces.
+- Test suite (unit, contract, golden, installer, end-to-end, V1 characterization) and CI on Linux,
+  macOS and Windows with Node 20, 22 and 24.
+
+### Changed
+- `bin/cli.js` is a launcher for the TypeScript CLI in `dist/`; the package now ships `dist/` and
+  `catalog/`.
+- The AI configuration is generated from the bundled catalog instead of being downloaded from GitHub
+  at create time.
+- `.claude/settings.json` no longer contains an `allow` list; destructive commands are `ask`.
+- `.claude/CLAUDE.md` is a generated managed section.
+- Rules load by scope: five always, language and area rules by file path, four on demand.
+- Unknown options are errors; `create`, `setup`, `diff`, `doctor`, `rollback` and `catalog` are
+  reserved as first arguments.
+
+### Fixed
+- `-f/--framework`, `--db` and `-T/--tier` were ignored.
+- `--version` printed 1.5.1; help used the wrong command name.
+- Generated `settings.json` contained the maintainer's machine paths.
+- Hooks never received their input, and the secret scan never blocked.
+- A failed git commit left a half-created project.
+- Build resolver agents had no frontmatter and were never loaded.
+- README counts and unmeasured performance claims (counts are now generated from the catalog).
+
+### Deprecated
+- `scripts/init.sh`, `scripts/create-project.js`, `make init` and `make copy` (removal planned for
+  2.1).
+
+### Also on `main` since 1.6.1 (not in any npm release)
+- `data-transform` skill (a993136, a47a057, 51bfc3a).
+- Vietnamese README (182e046).
+
+## [1.6.1] - 2026-06-02
+
+- Published the changes listed under 1.6.0 below; there is no separate `v1.6.0` tag in git.
+- Redesigned README (0c42fd1).
+- Known issue: `--version` printed `1.5.1` (fixed in 2.0).
+
 ## [1.6.0] - 2026-06-02
 
 ### Added
