@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { readGateHistory, runQualityGates } from '../../../src/app/gates';
 import type { GateCategory } from '../../../src/core/contracts';
-import { firstProgram, GATES, type GateRecord, parseCoverageSummary, programExists, parseNpmAudit, resolveCommand, runGates, scanDiffForSecrets, scanFilesForSecrets, validateGateConfig, type GateRunContext } from '../../../src/quality';
+import { firstProgram, GATES, isNoOpCommand, type GateRecord, parseCoverageSummary, programExists, parseNpmAudit, resolveCommand, runGates, scanDiffForSecrets, scanFilesForSecrets, validateGateConfig, type GateRunContext } from '../../../src/quality';
 import { SchemaValidator } from '../../../src/registry';
 import { writeTree } from '../../helpers/fs-tree';
 import { REPO_ROOT } from '../../helpers/v1-cli';
@@ -221,6 +221,28 @@ describe('runGates', () => {
     const report = await runGates({ gates: [], required: ['gate.coverage-95'] }, context(root, { gates: { 'gate.coverage-95': { command: node('ok.js') } } }));
 
     expect(report.records[0]!.reason).toMatch(/coverage-summary.json not found/);
+  });
+});
+
+describe('no-op gate commands', () => {
+  it.each(['echo ok', 'true', 'exit 0', 'true && echo done', ':', '', 'echo "Error: no test specified"; exit 0'])('should treat %j as performing no check', (command) => {
+    expect(isNoOpCommand(command)).toBe(true);
+  });
+
+  it.each(['node scripts/ok.js', 'npm test', 'echo start && vitest run', 'exit 1'])('should not treat %j as a no-op', (command) => {
+    expect(isNoOpCommand(command)).toBe(false);
+  });
+
+  it('should never PASS a gate whose configured command or script checks nothing', async () => {
+    const { root, config } = project({ 'gate.lint': 'echo ok' });
+    const configured = await runGates({ gates: [], required: ['gate.lint'] }, context(root, config));
+    expect(configured.records[0]).toMatchObject({ status: 'NOT_VERIFIED', reason: 'the command performs no check; configure a command that verifies the project' });
+
+    const scripted = await runGates(
+      { gates: [], required: ['gate.build'] },
+      context(root, {}, { facts: { ecosystems: ['node'], nodePackageManager: 'npm', scripts: { build: 'true' }, lockfiles: [] }, exec: () => Promise.resolve({ exitCode: 0, output: '', interrupted: null, error: null, truncated: false }) }),
+    );
+    expect(scripted.records[0]).toMatchObject({ status: 'NOT_VERIFIED', reason: 'the script (true) performs no check; configure a command that verifies the project' });
   });
 });
 

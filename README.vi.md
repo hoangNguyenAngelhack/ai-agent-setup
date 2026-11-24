@@ -107,7 +107,7 @@ nằm trong lộ trình.
 | Workflows | 9 |
 | Profiles | 3 |
 | Tools | 16 MCP servers (opt-in) + 1 other |
-| Policies | 2 (8 rules) |
+| Policies | 2 (11 rules) |
 | Adapters | claude-code, codex |
 <!-- catalog-summary:end -->
 
@@ -123,6 +123,8 @@ nằm trong lộ trình.
   mở OQ-07).
 - `--db mysql` / `sqlite` đổi provider Prisma; chưa kiểm chứng schema của từng template migrate được
   trên các CSDL đó.
+- **Bảo vệ trạng thái runtime** chặn agent ghi vào `.ai-agent-setup/` qua công cụ của host; đây không
+  phải ranh giới an ninh trước chương trình agent chạy bằng tài khoản của bạn.
 - **Giao kế hoạch và quality gate** mới được kiểm bằng lệnh giả lập và script host giả lập. Giao
   kế hoạch cho `claude` hay `codex` thật là NOT_VERIFIED; định dạng thông điệp của host lấy từ tài
   liệu công bố. Quét secret dựa trên mẫu, không chứng minh thay đổi sạch secret.

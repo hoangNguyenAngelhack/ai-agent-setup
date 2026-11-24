@@ -4,33 +4,109 @@
   "title": "Policy document",
   "description": "Layered policy evaluated by the Policy Engine. Effective effect = most restrictive match across layers; lower layers can only narrow (docs/v2/05 §7.4, §9).",
   "type": "object",
-  "required": ["schema", "id", "layer", "description", "rules"],
+  "required": [
+    "schema",
+    "id",
+    "layer",
+    "description",
+    "rules"
+  ],
   "additionalProperties": false,
   "properties": {
-    "schema": { "const": "policy/v1" },
-    "id": { "type": "string", "pattern": "^policy\\.[a-z0-9]+(-[a-z0-9]+)*$" },
-    "layer": { "enum": ["mandatory", "organization", "project", "user"] },
-    "description": { "type": "string", "minLength": 10 },
+    "schema": {
+      "const": "policy/v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^policy\\.[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "layer": {
+      "enum": [
+        "mandatory",
+        "organization",
+        "project",
+        "user"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10
+    },
     "rules": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "description", "effect", "match"],
+        "required": [
+          "id",
+          "description",
+          "effect",
+          "match"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z0-9]+(-[a-z0-9]+)*)+$" },
-          "description": { "type": "string", "minLength": 10 },
-          "effect": { "enum": ["allow", "ask", "deny"] },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z0-9]+(-[a-z0-9]+)*)+$"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10
+          },
+          "effect": {
+            "enum": [
+              "allow",
+              "ask",
+              "deny"
+            ]
+          },
           "match": {
             "type": "object",
             "minProperties": 1,
             "additionalProperties": false,
             "properties": {
-              "commands": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
-              "commandRegex": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
-              "ignoreCase": { "type": "boolean" },
-              "intents": { "type": "array", "minItems": 1, "items": { "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/permissionIntent" } },
-              "contentRegex": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+              "commands": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "commandRegex": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "ignoreCase": {
+                "type": "boolean"
+              },
+              "intents": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/permissionIntent"
+                }
+              },
+              "contentRegex": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "paths": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Globs for project-relative paths being written; for a write, every write criterion present must match."
+              }
             }
           }
         }
@@ -41,12 +117,25 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "description", "enforcedBy"],
+        "required": [
+          "id",
+          "description",
+          "enforcedBy"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "type": "string", "minLength": 1 },
-          "description": { "type": "string", "minLength": 10 },
-          "enforcedBy": { "type": "string", "minLength": 1 }
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10
+          },
+          "enforcedBy": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     }

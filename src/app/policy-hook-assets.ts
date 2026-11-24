@@ -7,13 +7,15 @@ const RUNTIME_FILES: ReadonlyArray<[compiled: string, target: string]> = [
   ['core/policy/index.js', 'policy/index.cjs'],
   ['core/policy/command-matcher.js', 'policy/command-matcher.cjs'],
   ['core/policy/policy-engine.js', 'policy/policy-engine.cjs'],
+  ['shared/glob.js', 'policy/glob.cjs'],
 ];
 
 /** Relative requires in the compiled files → their location inside the hook directory. */
 const REQUIRE_REWRITES: Record<string, Record<string, string>> = {
   'policy-check.cjs': { '../../core/policy': './policy/index.cjs' },
   'policy/index.cjs': { './command-matcher': './command-matcher.cjs', './policy-engine': './policy-engine.cjs' },
-  'policy/policy-engine.cjs': { './command-matcher': './command-matcher.cjs' },
+  'policy/policy-engine.cjs': { './command-matcher': './command-matcher.cjs', '../../shared/glob': './glob.cjs' },
+  'policy/glob.cjs': {},
   'policy/command-matcher.cjs': {},
 };
 

@@ -808,6 +808,15 @@ is never confused with a single gate. A result that fails the schema or the tota
 reported as it stands: SUCCEEDED and OUTCOME_VERIFIED become NOT_VERIFIED with the errors, and a
 result that is still invalid is not written.
 
+### 12.5 Runtime state protection (implemented)
+
+`.ai-agent-setup/**` holds run artifacts, gate configuration and results, and the install manifest.
+Policies can match the path being written (`match.paths`, globs on project-relative paths; for a
+write, every write criterion of a rule must match). `policy.safety` denies file-tool and shell writes
+there and asks before other shell access; the hook makes host paths project-relative (Claude Code
+sends absolute paths) and checks each file of a Codex patch. This is a guard against mistakes, not a
+security boundary against code the agent runs under the same account (docs/v2/08 §9.2).
+
 ## 13. Cross-cutting concerns
 
 | Concern | Approach |

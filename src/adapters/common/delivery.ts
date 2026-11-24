@@ -47,6 +47,7 @@ export function deliveryPrompt(plan: ExecutionPlan, files: DeliveryFiles): strin
     '   If blocked (missing tool, access, information): --type STEP_BLOCKED --reason "<why>".',
     'Your completion report is not verification: the orchestrator runs the quality gates. Never claim a step passed.',
     'Never print secrets, tokens or personal data.',
+    'Do not create, edit or delete anything under .ai-agent-setup/: the toolkit writes it, and the policy hook blocks it.',
   ].join('\n');
 }
 

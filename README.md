@@ -118,7 +118,7 @@ is on the roadmap.
 | Workflows | 9 |
 | Profiles | 3 |
 | Tools | 16 MCP servers (opt-in) + 1 other |
-| Policies | 2 (8 rules) |
+| Policies | 2 (11 rules) |
 | Adapters | claude-code, codex |
 <!-- catalog-summary:end -->
 
@@ -135,6 +135,8 @@ is on the roadmap.
   (open question OQ-07).
 - `--db mysql` / `sqlite` switch the Prisma provider; migrating each template's schema on those
   databases has not been verified.
+- **Runtime state protection** blocks agent writes to `.ai-agent-setup/` through the hosts' tools; it
+  is not a security boundary against programs the agent runs under your account.
 - **Run delivery and quality gates** have been tested with synthetic commands and a synthetic host
   script only. Delivering a plan to a real `claude` or `codex` CLI is NOT_VERIFIED; the host message
   formats come from their published docs. The secret scan is pattern-based and does not prove that

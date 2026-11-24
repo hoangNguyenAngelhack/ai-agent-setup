@@ -154,3 +154,49 @@ describe('PolicyEngine — run approvals belong to the user (ADR-009)', () => {
     expect(engine.evaluate(command('npx create-ai-agent-setup run status run-20261124T100000Z-abcdef')).effect).toBe('allow');
   });
 });
+
+describe('PolicyEngine — runtime state is written by the toolkit only (docs/v2/08 §9.2)', () => {
+  const write = (path: string): PolicyAction => ({ type: 'write', path, content: '{}' });
+
+  it.each(['.ai-agent-setup/runs/run-1/events.jsonl', './.ai-agent-setup/gates.json', '.ai-agent-setup\\manifest.json'])('should deny writing %s', (path) => {
+    expect(engine.evaluate(write(path))).toMatchObject({ effect: 'deny', matches: [expect.objectContaining({ ruleId: 'safety.runtime-state-write' })] });
+  });
+
+  it.each(['src/index.ts', '.ai-agent-setup-notes.md', 'docs/.ai-agent-setup.md'])('should not restrict writing %s', (path) => {
+    expect(engine.evaluate(write(path)).effect).toBe('allow');
+  });
+
+  it.each([
+    'echo {} >> .ai-agent-setup/runs/r/events.jsonl',
+    "printf x > '.ai-agent-setup/runs/r/execution-plan.json'",
+    'sed -i s/a/b/ .ai-agent-setup/gates.json',
+    'rm -f .ai-agent-setup/runs/r/result.json',
+    'mv tmp.json .ai-agent-setup/runs/r/execution-state.json',
+    'cat x | tee .ai-agent-setup/gates.json',
+    'Set-Content .ai-agent-setup\\gates.json x',
+  ])('should deny the shell write %j', (text) => {
+    expect(engine.evaluate(command(text))).toMatchObject({ effect: 'deny' });
+  });
+
+  it('should ask before other shell access and leave the toolkit CLI alone', () => {
+    expect(engine.evaluate(command('cat .ai-agent-setup/runs/r/execution-plan.md')).effect).toBe('ask');
+    expect(engine.evaluate(command('npx create-ai-agent-setup run event run-1 --type STEP_STARTED --step a')).effect).toBe('allow');
+    expect(engine.evaluate(command('echo hi > out.txt')).effect).toBe('allow');
+  });
+
+  it('should not let a lower layer allow it', () => {
+    const userAllow = layerPolicy('user', [{ id: 'user.allow-runtime', description: 'Allow editing runtime state.', effect: 'allow', match: { paths: ['.ai-agent-setup/**'] } }]);
+
+    expect(new PolicyEngine([...catalogPolicies, userAllow]).evaluate(write('.ai-agent-setup/gates.json')).effect).toBe('deny');
+  });
+
+  it('should require every write criterion of a rule to match', () => {
+    const both = layerPolicy('project', [{ id: 'project.env-secret', description: 'Secrets in env files.', effect: 'deny', match: { paths: ['**/*.env'], contentRegex: ['SECRET'] } }]);
+    const scoped = new PolicyEngine([both]);
+
+    expect(scoped.evaluate({ type: 'write', path: 'a.env', content: 'SECRET=1' }).effect).toBe('deny');
+    expect(scoped.evaluate({ type: 'write', path: 'a.env', content: 'PORT=1' }).effect).toBe('allow');
+    expect(scoped.evaluate({ type: 'write', path: 'a.txt', content: 'SECRET=1' }).effect).toBe('allow');
+  });
+});
+

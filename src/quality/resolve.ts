@@ -20,6 +20,8 @@ export interface ResolvedCommand {
   command: string | null;
   source: 'config' | 'script' | 'default' | 'built-in' | 'none';
   timeoutMs: number;
+  /** For `script`: the script's own text in package.json, which is what actually runs. */
+  scriptBody?: string;
 }
 
 function scriptCommand(packageManager: string, script: string): string {
@@ -32,7 +34,7 @@ export function resolveCommand(definition: GateDefinition, facts: ProjectFacts, 
   const timeoutMs = configured?.timeoutMs ?? definition.timeoutMs;
   if (configured?.command) return { command: configured.command, source: 'config', timeoutMs };
   const script = facts.nodePackageManager ? definition.scripts.find((name) => facts.scripts[name] !== undefined) : undefined;
-  if (script && facts.nodePackageManager) return { command: scriptCommand(facts.nodePackageManager, script), source: 'script', timeoutMs };
+  if (script && facts.nodePackageManager) return { command: scriptCommand(facts.nodePackageManager, script), source: 'script', timeoutMs, scriptBody: facts.scripts[script]! };
   if (definition.check === 'secret-scan') return { command: 'git diff HEAD --no-color --unified=0', source: 'built-in', timeoutMs };
   if (definition.check === 'npm-audit' && facts.lockfiles.includes('package-lock.json')) return { command: 'npm audit --json', source: 'built-in', timeoutMs };
   const ecosystem = facts.ecosystems.find((name) => definition.defaults[name]);

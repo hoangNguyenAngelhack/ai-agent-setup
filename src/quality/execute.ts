@@ -74,6 +74,23 @@ export function runCommand(command: string, options: { cwd: string; timeoutMs: n
 /** Shell builtins: they never resolve to a file, so their absence proves nothing. */
 const BUILTINS = new Set(['cd', 'echo', 'set', 'export', 'true', 'false', 'test', '[', 'exit', 'call', 'if', 'for', 'type', 'dir', 'exec', '.', 'source', 'env', 'command']);
 
+/** Programs that cannot check anything about a project. */
+const NO_OP_PROGRAMS = new Set(['true', ':', 'echo', 'printf', 'rem', 'cd', 'set', 'export', 'sleep', 'pause']);
+
+/**
+ * True when every part of a command is a no-op (`echo ok`, `true && exit 0`, an empty script): a
+ * gate must not PASS on it. A heuristic for obvious cases; it cannot judge what a real program does.
+ */
+export function isNoOpCommand(command: string): boolean {
+  const parts = command.split(/&&|\|\||;|\n/).map((part) => part.trim()).filter(Boolean);
+  return parts.every((part) => {
+    const program = firstProgram(part)?.toLowerCase();
+    if (program === undefined) return true;
+    if (program === 'exit') return /^exit(\s+0)?$/i.test(part); // `exit 1` fails, so it is a check of sorts
+    return NO_OP_PROGRAMS.has(program);
+  });
+}
+
 /** The program a shell command starts with: env assignments skipped, quotes removed. */
 export function firstProgram(command: string): string | null {
   const tokens = command.trim().match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
