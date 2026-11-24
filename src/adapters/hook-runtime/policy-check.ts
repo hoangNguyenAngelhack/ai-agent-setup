@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join, relative } from 'node:path';
 import { PolicyEngine, type PolicyAction, type PolicyDecision } from '../../core/policy';
 import type { PolicyDocument } from '../../registry';
 
@@ -16,15 +16,27 @@ export interface HookResponse {
   stderr: string;
 }
 
-type HookInput = { tool_name?: unknown; tool_input?: unknown } | null;
+type HookInput = { tool_name?: unknown; tool_input?: unknown; cwd?: unknown } | null;
 
 function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
 }
 
-function filePathOf(toolInput: Record<string, unknown>): string {
-  if (typeof toolInput.file_path === 'string') return toolInput.file_path;
-  return typeof toolInput.path === 'string' ? toolInput.path : '';
+/** Project-relative path with forward slashes (hosts may send absolute paths). */
+function projectPath(path: string, cwd: string): string {
+  const relativePath = isAbsolute(path) ? relative(cwd, path) : path;
+  return relativePath.split('\\').join('/');
+}
+
+function filePathOf(toolInput: Record<string, unknown>, cwd: string): string {
+  if (typeof toolInput.file_path === 'string') return projectPath(toolInput.file_path, cwd);
+  return typeof toolInput.path === 'string' ? projectPath(toolInput.path, cwd) : '';
+}
+
+/** Files named in a Codex patch (`*** Add File:`, `*** Update File:`, `*** Delete File:`, `*** Move to:`). */
+export function patchPaths(patch: string): string[] {
+  const paths = [...patch.matchAll(/^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+)$/gm)].map((match) => match[1]!.trim());
+  return [...new Set(paths)];
 }
 
 function shellQuote(token: string): string {
@@ -36,12 +48,16 @@ function shellQuote(token: string): string {
  * Codex (verified on 0.171) reports shell commands as `Bash` with `tool_input.command` (string)
  * and file edits as `apply_patch` with the patch text also in `tool_input.command`.
  */
-export function actionsFromHookInput(input: HookInput): PolicyAction[] {
+export function actionsFromHookInput(input: HookInput, fallbackCwd: string = process.cwd()): PolicyAction[] {
   const toolInput = asRecord(input?.tool_input);
-  const path = filePathOf(toolInput);
+  const cwd = typeof input?.cwd === 'string' ? input.cwd : fallbackCwd;
+  const path = filePathOf(toolInput, cwd);
 
   if (input?.tool_name === 'apply_patch' && typeof toolInput.command === 'string') {
-    return [{ type: 'write', path, content: toolInput.command }];
+    // One write per file in the patch, so path rules apply to each of them.
+    const patch = toolInput.command;
+    const paths = patchPaths(patch).map((file) => projectPath(file, cwd));
+    return (paths.length ? paths : [path]).map((file) => ({ type: 'write', path: file, content: patch }));
   }
   if (typeof toolInput.command === 'string') return [{ type: 'command', command: toolInput.command }];
   if (Array.isArray(toolInput.command)) return [{ type: 'command', command: toolInput.command.map(String).map(shellQuote).join(' ') }];

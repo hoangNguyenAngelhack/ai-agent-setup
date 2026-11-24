@@ -3,7 +3,7 @@ import { isAbsolute, join } from 'node:path';
 import type { GateCategory, GateStatus } from '../core/contracts';
 import { redactText } from '../shared/redact';
 import { COVERAGE_METRICS, parseCoverageSummary, parseNpmAudit, scanDiff, scanFilesForSecrets } from './checks';
-import { programExists, runCommand, type CommandOutcome } from './execute';
+import { isNoOpCommand, programExists, runCommand, type CommandOutcome } from './execute';
 import { gateById, type GateDefinition } from './gates';
 import { missingCommandReason, resolveCommand, type GateConfig, type ProjectFacts } from './resolve';
 
@@ -171,6 +171,10 @@ class GateRunner {
     if (resolved.source === 'built-in' && definition.check === 'secret-scan') return this.secretScan(base, outcome.output);
     if (resolved.source === 'built-in' && definition.check === 'npm-audit') return npmAudit(base, outcome.output);
     if (definition.check === 'coverage') return this.coverage(definition, base, startedMs);
+    if (outcome.exitCode === 0 && isNoOpCommand(resolved.scriptBody ?? resolved.command)) {
+      const what = resolved.scriptBody === undefined ? 'the command' : `the script (${redactText(resolved.scriptBody).text})`;
+      return { ...base, status: 'NOT_VERIFIED', reason: `${what} performs no check; configure a command that verifies the project` };
+    }
     if (definition.check && resolved.source === 'config') {
       // Allowed (for example a dedicated scanner), but never silent: the result says the built-in check did not run.
       const note = `built-in ${definition.check} replaced by the configured command`;

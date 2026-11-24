@@ -80,4 +80,24 @@ describe('generated policy hook (end to end)', () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('ai-agent-setup policy hook error');
   });
+
+  it('should deny Claude Code writes to runtime state, given as an absolute path', () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'runtime-'));
+    const result = runHook('claude-code', { cwd, tool_name: 'Write', tool_input: { file_path: join(cwd, '.ai-agent-setup', 'runs', 'r', 'events.jsonl'), content: '{}' } });
+
+    expect((JSON.parse(result.stdout) as HookOutput).hookSpecificOutput.permissionDecision).toBe('deny');
+  });
+
+  it('should block a Codex patch that edits the gate configuration', () => {
+    const patch = '*** Begin Patch\n*** Update File: .ai-agent-setup/gates.json\n@@\n-{}\n+{"gates":{}}\n*** End Patch';
+    const result = runHook('codex', { cwd: tmpdir(), tool_name: 'apply_patch', tool_input: { command: patch } });
+
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain('safety.runtime-state-write');
+  });
+
+  it('should block shell writes to runtime state and allow the toolkit CLI', () => {
+    expect((JSON.parse(runHook('claude-code', { tool_name: 'Bash', tool_input: { command: 'echo {} >> .ai-agent-setup/runs/r/events.jsonl' } }).stdout) as HookOutput).hookSpecificOutput.permissionDecision).toBe('deny');
+    expect(runHook('claude-code', { tool_name: 'Bash', tool_input: { command: 'npx create-ai-agent-setup run event run-1 --type STEP_STARTED --step a' } }).stdout).toBe('');
+  });
 });

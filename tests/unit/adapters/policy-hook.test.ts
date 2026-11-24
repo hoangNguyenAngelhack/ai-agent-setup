@@ -1,5 +1,7 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { actionsFromHookInput, hookResponse } from '../../../src/adapters/hook-runtime/policy-check';
+import { actionsFromHookInput, hookResponse, patchPaths } from '../../../src/adapters/hook-runtime/policy-check';
 import type { PolicyDecision } from '../../../src/core/policy';
 
 const decision = (effect: PolicyDecision['effect']): PolicyDecision => ({
@@ -80,4 +82,17 @@ describe('hookResponse', () => {
     expect(response.stderr).toContain('requires explicit human approval');
     expect(response.stderr).toContain('safety.rule');
   });
+
+  it('should turn each file of a Codex patch into its own write, relative to the project', () => {
+    const patch = '*** Begin Patch\n*** Update File: src/a.ts\n*** Add File: .ai-agent-setup/x.json\n*** End Patch';
+
+    expect(patchPaths(patch)).toEqual(['src/a.ts', '.ai-agent-setup/x.json']);
+    expect(actionsFromHookInput({ tool_name: 'apply_patch', tool_input: { command: patch } }).map((action) => (action.type === 'write' ? action.path : ''))).toEqual(['src/a.ts', '.ai-agent-setup/x.json']);
+  });
+
+  it('should make absolute paths project-relative using the hook cwd', () => {
+    const cwd = join(tmpdir(), 'project');
+    expect(actionsFromHookInput({ cwd, tool_name: 'Write', tool_input: { file_path: join(cwd, 'src', 'a.ts'), content: 'A' } })).toEqual([{ type: 'write', path: 'src/a.ts', content: 'A' }]);
+  });
 });
+

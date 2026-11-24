@@ -224,11 +224,22 @@ NOT_VERIFIED; fixed in `900473c`. Updated 2026-11-24.
 Open risks from the independent review of 2026-11-24 (not fixed: they change the trust model or the
 event semantics and need a decision):
 
-- **Local artifacts are not tamper-proof.** An agent with file-write access can append an
-  `orchestrator` event to `events.jsonl`, edit an approved plan together with its unkeyed sha256
-  digest, or set a no-op command in `.ai-agent-setup/gates.json`. The `project.run-approval` rule
-  only guards the CLI. Options: an HMAC with a key outside the project, or a policy that denies
-  agent writes to `.ai-agent-setup/**`.
+- **Local artifacts are guarded, not tamper-proof.** Decision 2026-11-24 (Product Owner): control
+  writes through the hosts' permissions rather than an HMAC, whose key an agent under the same account
+  could read. Implemented on branch `feature/v2.2-runtime-protection`:
+  - `.ai-agent-setup/**` is runtime state written by the toolkit only. Mandatory rules in
+    `policy.safety` (no layer can loosen them): `safety.runtime-state-write` denies file-tool writes
+    (Claude Code `Write`/`Edit`, Codex `apply_patch`, per file in the patch);
+    `safety.runtime-state-shell-write` denies shell writes (redirects, `tee`, `sed -i`, `mv`, `cp`,
+    `rm`, PowerShell `Set-Content`, …); `safety.runtime-state-shell-access` asks before any other
+    shell command that names the folder. The toolkit CLI (`run event`, `gates run`) is not affected.
+  - An approved plan cannot change: a scope change is a new revision that needs approval again.
+  - A gate never PASSes on a command or package script that checks nothing (`echo`, `true`,
+    `exit 0`, an empty script): NOT_VERIFIED.
+  - **Limit:** this guards against mistakes and ordinary agent behaviour. It is not a security
+    boundary: a program the agent runs under the same OS account (for example `node script.js`) can
+    still write the files, and the hook only sees command text. It must not be described as
+    protection against a malicious agent.
 - **Early step events are dropped.** When a host reports work on a step whose dependency is still
   NOT_VERIFIED, the events (including APPROVAL_REQUIRED) become anomalies and are not replayed later.
   The step can still be verified with `run verify`, and plan-level approvals are still enforced, but

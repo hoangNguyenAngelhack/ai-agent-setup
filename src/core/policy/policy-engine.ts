@@ -1,4 +1,5 @@
 import type { PolicyDocument, PolicyEffect, PolicyLayer, PolicyRule } from '../../registry';
+import { matchesGlob } from '../../shared/glob';
 import { commandSegments, matchesTokenGlob } from './command-matcher';
 
 export type PolicyAction =
@@ -36,6 +37,20 @@ function compile(patterns: string[] | undefined, ignoreCase: boolean | undefined
 
 function intentMatches(ruleIntent: string, actionIntent: string): boolean {
   return actionIntent === ruleIntent || actionIntent.startsWith(`${ruleIntent}:`);
+}
+
+/** Project-relative, forward slashes, no leading `./`. */
+function normalisePath(path: string): string {
+  return path.split('\\').join('/').replace(/^(\.\/)+/, '');
+}
+
+/** Every write criterion the rule has must match; a rule without one does not match writes. */
+function writeMatches(rule: PolicyRule, contentRegex: RegExp[], action: { path: string; content: string }): boolean {
+  const { paths } = rule.match;
+  if (!paths && contentRegex.length === 0) return false;
+  const pathOk = !paths || paths.some((glob) => matchesGlob(normalisePath(action.path), glob));
+  const contentOk = contentRegex.length === 0 || contentRegex.some((regex) => regex.test(action.content));
+  return pathOk && contentOk;
 }
 
 interface CompiledRule {
@@ -100,7 +115,7 @@ export class PolicyEngine {
         return byGlob || commandRegex.some((regex) => regex.test(action.command));
       }
       case 'write':
-        return contentRegex.some((regex) => regex.test(action.content));
+        return writeMatches(rule, contentRegex, action);
       case 'intent':
         return (rule.match.intents ?? []).some((intent) => intentMatches(intent, action.intent));
     }

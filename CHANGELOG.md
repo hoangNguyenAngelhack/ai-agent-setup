@@ -47,6 +47,10 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 - Development checks: `npm run lint` (ESLint 9 + typescript-eslint, type-aware, zero warnings) and
   `npm run test:coverage` (V8, 80% minimum for statements, branches, functions and lines), both in
   CI. `gate.coverage-80` / `-95` 1.1.0 now check all four metrics, not only lines.
+- Runtime state protection: mandatory policy rules deny agent writes to `.ai-agent-setup/**` (file
+  tools, Codex patches and shell writes) and ask before other shell access; policies can now match
+  written paths (`match.paths`). A gate never passes on a command that checks nothing. A guard, not
+  a security boundary against code the agent runs under the same account.
 - `run-result` JSON Schema: `run status` validates the final report and never reports an invalid
   result as SUCCEEDED. SUCCEEDED needs both the outcome (gates) and execution evidence (host step
   reports); gates passing without execution reports give OUTCOME_VERIFIED.

@@ -58,6 +58,29 @@ rules:
       ignoreCase: true
       contentRegex:
         - "(password|passwd|secret|api[_-]?key|access[_-]?token)\\s*[:=]\\s*[\"'][^\"'\\s]{8,}[\"']"
+  # Runtime state (ADR-009): approved plans, event logs, gate configuration and results, install
+  # manifest. Only the toolkit writes there. A guard, not a security boundary: code that the agent runs
+  # under the same OS account can still write files (docs/v2/08 §9.2).
+  - id: safety.runtime-state-write
+    description: Run artifacts, gate configuration and install state under .ai-agent-setup are written by the toolkit only.
+    effect: deny
+    match:
+      paths:
+        - ".ai-agent-setup/**"
+  - id: safety.runtime-state-shell-write
+    description: Shell commands must not write, move or delete files under .ai-agent-setup; use the toolkit CLI.
+    effect: deny
+    match:
+      ignoreCase: true
+      commandRegex:
+        - ">>?\\s*[\"']?[^\\s|;&]*\\.ai-agent-setup[\\\\/]"
+        - "\\b(tee|mv|cp|rm|rmdir|touch|truncate|ln|chmod|rsync|install|dd|sed\\s+-i|set-content|add-content|out-file|new-item|remove-item|move-item|copy-item)\\b[^|;&]*\\.ai-agent-setup[\\\\/]"
+  - id: safety.runtime-state-shell-access
+    description: Other shell commands that touch .ai-agent-setup need explicit approval; read plans with the file tools.
+    effect: ask
+    match:
+      commandRegex:
+        - "\\.ai-agent-setup[\\\\/]"
 invariants:
   - id: safety.no-silent-overwrite
     description: Installer writes to user-modified or unmanaged files require a diff and recorded consent.

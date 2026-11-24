@@ -172,6 +172,11 @@ export interface PolicyMatch {
   intents?: string[];
   /** JavaScript regular expressions tested against content being written. */
   contentRegex?: string[];
+  /**
+   * Globs for project-relative paths being written (`**`, `*`, `?`, `{a,b}`). For a write, every
+   * write criterion present (`paths`, `contentRegex`) must match.
+   */
+  paths?: string[];
 }
 
 export interface PolicyRule {

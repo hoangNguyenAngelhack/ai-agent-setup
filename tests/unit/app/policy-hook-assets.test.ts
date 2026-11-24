@@ -5,7 +5,7 @@ import { compiledDir, loadPolicyHookAssets } from '../../../src/app/policy-hook-
 import { writeTree } from '../../helpers/fs-tree';
 import { REPO_ROOT } from '../../helpers/v1-cli';
 
-const RUNTIME = ['adapters/hook-runtime/policy-check', 'core/policy/index', 'core/policy/command-matcher', 'core/policy/policy-engine'];
+const RUNTIME = ['adapters/hook-runtime/policy-check', 'core/policy/index', 'core/policy/command-matcher', 'core/policy/policy-engine', 'shared/glob'];
 
 /** A fake package: src/ with the runtime sources, dist/ with or without their build. */
 function fakePackage(options: { built: boolean }): string {
@@ -44,6 +44,6 @@ describe('compiledDir', () => {
   });
 
   it('should build the hook files from the repository build', () => {
-    expect(Object.keys(loadPolicyHookAssets().files).sort()).toEqual(['policy-check.cjs', 'policy/command-matcher.cjs', 'policy/index.cjs', 'policy/policy-engine.cjs']);
+    expect(Object.keys(loadPolicyHookAssets().files).sort()).toEqual(['policy-check.cjs', 'policy/command-matcher.cjs', 'policy/glob.cjs', 'policy/index.cjs', 'policy/policy-engine.cjs']);
   });
 });

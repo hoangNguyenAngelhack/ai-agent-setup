@@ -45,7 +45,7 @@
   },
   {
     "path": ".claude/CLAUDE.md",
-    "sha256": "cf6dcdf3af1ed704f5cecfcaa0a5b08b9bf29ead3c3524d627a58af79b9cd5f4"
+    "sha256": "e8a3ab9ce62f67a1c0ed955ab2b959c45f0f0701942df01bb0e48de2ad18b4ae"
   },
   {
     "path": ".claude/commands/build.md",
@@ -85,15 +85,19 @@
   },
   {
     "path": ".claude/hooks/ai-agent-setup/policies.json",
-    "sha256": "74c43316967651a6a8ac68904ed8b31c0a22ee692bd9c4e1b3fd32023b17203d"
+    "sha256": "595805942dfd09546060d766858168f7d8157621856673c61f8a1fccf769f0ee"
   },
   {
     "path": ".claude/hooks/ai-agent-setup/policy-check.cjs",
-    "sha256": "00eea16a8966c2796a5aa1c8a5e5552ab8e876202462fa76f5186484840b3294"
+    "sha256": "7473cc052bdc2eebbfaff5f50fb0ff2b66aab2dde02384101aa93a7f5bd817a7"
   },
   {
     "path": ".claude/hooks/ai-agent-setup/policy/command-matcher.cjs",
     "sha256": "906b894869eeb78fa2babcd19c0ad27ff6dda1701d908b7950f08e14965686f9"
+  },
+  {
+    "path": ".claude/hooks/ai-agent-setup/policy/glob.cjs",
+    "sha256": "1f32b32ec2190f339f1b4a1c356951bf785f79f2f5535dd5594bd8f48d0361cd"
   },
   {
     "path": ".claude/hooks/ai-agent-setup/policy/index.cjs",
@@ -101,7 +105,7 @@
   },
   {
     "path": ".claude/hooks/ai-agent-setup/policy/policy-engine.cjs",
-    "sha256": "c52616daf0d1060318e1c87b10ae565e4acdce1f5bb588ad0efb216312efaa84"
+    "sha256": "a155b154fd6eaa0c85c91d5b2897a18c69d5618ccf091db14c633f0b6ec395b0"
   },
   {
     "path": ".claude/rules/api-conventions.md",
