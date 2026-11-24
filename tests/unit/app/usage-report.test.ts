@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { sha256File } from '../../../src/app/integrity';
 import { buildExecutionReport, renderExecutionReport } from '../../../src/app/reports';
+import { RUNS_DIR } from '../../../src/app/run-files';
 import { approveRun, createRun, recordEvent } from '../../../src/app/runs';
 import { usageByHost, type ReportDelivery } from '../../../src/app/usage-report';
 import { UsageMeter } from '../../../src/core/evaluation';
@@ -10,7 +11,8 @@ import { PLAN_ID, projectWithPlan } from '../../helpers/run-project';
 
 /** One delivery's files, written the way runHost writes them; `sign` records their checksums. */
 function delivery(root: string, runId: string, files: { transcript: string; usage?: unknown; sign?: boolean }, host = 'codex', stamp = 1): string {
-  const dir = join('.ai-agent-setup', 'runs', runId, 'evidence');
+  // Project-relative paths use '/', as runHost writes them; join() would use backslashes on Windows.
+  const dir = `${RUNS_DIR}/${runId}/evidence`;
   mkdirSync(join(root, dir), { recursive: true });
   const transcript = `${dir}/host-${host}-${stamp}.jsonl`;
   const usage = `${dir}/usage-${host}-${stamp}.json`;
