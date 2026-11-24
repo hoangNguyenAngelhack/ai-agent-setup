@@ -141,13 +141,14 @@
     },
     "delivery": {
       "type": "object",
-      "required": ["host", "status", "tokens", "costUsd"],
+      "required": ["host", "status", "tokens", "costUsd", "toolCalls"],
       "additionalProperties": false,
       "properties": {
         "host": { "type": "string", "minLength": 1 },
         "status": { "$ref": "#/$defs/usageStatus" },
         "tokens": { "oneOf": [{ "$ref": "#/$defs/tokens" }, { "type": "null" }] },
-        "costUsd": { "oneOf": [{ "type": "number", "minimum": 0 }, { "type": "null" }] }
+        "costUsd": { "oneOf": [{ "type": "number", "minimum": 0 }, { "type": "null" }] },
+        "toolCalls": { "oneOf": [{ "$ref": "#/$defs/count" }, { "type": "null" }] }
       }
     },
     "hostUsage": {

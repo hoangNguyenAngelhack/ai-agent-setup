@@ -42,7 +42,7 @@ describe('token usage in the execution report (W2.2-04)', () => {
     const id = run(root);
     delivery(root, id, { transcript: '{"type":"turn.completed"}\n', usage: measured(10), sign: true });
     const report = buildExecutionReport(root);
-    expect(report.runs.items[0]!.deliveries).toEqual([{ host: 'codex', status: 'MEASURED', tokens: { input: 10, output: 2, cacheRead: 0, cacheWrite: 0 }, costUsd: null }]);
+    expect(report.runs.items[0]!.deliveries).toEqual([{ host: 'codex', status: 'MEASURED', tokens: { input: 10, output: 2, cacheRead: 0, cacheWrite: 0 }, costUsd: null, toolCalls: 0 }]);
     // Measured but no accepted outcome yet: no per-outcome figure.
     expect(report.usage.hosts[0]).toMatchObject({ complete: true, acceptedOutcomes: 0, perAcceptedOutcome: null, cost: null, reason: 'no accepted outcome (SUCCEEDED run) in the period' });
   });
@@ -88,7 +88,7 @@ describe('token usage in the execution report (W2.2-04)', () => {
 
   it('should spread the tokens of every delivery, accepted or not, over the accepted outcomes', () => {
     const tokens = (input: number) => ({ input, output: 1, cacheRead: 0, cacheWrite: 0 });
-    const measuredDelivery = (input: number, costUsd: number | null): ReportDelivery => ({ host: 'claude-code', status: 'MEASURED', tokens: tokens(input), costUsd });
+    const measuredDelivery = (input: number, costUsd: number | null): ReportDelivery => ({ host: 'claude-code', status: 'MEASURED', tokens: tokens(input), costUsd, toolCalls: null });
     const [summary] = usageByHost([
       { status: 'SUCCEEDED', deliveries: [measuredDelivery(10, 0.1)] },
       { status: 'FAILED', deliveries: [measuredDelivery(20, 0.2)] },

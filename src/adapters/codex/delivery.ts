@@ -11,6 +11,9 @@ const USAGE_FIELDS = { input: 'input_tokens', output: 'output_tokens', cacheRead
  * `turn.completed`, `turn.failed`, `error`, item events). Event names follow the published docs and
  * are NOT yet verified against an installed CLI (W2.0-15).
  */
+/** Item types that are tool calls (published docs; NOT verified on an installed CLI). Counted once per item id. */
+const TOOL_ITEMS = new Set(['command_execution', 'file_change', 'mcp_tool_call', 'web_search']);
+
 export const codexDelivery: HostDelivery = {
   host: 'codex',
   executable: 'codex',
@@ -39,6 +42,11 @@ export const codexDelivery: HostDelivery = {
   },
   parseUsage(line) {
     const event = jsonLine(line);
+    if (event?.type === 'item.started' || event?.type === 'item.completed') {
+      const item = event.item as { id?: unknown; type?: unknown } | undefined;
+      const isToolCall = typeof item?.type === 'string' && TOOL_ITEMS.has(item.type) && typeof item.id === 'string';
+      return isToolCall ? { toolCalls: [item.id as string] } : null;
+    }
     if (event?.type !== 'turn.completed') return null;
     const tokens = usageCounts(event.usage, USAGE_FIELDS);
     return tokens ? { tokens } : null;

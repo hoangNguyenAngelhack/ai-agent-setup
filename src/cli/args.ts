@@ -64,6 +64,7 @@ const SWITCHES: Record<string, string> = {
   '--json': 'json',
   '--changed': 'changed',
   '--decline': 'decline',
+  '--kpi': 'kpi',
 };
 
 export interface ParsedArgs {

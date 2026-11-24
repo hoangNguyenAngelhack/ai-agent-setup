@@ -12,6 +12,18 @@ const USAGE_FIELDS = { input: 'input_tokens', output: 'output_tokens', cacheRead
  * 2.1.33x session transcripts: 411 lines, 181 ids, same usage on each repeat). The `result` message
  * adds `total_cost_usd` and a session `usage` (published docs; not verified on an installed CLI).
  */
+/**
+ * Tool calls: `tool_use` content blocks, each with a unique id (verified 2026-11-25 on a local
+ * transcript: one block per line, 1003 tool_use ids, none repeated).
+ */
+function toolUseIds(content: unknown): string[] {
+  if (!Array.isArray(content)) return [];
+  return content.flatMap((block: unknown) => {
+    const item = block as { type?: unknown; id?: unknown } | null;
+    return item?.type === 'tool_use' && typeof item.id === 'string' ? [item.id] : [];
+  });
+}
+
 export const claudeCodeDelivery: HostDelivery = {
   host: 'claude-code',
   executable: 'claude',
@@ -39,9 +51,11 @@ export const claudeCodeDelivery: HostDelivery = {
     if (message?.type === 'assistant') {
       const body = message.message as Record<string, unknown> | undefined;
       const tokens = usageCounts(body?.usage, USAGE_FIELDS);
-      if (!tokens) return null;
+      const toolCalls = toolUseIds(body?.content);
+      if (!tokens && !toolCalls.length) return null;
       return {
-        tokens,
+        ...(tokens ? { tokens } : {}),
+        ...(toolCalls.length ? { toolCalls } : {}),
         ...(typeof body?.id === 'string' ? { messageId: body.id } : {}),
         ...(typeof body?.model === 'string' ? { model: body.model } : {}),
       };

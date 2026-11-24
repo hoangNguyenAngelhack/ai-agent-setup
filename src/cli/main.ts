@@ -42,6 +42,7 @@ Usage:
   ${BIN} gates list|run|history [dir]    Quality gates: support status, run with evidence, history (V2.2)
   ${BIN} isolation check                 Runtime isolation (W2.2-09): what this platform can enforce
   ${BIN} report [dir] [--since d] [--json]  Execution report across runs and gate history (W2.2-05)
+  ${BIN} report [dir] --kpi [--since d] [--json]  Every KPI of docs/v2/09 §6, measured or NOT_VERIFIED (W2.2-07)
   ${BIN} run <action> …                  Execution runs (V2.1 preview): create <plan-id>, approve, deliver,
                                          event, verify, approve-step, cancel, status <run-id>
 

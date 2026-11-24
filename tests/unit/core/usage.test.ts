@@ -76,3 +76,19 @@ describe('host usage parsing (W2.2-04)', () => {
     expect(codexDelivery.parseUsage(line({ type: 'turn.completed', usage: [1, 2] }))).toBeNull();
   });
 });
+
+describe('tool calls (W2.2-07)', () => {
+  it('should read Claude Code tool_use blocks and Codex tool items, each id once', () => {
+    const claude = line({ type: 'assistant', message: { id: 'm1', content: [{ type: 'tool_use', id: 't1' }, { type: 'text', text: 'x' }, { type: 'tool_use' }] } });
+    expect(claudeCodeDelivery.parseUsage(claude)).toEqual({ toolCalls: ['t1'], messageId: 'm1' });
+    expect(claudeCodeDelivery.parseUsage(line({ type: 'assistant', message: { content: 'text' } }))).toBeNull();
+    expect(codexDelivery.parseUsage(line({ type: 'item.started', item: { id: 'i1', type: 'command_execution' } }))).toEqual({ toolCalls: ['i1'] });
+    expect(codexDelivery.parseUsage(line({ type: 'item.completed', item: { id: 'i2', type: 'agent_message' } }))).toBeNull();
+    expect(codexDelivery.parseUsage(line({ type: 'item.completed', item: { type: 'web_search' } }))).toBeNull();
+
+    const meter = new UsageMeter('codex');
+    for (const sample of [{ toolCalls: ['i1'] }, { toolCalls: ['i1'] }, { toolCalls: ['i2'] }]) meter.add(sample);
+    // Tool calls are not usage records: a stream with only tool calls still reports no usage.
+    expect(meter.result()).toMatchObject({ toolCalls: 2, samples: 0 });
+  });
+});
