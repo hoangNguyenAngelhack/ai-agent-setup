@@ -3,16 +3,19 @@ import { delimiter, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { claudeCodeDelivery } from '../../../src/adapters/claude-code';
 import { codexDelivery } from '../../../src/adapters/codex';
-import { approveRun, createRun, deliverRun, finishRun, loadRun, recordEvent, verifyStep } from '../../../src/app/runs';
+import { approveRun, checkedRunResult, createRun, deliverRun, finishRun, loadRun, recordEvent, verifyStep } from '../../../src/app/runs';
+import type { RunResult } from '../../../src/core/execution';
 import { TaskClassifier } from '../../../src/core/planning';
 import { routeTask } from '../../../src/core/routing';
-import { KnowledgeIndex, Registry, validateCatalog, type ProfileEntry } from '../../../src/registry';
+import { KnowledgeIndex, Registry, SchemaValidator, validateCatalog, type ProfileEntry } from '../../../src/registry';
 import { writeTree } from '../../helpers/fs-tree';
 import { REPO_ROOT } from '../../helpers/v1-cli';
 
 const report = validateCatalog(join(REPO_ROOT, 'catalog'));
 const registry = new Registry(report.entries);
 const PLAN_ID = 'plan-20261124T100000Z-abcdef';
+const validator = new SchemaValidator(join(REPO_ROOT, 'catalog', 'schemas'));
+const RUN_RESULT = 'urn:ai-agent-setup:contracts:v1:run-result';
 const SECRET = `ghp_${'Qw8'.repeat(12)}`; // synthetic
 
 function projectWithPlan(): string {
@@ -64,6 +67,63 @@ describe('run artifacts (ADR-009)', () => {
     expect(readFileSync(join(root, '.ai-agent-setup', 'runs', runId, 'events.jsonl'), 'utf8')).not.toContain(SECRET);
   });
 
+  const fixture = (name: string) => JSON.parse(readFileSync(join(REPO_ROOT, 'tests', 'contract', 'fixtures', 'run-result', `${name}.json`), 'utf8')) as RunResult;
+  const check = (result: RunResult) => checkedRunResult(result, (value) => validator.validate(RUN_RESULT, value));
+
+  it('should turn a SUCCEEDED result that breaks the contract into NOT_VERIFIED', () => {
+    // Consistent totals, but a NOT_VERIFIED step under a SUCCEEDED run.
+    const succeeded = fixture('valid-succeeded');
+    const broken: RunResult = {
+      ...succeeded,
+      steps: [succeeded.steps[0]!, { ...succeeded.steps[1]!, state: 'NOT_VERIFIED', final: 'NOT_VERIFIED', reason: 'no gates were run for this step', gates: [] }],
+      counts: { ...succeeded.counts, SUCCEEDED: 1, NOT_VERIFIED: 1 },
+      verification: { stepsTotal: 2, stepsSucceeded: 1, stepsWithExecutionEvidence: 2, gates: { PASS: 2, FAIL: 0, NOT_VERIFIED: 0 } },
+    };
+    const result = check(broken);
+
+    expect(result.status).toBe('NOT_VERIFIED');
+    expect(result.reason).toMatch(/^result failed contract validation: /);
+  });
+
+  it('should refuse a result whose totals disagree with its steps', () => {
+    const tampered = { ...fixture('valid-failed'), counts: { ...fixture('valid-failed').counts, FAILED: 0, SUCCEEDED: 1 } };
+
+    expect(() => check(tampered)).toThrow(/\/counts\/SUCCEEDED: 1 but 0 step\(s\) are SUCCEEDED/);
+  });
+
+  it('should refuse a result that stays invalid after the downgrade', () => {
+    expect(() => check(fixture('invalid-bad-digest'))).toThrow(/is invalid: \/planDigest/);
+  });
+
+  it('should refuse an approval without an approver', () => {
+    const root = projectWithPlan();
+
+    expect(() => approveRun(root, createRun(root, PLAN_ID).runId, ' ')).toThrow(/needs the approver/);
+  });
+
+  it('should still produce a result for a failure logged without a reason', () => {
+    const root = projectWithPlan();
+    const { runId, steps } = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
+    recordEvent(root, runId, { type: 'STEP_FAILED', source: 'host', stepId: steps[0]!.id, reason: '', evidence: [] });
+    const result = finishRun(root, runId);
+
+    expect(result).toMatchObject({ status: 'FAILED', steps: [{ final: 'FAILED', reason: 'FAILED (no reason recorded)' }, { final: 'BLOCKED' }] });
+  });
+
+  it('should record lines that are not events and still report the run', () => {
+    const root = projectWithPlan();
+    const { runId } = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
+    writeFileSync(join(root, '.ai-agent-setup', 'runs', runId, 'events.jsonl'), '{"foo":1}\nnull\n{"eventId":"e9","type":"STEP_EXPLODED"}\n');
+    const result = finishRun(root, runId);
+
+    expect(result.status).toBe('NOT_VERIFIED');
+    expect(result.anomalies).toEqual([
+      { eventId: 'unknown', type: 'UNKNOWN', reason: 'not an execution event' },
+      { eventId: 'unknown', type: 'UNKNOWN', reason: 'not an execution event' },
+      { eventId: 'e9', type: 'STEP_EXPLODED', reason: 'not an execution event' },
+    ]);
+  });
+
   it('should skip an unreadable event line and report it', () => {
     const root = projectWithPlan();
     const { runId, steps } = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
@@ -97,6 +157,7 @@ describe('run artifacts (ADR-009)', () => {
     const result = finishRun(root, runId);
 
     expect(result.status).toBe('SUCCEEDED');
+    expect(result.reason).not.toContain('contract validation');
     expect(existsSync(join(root, '.ai-agent-setup', 'runs', runId, 'result.json'))).toBe(true);
     expect(existsSync(join(root, '.ai-agent-setup', 'runs', runId, 'gates', 'g1', 'gate.build.json'))).toBe(true);
     expect(existsSync(join(root, '.ai-agent-setup', 'runs', runId, 'gates', 'g2', 'gate.build.json'))).toBe(true);
@@ -138,7 +199,7 @@ describe('plan delivery (W2.1-10)', () => {
     process.env.PATH = writeTree({});
 
     const outcome = await deliverRun(root, plan.runId, 'codex');
-    expect(outcome).toMatchObject({ status: 'NOT_VERIFIED', reason: expect.stringMatching(/codex is not on PATH/) });
+    expect(outcome).toMatchObject({ status: 'NOT_VERIFIED', reason: expect.stringMatching(/codex is not on PATH/) as unknown });
   });
 
   it.skipIf(process.platform === 'win32')('should record run-level signals from a synthetic host stream without succeeding steps', async () => {

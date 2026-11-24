@@ -66,14 +66,16 @@ export function createExecutionPlan(plan: Plan, input: ExecutionPlanInput): Exec
 
 export function approveExecutionPlan(plan: ExecutionPlan, by: string, at: string): ExecutionPlan {
   if (plan.approval.status === 'approved') throw new Error(`Revision ${plan.revision} of ${plan.runId} is already approved`);
+  if (!by.trim() || !at) throw new Error('An approval needs the approver and the time');
   return { ...plan, approval: { status: 'approved', by, at, digest: planDigest(plan) } };
 }
 
 /** An approved plan is immutable: its content must still match the digest recorded at approval. */
 export function assertApproved(plan: ExecutionPlan): string {
-  if (plan.approval.status !== 'approved' || !plan.approval.digest) throw new Error(`Run ${plan.runId} revision ${plan.revision} is not approved`);
+  const { status, digest: approvedDigest, by, at } = plan.approval;
+  if (status !== 'approved' || !approvedDigest || !by || !at) throw new Error(`Run ${plan.runId} revision ${plan.revision} is not approved`);
   const digest = planDigest(plan);
-  if (digest !== plan.approval.digest) throw new Error(`Run ${plan.runId} revision ${plan.revision} changed after approval; create a new revision`);
+  if (digest !== approvedDigest) throw new Error(`Run ${plan.runId} revision ${plan.revision} changed after approval; create a new revision`);
   return digest;
 }
 

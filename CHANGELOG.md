@@ -44,6 +44,12 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   specialist review with a recorded reason; words in unrelated contexts (design tokens, token usage,
   fixtures, UI copy, docs) no longer trigger one. Policy rule `project.run-approval` makes an agent
   ask before approving or cancelling a run.
+- Development checks: `npm run lint` (ESLint 9 + typescript-eslint, type-aware, zero warnings) and
+  `npm run test:coverage` (V8, 80% minimum for statements, branches, functions and lines), both in
+  CI. `gate.coverage-80` / `-95` 1.1.0 now check all four metrics, not only lines.
+- `run-result` JSON Schema: `run status` validates the final report and never reports an invalid
+  result as SUCCEEDED. SUCCEEDED needs both the outcome (gates) and execution evidence (host step
+  reports); gates passing without execution reports give OUTCOME_VERIFIED.
 - Test suite (unit, contract, golden, installer, end-to-end, V1 characterization) and CI on Linux,
   macOS and Windows with Node 20, 22 and 24.
 

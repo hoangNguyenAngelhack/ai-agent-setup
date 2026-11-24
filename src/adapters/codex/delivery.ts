@@ -26,7 +26,8 @@ export const codexDelivery: HostDelivery = {
     if (event.type === 'turn.completed') return { kind: 'completed' };
     if (event.type === 'turn.failed' || event.type === 'error') {
       const error = event.error as { message?: unknown } | undefined;
-      return { kind: 'failed', reason: `codex ${String(event.type)}: ${String(error?.message ?? event.message ?? 'unknown error')}` };
+      const message = [error?.message, event.message].find((item): item is string => typeof item === 'string') ?? 'unknown error';
+      return { kind: 'failed', reason: `codex ${event.type}: ${message}` };
     }
     return null;
   },

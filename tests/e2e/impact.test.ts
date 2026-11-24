@@ -3,6 +3,7 @@ import { cpSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import type { ImpactReport, Plan } from '../../src/core/contracts';
 import { REPO_ROOT } from '../helpers/v1-cli';
 
 /** `impact` and `plan --changed` on a real git repository (W2.1-02). */
@@ -28,7 +29,7 @@ describe('impact', () => {
     const result = cli(root, ['impact', '--json']);
 
     expect(result.status, result.stderr).toBe(0);
-    const impact = JSON.parse(result.stdout);
+    const impact = JSON.parse(result.stdout) as ImpactReport;
     expect(impact.files.sort()).toEqual(['prisma/schema.renamed.prisma', 'src/modules/auth/auth.service.spec.ts', 'src/modules/auth/auth.service.ts']);
     expect(impact.risk).toBe('high');
     expect(impact.relatedTests).toEqual(['src/modules/auth/auth.service.spec.ts']);
@@ -52,9 +53,9 @@ describe('impact', () => {
     const root = gitProject();
     writeFileSync(join(root, 'src', 'modules', 'auth', 'auth.controller.ts'), '// changed\n');
 
-    const plan = JSON.parse(cli(root, ['plan', 'Add rate limiting to the login endpoint', '--changed', '--json']).stdout);
+    const plan = JSON.parse(cli(root, ['plan', 'Add rate limiting to the login endpoint', '--changed', '--json']).stdout) as Plan;
 
-    expect(plan.explain.impact.files).toEqual(['src/modules/auth/auth.controller.ts']);
+    expect(plan.explain.impact?.files).toEqual(['src/modules/auth/auth.controller.ts']);
     expect(plan.classification.risk).toBe('high');
     expect(plan.rules).toContain('rule.typescript-patterns');
   });

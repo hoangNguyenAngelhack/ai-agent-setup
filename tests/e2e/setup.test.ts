@@ -89,8 +89,8 @@ describe.skipIf(process.platform === 'win32')('setup into a V1-generated project
     expect(changedV1Files.sort()).toEqual(['.claude/CLAUDE.md', '.claude/settings.json']);
     expect(readFileSync(join(projectDir, '.claude/CLAUDE.md'), 'utf8')).toContain('# Claude AI Agent Configuration');
     expect(Object.keys(after).some((path) => path === '.claude/agents/backend.md.ai-agent-setup.new')).toBe(true);
-    const settings = JSON.parse(readFileSync(join(projectDir, '.claude/settings.json'), 'utf8'));
-    expect(settings.hooks.PreToolUse.some((group: { hooks: Array<{ command: string }> }) => group.hooks[0]!.command.includes('policy-check.cjs'))).toBe(true);
+    const settings = JSON.parse(readFileSync(join(projectDir, '.claude/settings.json'), 'utf8')) as { hooks: { PreToolUse: Array<{ hooks: Array<{ command: string }> }> } };
+    expect(settings.hooks.PreToolUse.some((group) => group.hooks[0]!.command.includes('policy-check.cjs'))).toBe(true);
     expect(outcome.diagnostics.map((diagnostic) => diagnostic.code)).toContain('W_V1_PERMISSIONS');
   });
 });

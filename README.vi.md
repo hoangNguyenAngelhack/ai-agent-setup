@@ -60,7 +60,7 @@ node bin/cli.js rollback ../my-project      # hoàn tác lần cài gần nhất
 | `explain <plan-id>` | Xem lại kế hoạch đã lưu và phần giải thích |
 | `impact [file...]` *(bản xem trước V2.1)* | File thay đổi chạm vào đâu: module, vùng code, rủi ro, test liên quan, chủ sở hữu theo CODEOWNERS; không truyền file thì đọc thay đổi chưa commit trong git, `--since <ref>` để so với một ref. `plan --files`, `--changed`, `--since` dùng cùng phân tích này |
 | `gates list\|run\|history [thư mục]` *(bản xem trước V2.2)* | Quality gate có bằng chứng: `list` liệt kê mọi gate, mức hỗ trợ và lệnh sẽ chạy; `run` chạy các gate bắt buộc (profile + `.ai-agent-setup/gates.json`), ghi bằng chứng đã che dữ liệu nhạy cảm và có checksum; mã thoát 0 PASS, 1 FAIL, 2 NOT_VERIFIED. `--gate`, `--skip`, `--run`, `--profile`, `--json` |
-| `run <hành động>` *(bản xem trước V2.1)* | Lượt thực thi (ADR-009): `create <plan-id>`, `approve`, `deliver --host claude-code\|codex [--dry-run]`, `event`, `verify <run-id> <bước>`, `approve-step`, `cancel`, `status`. Lượt chỉ thành công khi mọi bước qua gate |
+| `run <hành động>` *(bản xem trước V2.1)* | Lượt thực thi (ADR-009): `create <plan-id>`, `approve`, `deliver --host claude-code\|codex [--dry-run]`, `event`, `verify <run-id> <bước>`, `approve-step`, `cancel`, `status`. Lượt chỉ SUCCEEDED khi mọi bước được báo đã thực thi và qua gate; qua gate mà không có báo cáo thực thi thì là OUTCOME_VERIFIED (mã thoát 2) |
 
 Tuỳ chọn của `create` giữ nguyên V1: `-t` (`backend`, `frontend`, `fullstack`, `mobile`), `-f`
 (backend: `express`, `nestjs` · frontend: `nextjs`, `vite` · mobile: `expo`, `cli`), `-u` (chỉ
@@ -143,7 +143,9 @@ nằm trong lộ trình.
 ```bash
 npm ci
 npm run typecheck
+npm run lint              # ESLint với luật có kiểm kiểu, không cho phép cảnh báo
 npm test                  # unit, contract, golden, installer và end-to-end
+npm run test:coverage     # như trên kèm coverage V8; lỗi nếu chỉ số nào dưới 80%
 npm run catalog:validate  # in kèm số byte context luôn nạp đo được theo profile
 npm run docs:summary      # cập nhật bảng catalog trong cả hai README
 ```

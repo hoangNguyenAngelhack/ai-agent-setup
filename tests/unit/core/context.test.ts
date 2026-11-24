@@ -6,7 +6,7 @@ import { KnowledgeIndex, Registry, validateCatalog, type ProfileEntry } from '..
 import { fixtures, minimalValidEntries, writeCatalog } from '../../helpers/catalog-fixture';
 import { REPO_ROOT } from '../../helpers/v1-cli';
 
-const rule = fixtures.rule;
+const rule = fixtures.rule.bind(fixtures);
 const profile = (overrides: Record<string, unknown> = {}) =>
   fixtures.profile('profile.test', { contextBudget: { codex: 100 }, ...overrides });
 

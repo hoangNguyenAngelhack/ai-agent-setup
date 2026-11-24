@@ -100,6 +100,20 @@ export type ExecutionEvent =
 
 export type ExecutionEventType = ExecutionEvent['type'];
 
+export const EXECUTION_EVENT_TYPES: readonly ExecutionEventType[] = [
+  'RUN_STARTED',
+  'STEP_STARTED',
+  'STEP_PROGRESS',
+  'APPROVAL_REQUIRED',
+  'APPROVAL_RESOLVED',
+  'STEP_COMPLETED',
+  'STEP_FAILED',
+  'STEP_BLOCKED',
+  'RUN_COMPLETED',
+  'RUN_FAILED',
+  'RUN_CANCELLED',
+];
+
 export interface StepRecord {
   id: string;
   state: StepState;
@@ -108,6 +122,8 @@ export interface StepRecord {
   gates: GateOutcome[];
   evidence: string[];
   lastProgress: string | null;
+  /** Accepted step events reported by the host (agent), e.g. `STEP_STARTED`: execution evidence. */
+  reports: string[];
   history: Array<{ eventId: string; from: StepState; to: StepState }>;
 }
 
@@ -124,16 +140,50 @@ export interface ExecutionState {
   anomalies: Array<{ eventId: string; type: string; reason: string }>;
 }
 
-export type RunStatus = 'SUCCEEDED' | 'FAILED' | 'CANCELLED' | 'NOT_VERIFIED';
+/**
+ * SUCCEEDED: every step's outcome passed its gates AND every step has execution evidence.
+ * OUTCOME_VERIFIED: every outcome passed its gates, but at least one step has no execution evidence
+ * (the product state is verified; that the assigned work was executed is not). Not success, not failure.
+ */
+export type RunStatus = 'SUCCEEDED' | 'OUTCOME_VERIFIED' | 'FAILED' | 'CANCELLED' | 'NOT_VERIFIED';
 
+/** A step's place in the final report; `final` is always a terminal state (open steps → NOT_VERIFIED). */
+export interface RunResultStep {
+  id: string;
+  capability: string;
+  agent: string;
+  /** State in the log when the result was produced. */
+  state: StepState;
+  final: Exclude<StepState, 'PENDING' | 'READY' | 'RUNNING' | 'WAITING_FOR_APPROVAL'>;
+  reason: string | null;
+  approval: { required: boolean; approved: boolean };
+  /** Gate results recorded by the orchestrator: the outcome. */
+  gates: GateOutcome[];
+  evidence: string[];
+  /**
+   * Execution evidence: step events the host reported (and the orchestrator accepted). They show the
+   * work was reported as done by this run, not that the report is true; the gates verify the outcome.
+   */
+  execution: { evidenced: boolean; reports: string[] };
+}
+
+/** Contract `urn:ai-agent-setup:contracts:v1:run-result` (catalog/schemas/run-result.schema.json). */
 export interface RunResult {
   schemaVersion: 'run-result/v1';
   runId: string;
+  planId: string;
   planDigest: string;
   revision: number;
+  project: { name: string; commit: string | null };
+  profile: string;
+  generatedAt: string;
+  approval: { by: string; at: string };
   status: RunStatus;
   reason: string;
-  steps: Array<{ id: string; state: StepState; final: StepState; reason: string | null; gates: GateOutcome[]; evidence: string[] }>;
+  /** Run-level state from the event log (what the host and user reported). */
+  run: ExecutionState['run'];
+  steps: RunResultStep[];
   counts: Record<StepState, number>;
+  verification: { stepsTotal: number; stepsSucceeded: number; stepsWithExecutionEvidence: number; gates: Record<GateStatus, number> };
   anomalies: ExecutionState['anomalies'];
 }

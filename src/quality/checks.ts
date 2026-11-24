@@ -89,11 +89,26 @@ export function parseNpmAudit(output: string): AuditCounts | null {
   }
 }
 
-/** Total line coverage from an Istanbul `json-summary` file; null when the shape is unknown. */
-export function parseCoverageSummary(text: string): number | null {
+export const COVERAGE_METRICS = ['statements', 'branches', 'functions', 'lines'] as const;
+export type CoverageMetric = (typeof COVERAGE_METRICS)[number];
+
+/**
+ * Total coverage per metric from an Istanbul `json-summary` file. A metric is `null` (not
+ * applicable) only when the report states `total: 0` (older Istanbul then writes pct "Unknown").
+ * Returns null — never a pass — when a metric is missing or malformed, when pct is "Unknown" without
+ * `total: 0`, or when lines are not applicable (nothing was measured).
+ */
+export function parseCoverageSummary(text: string): Record<CoverageMetric, number | null> | null {
   try {
-    const pct = (JSON.parse(text) as { total?: { lines?: { pct?: unknown } } }).total?.lines?.pct;
-    return typeof pct === 'number' ? pct : null;
+    const total = (JSON.parse(text) as { total?: Partial<Record<CoverageMetric, { pct?: unknown; total?: unknown }>> }).total;
+    const values = COVERAGE_METRICS.map((metric) => {
+      const entry = total?.[metric];
+      if (!entry) return undefined;
+      if (entry.total === 0) return null;
+      return typeof entry.pct === 'number' ? entry.pct : undefined;
+    });
+    if (values.some((value) => value === undefined) || values[COVERAGE_METRICS.indexOf('lines')] === null) return null;
+    return Object.fromEntries(COVERAGE_METRICS.map((metric, index) => [metric, values[index]!])) as Record<CoverageMetric, number | null>;
   } catch {
     return null;
   }

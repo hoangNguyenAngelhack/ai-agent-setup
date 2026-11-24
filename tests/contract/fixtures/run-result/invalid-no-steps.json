@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "run-result/v1",
+  "runId": "run-20261124T100000Z-abcdef",
+  "planId": "plan-20261124T095900Z-123abc",
+  "planDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "revision": 1,
+  "project": {
+    "name": "demo",
+    "commit": "5e88d7733f73f5559dfb73f477f5ea3ccf5b675b"
+  },
+  "profile": "profile.standard",
+  "generatedAt": "2026-11-24T10:30:00.000Z",
+  "approval": {
+    "by": "user",
+    "at": "2026-11-24T10:01:00.000Z"
+  },
+  "status": "SUCCEEDED",
+  "reason": "every step succeeded with verified evidence",
+  "run": "HOST_COMPLETED",
+  "steps": [],
+  "counts": {
+    "PENDING": 0,
+    "READY": 0,
+    "RUNNING": 0,
+    "WAITING_FOR_APPROVAL": 0,
+    "SUCCEEDED": 2,
+    "FAILED": 0,
+    "BLOCKED": 0,
+    "SKIPPED": 0,
+    "CANCELLED": 0,
+    "NOT_VERIFIED": 0
+  },
+  "verification": {
+    "stepsTotal": 2,
+    "stepsSucceeded": 2,
+    "gates": {
+      "PASS": 4,
+      "FAIL": 0,
+      "NOT_VERIFIED": 0
+    },
+    "stepsWithExecutionEvidence": 0
+  },
+  "anomalies": []
+}

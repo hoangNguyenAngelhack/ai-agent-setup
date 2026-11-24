@@ -760,6 +760,9 @@ nothing is required. Records and reports live under `.ai-agent-setup/runs/<run-i
 folder per invocation so earlier evidence is never overwritten, with logs in `evidence/g<n>/`; history
 is `.ai-agent-setup/gates/history.jsonl`. Both top folders carry a `.gitignore` of `*`. A configured
 command may replace a built-in check (secret scan, audit), and the record then says so in its reason.
+The coverage gates (1.1.0) require statements, branches, functions and lines; a metric counts as not
+applicable only when the report states `total: 0` (named in the reason), lines must be measured, and
+anything else missing or `"Unknown"` is NOT_VERIFIED.
 
 | Category | Gate (support) |
 |---|---|
@@ -774,6 +777,36 @@ command may replace a built-in check (secret scan, audit), and the record then s
 | accessibility | `gate.accessibility` (project command) |
 | documentation | `gate.documentation` (project command) |
 | deployment-readiness | `gate.deployment-readiness` (composite: build, unit tests, security scan) |
+
+### 12.4 Run result (implemented)
+
+`run status` reconciles a run and writes `.ai-agent-setup/runs/<run-id>/result.json`, contract
+`urn:ai-agent-setup:contracts:v1:run-result`: run and plan identity (`runId`, `planId`, `planDigest`,
+`revision`), `project`, `profile`, `generatedAt`, the plan `approval` (by, at), `status` and `reason`,
+the run-level state reported by events, one entry per step (`state` as logged, `final` always
+terminal, reason, approval required/approved, orchestrator gate results, evidence paths), counts per
+state, a verification summary (steps succeeded, gate results by status) and the anomalies.
+
+A result has two axes per step: the **outcome** (orchestrator gate results; step state SUCCEEDED
+means its gates passed) and **execution evidence** (`execution.reports`: step events the host
+reported and the orchestrator accepted). Execution evidence shows that execution was reported in this
+run; it does not prove the report true — the gates verify the outcome.
+
+| Run status | Meaning | Exit code |
+|---|---|---|
+| SUCCEEDED | Every step passed its gates (at least one gate, all PASS) **and** has execution evidence | 0 |
+| OUTCOME_VERIFIED | Every step passed its gates, but at least one step has no execution evidence: the product state is verified, the assigned work is not shown to have been executed. Not success, not failure | 2 |
+| FAILED | A step failed, or the host reported the run failed | 1 |
+| CANCELLED | The run was cancelled; never success, whatever the steps reached | 2 |
+| NOT_VERIFIED | Anything else: open steps, missing or unverified gates, blocked or skipped steps | 2 |
+
+Reports rejected as anomalies (for example a start reported after the step was already verified)
+are not execution evidence.
+
+Gate statuses stay PASS, FAIL and NOT_VERIFIED; run statuses use SUCCEEDED and FAILED so that a run
+is never confused with a single gate. A result that fails the schema or the totals check is not
+reported as it stands: SUCCEEDED and OUTCOME_VERIFIED become NOT_VERIFIED with the errors, and a
+result that is still invalid is not written.
 
 ## 13. Cross-cutting concerns
 

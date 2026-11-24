@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { readGateHistory, runQualityGates } from '../../../src/app/gates';
 import type { GateCategory } from '../../../src/core/contracts';
-import { GATES, parseCoverageSummary, parseNpmAudit, resolveCommand, runGates, scanDiffForSecrets, scanFilesForSecrets, validateGateConfig, type GateRunContext } from '../../../src/quality';
+import { GATES, type GateRecord, parseCoverageSummary, parseNpmAudit, resolveCommand, runGates, scanDiffForSecrets, scanFilesForSecrets, validateGateConfig, type GateRunContext } from '../../../src/quality';
 import { SchemaValidator } from '../../../src/registry';
 import { writeTree } from '../../helpers/fs-tree';
 import { REPO_ROOT } from '../../helpers/v1-cli';
@@ -20,7 +20,8 @@ const SCRIPTS = {
   'fail.js': 'console.error("broken"); process.exit(3)',
   'slow.js': 'setTimeout(() => {}, 60000)',
   'leak.js': `console.log("token=${SECRET} mail jane.doe@example.com")`,
-  'cov.js': 'const fs=require("fs");fs.mkdirSync("coverage",{recursive:true});fs.writeFileSync("coverage/coverage-summary.json",JSON.stringify({total:{lines:{pct:Number(process.argv[2])}}}))',
+  // Writes an Istanbul json-summary; argv: lines pct, optional branches pct (defaults to lines).
+  'cov.js': 'const fs=require("fs");const l=Number(process.argv[2]);const a=process.argv[3];const b=a==="Unknown"?{total:0,pct:"Unknown"}:{pct:Number(a??l)};fs.mkdirSync("coverage",{recursive:true});fs.writeFileSync("coverage/coverage-summary.json",JSON.stringify({total:{statements:{pct:l},branches:b,functions:{pct:l},lines:{pct:l}}}))',
 };
 
 function project(gates: Record<string, string>, extra: Record<string, string> = {}) {
@@ -203,7 +204,11 @@ describe('runGates', () => {
     const run = (pct: number) => runGates({ gates: [], required: ['gate.coverage-80'] }, context(root, { gates: { 'gate.coverage-80': { command: node('cov.js', String(pct)) } } }));
 
     expect((await run(91.5)).records[0]).toMatchObject({ status: 'PASS' });
-    expect((await run(42)).records[0]).toMatchObject({ status: 'FAIL', reason: 'line coverage 42% is below 80%' });
+    expect((await run(42)).records[0]).toMatchObject({ status: 'FAIL', reason: 'coverage below 80%: statements 42%, branches 42%, functions 42%, lines 42%' });
+    const noBranches = await runGates({ gates: [], required: ['gate.coverage-80'] }, context(root, { gates: { 'gate.coverage-80': { command: node('cov.js', '95 Unknown') } } }));
+    expect(noBranches.records[0]).toMatchObject({ status: 'PASS', reason: 'nothing to cover for branches (not applicable)' });
+    const branchesOnly = await runGates({ gates: [], required: ['gate.coverage-80'] }, context(root, { gates: { 'gate.coverage-80': { command: node('cov.js', '95 68.8') } } }));
+    expect(branchesOnly.records[0]).toMatchObject({ status: 'FAIL', reason: 'coverage below 80%: branches 68.8%', gateVersion: '1.1.0' });
 
     const old = new Date(Date.now() - 60_000);
     utimesSync(join(root, 'coverage', 'coverage-summary.json'), old, old);
@@ -240,7 +245,14 @@ describe('built-in checks', () => {
   });
 
   it('should read only Istanbul json-summary coverage', () => {
-    expect(parseCoverageSummary('{"total":{"lines":{"pct":88.2}}}')).toBe(88.2);
+    expect(parseCoverageSummary('{"total":{"statements":{"pct":90},"branches":{"pct":81.5},"functions":{"pct":95},"lines":{"pct":88.2}}}')).toEqual({ statements: 90, branches: 81.5, functions: 95, lines: 88.2 });
+    expect(parseCoverageSummary('{"total":{"lines":{"pct":88.2}}}')).toBeNull();
+    // Older Istanbul writes "Unknown" when there is nothing to cover; newer versions report total 0.
+    expect(parseCoverageSummary('{"total":{"statements":{"pct":90},"branches":{"total":0,"pct":"Unknown"},"functions":{"total":0,"pct":100},"lines":{"pct":88}}}')).toEqual({ statements: 90, branches: null, functions: null, lines: 88 });
+    expect(parseCoverageSummary('{"total":{"statements":{"pct":90},"branches":{"pct":90},"functions":{"pct":90},"lines":{"total":0,"pct":"Unknown"}}}')).toBeNull();
+    // "Unknown" without a stated zero total is missing data, not a free pass.
+    expect(parseCoverageSummary('{"total":{"statements":{"pct":90},"branches":{"pct":"Unknown"},"functions":{"pct":90},"lines":{"pct":90}}}')).toBeNull();
+    expect(parseCoverageSummary('{"total":{"statements":{"pct":90},"branches":{"total":12,"pct":"Unknown"},"functions":{"pct":90},"lines":{"pct":90}}}')).toBeNull();
     expect(parseCoverageSummary('{"lines":88}')).toBeNull();
   });
 
@@ -268,7 +280,7 @@ describe('built-in checks', () => {
     writeFileSync(join(root, 'new.ts'), `export const key = "${SECRET}"; // secret-scan:allow fake\n`);
     const allowed = (await scan()).records[0]!;
     expect(allowed.status).toBe('PASS');
-    expect(allowed.evidence.find((item) => item.type === 'review-note')!.summary).toMatchObject({ allowedByMarker: ['new.ts:1'], untrackedFilesScanned: expect.any(Number) });
+    expect(allowed.evidence.find((item) => item.type === 'review-note')!.summary).toMatchObject({ allowedByMarker: ['new.ts:1'], untrackedFilesScanned: expect.any(Number) as unknown });
   });
 
   it('should not verify the secret scan outside a git repository', async () => {
@@ -283,13 +295,13 @@ describe('runQualityGates (persistence)', () => {
     const { root } = project({ 'gate.build': node('ok.js'), 'gate.unit-tests': node('fail.js') });
     const outcome = await runQualityGates({ root, profileId: 'profile.starter' });
     const runDir = join(root, '.ai-agent-setup', 'runs', outcome.report.runId);
-    const record = JSON.parse(readFileSync(join(root, outcome.recordsDir, 'gate.build.json'), 'utf8'));
-    const log = record.evidence.find((item: { type: string }) => item.type === 'artifact');
+    const record = JSON.parse(readFileSync(join(root, outcome.recordsDir, 'gate.build.json'), 'utf8')) as GateRecord;
+    const log = record.evidence.find((item) => item.type === 'artifact')!;
 
     expect(outcome.profile).toBe('profile.starter');
     expect(outcome.report.status).toBe('FAIL');
-    expect(record).toMatchObject({ project: { name: expect.any(String), commit: null }, environment: { node: process.version } });
-    expect(`sha256:${createHash('sha256').update(readFileSync(join(root, log.artifact))).digest('hex')}`).toBe(log.checksum);
+    expect(record).toMatchObject({ project: { name: expect.any(String) as unknown, commit: null }, environment: { node: process.version } });
+    expect(`sha256:${createHash('sha256').update(readFileSync(join(root, log.artifact!))).digest('hex')}`).toBe(log.checksum);
     expect(readFileSync(join(root, '.ai-agent-setup', 'runs', '.gitignore'), 'utf8')).toContain('*');
     expect(readFileSync(join(root, '.ai-agent-setup', 'gates', '.gitignore'), 'utf8')).toContain('*');
     expect(outcome.recordsDir).toBe(`.ai-agent-setup/runs/${outcome.report.runId}/gates/g1`);

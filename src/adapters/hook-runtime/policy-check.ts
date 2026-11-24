@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PolicyEngine, type PolicyAction, type PolicyDecision } from '../../core/policy';
+import type { PolicyDocument } from '../../registry';
 
 /**
  * PreToolUse hook runtime (replaces the inert V1 hooks, TD-03). Copied into projects as
@@ -96,7 +97,7 @@ function main(): void {
   let response: HookResponse;
   try {
     const input = JSON.parse(readFileSync(0, 'utf8')) as HookInput;
-    const policies = JSON.parse(readFileSync(join(__dirname, 'policies.json'), 'utf8'));
+    const policies = JSON.parse(readFileSync(join(__dirname, 'policies.json'), 'utf8')) as PolicyDocument[];
     response = hookResponse(host, strictestDecision(new PolicyEngine(policies), actionsFromHookInput(input)));
   } catch (error) {
     // Fail open but visibly: a broken hook must not block every tool; host permissions still apply.

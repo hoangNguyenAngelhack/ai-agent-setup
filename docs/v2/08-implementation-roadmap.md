@@ -214,7 +214,7 @@ Branch `feature/v2.2-quality-gates`, not yet pushed. Updated 2026-11-24.
 | Item | Status | Evidence |
 |---|---|---|
 | W2.2-01 Quality Gate Engine + evidence capture | Done for local execution: registry of 14 gates covering all 11 categories, each with an explicit support status (`project-command`, `built-in`, `composite`); commands from `.ai-agent-setup/gates.json`, known scripts or stack defaults; timeout and cancellation (process tree killed); missing command, missing tool (exit 127/9009), timeout, cancellation, unreadable audit output, stale or missing coverage → NOT_VERIFIED; built-in secret scan of uncommitted and untracked changes (locations only, values never stored; `secret-scan:allow` lines are counted), npm audit parse, Istanbul coverage threshold, composite deployment readiness; every record validated against `gate-record` (a record failing validation is downgraded to NOT_VERIFIED, never PASS); evidence logs redacted with sha256 checksums; records, report (JSON + Markdown) and history stored in git-ignored folders; required gates = profile + configuration (configuration can only add); a skipped required gate is NOT_VERIFIED; the overall status is PASS only when every required gate passed | `src/quality/`, `src/shared/redact.ts`, `src/app/gates.ts`, `catalog/schemas/gate-record.schema.json`; `tests/unit/quality/gate-engine.test.ts`, `tests/unit/shared/redact.test.ts`, `tests/e2e/run.test.ts` |
-| W2.2-05 Execution reports | Partial: `run status` writes `result.json` (reconciled steps, counts, anomalies) and `gates run` writes `report.json` / `report.md`. No JSON Schema for `run-result` yet | `src/core/execution/state.ts`, `src/app/runs.ts` |
+| W2.2-05 Execution reports | Partial: `run status` writes `result.json` validated against the `run-result` schema (identity, profile, approval, steps with gates and evidence, counts, verification summary, anomalies) and `gates run` writes `report.json` / `report.md`. Not yet: a schema for the gate report, aggregated reports across runs | `src/core/execution/state.ts`, `src/app/runs.ts`, `catalog/schemas/run-result.schema.json` |
 | W2.2-02, -03, -04, -06, -07, -08 | Not started | — |
 
 Open risks from the independent review of 2026-11-24 (not fixed: they change the trust model or the
@@ -234,13 +234,25 @@ event semantics and need a decision):
 - The task text is stored unredacted in `plan.json` and the execution plan objective.
 - On Windows, host CLIs installed as `.cmd` wrappers cannot be started without a shell; delivery then
   records RUN_FAILED and reports NOT_VERIFIED.
+- The run-result schema cannot express cross-field totals; the toolkit checks them when it writes
+  `result.json` (`consistencyErrors`), so result files written by other tools are only
+  schema-checked.
 
-Self-run on this repository (2026-11-24, `gates run --profile profile.standard --gate gate.typecheck,gate.dependency-audit`,
-uncommitted tree on `5e88d77`): overall **NOT_VERIFIED**. PASS: build, unit tests (526 tests),
-security scan (0 findings, 29 untracked files scanned, 7 fixture lines allowed by marker), typecheck,
-dependency audit (0 vulnerabilities). NOT_VERIFIED: `gate.lint` and `gate.coverage-80` — the
-repository has no lint or coverage script. Both are required by the standard profile, so the
-repository itself does not yet pass its own standard profile.
+Self-run on this repository:
+
+- 2026-11-24, uncommitted tree on `5e88d77`: overall **NOT_VERIFIED** — no lint or coverage script.
+- 2026-11-24, uncommitted tree on `9bbd4cb` (lint, coverage and run-result schema added):
+  overall **PASS**, all 5 required gates of `profile.standard` passed (build; unit tests, 600 tests;
+  lint, `eslint . --max-warnings 0`; security scan, 0 findings in 22 untracked files and the diff;
+  `gate.coverage-80` 1.1.0 with statements 94.01%, branches 85.31%, functions 96.03%, lines
+  96.45%), plus typecheck and dependency audit (0 vulnerabilities). The profile was not changed.
+
+| Item | Status | Evidence |
+|---|---|---|
+| Lint (standard profile `gate.lint`) | Done: ESLint 9 + typescript-eslint `recommendedTypeChecked` on `src`, `tests`, `scripts`, `bin`; no rule disabled globally (one option: `ignoreRestSiblings`); shipped content (`templates/`, `examples/`, catalog bodies) is not linted; findings were fixed in code | `eslint.config.mjs`, `npm run lint`; `tests/tooling/lint-config.test.ts` |
+| Coverage (standard profile `gate.coverage-80`) | Done: V8 coverage of all of `src/`, thresholds 80% on four metrics enforced by Vitest and by the gate (1.1.0); CLI tested in-process so its branches are measured | `vitest.config.mts`, `npm run test:coverage`; `tests/unit/cli/main.test.ts` |
+| `run-result` contract | Done: JSON Schema with conditional rules (SUCCEEDED needs every step SUCCEEDED with at least one gate and all gates PASS **and** execution evidence; OUTCOME_VERIFIED when the gates pass but execution was not reported — decided 2026-11-24; CANCELLED never success; reasons required for non-success); `run status` validates the result and turns an invalid SUCCEEDED into NOT_VERIFIED, or refuses to write it | `catalog/schemas/run-result.schema.json`, `src/app/runs.ts`; `tests/contract/` (4 valid, 14 invalid fixtures), `tests/unit/core/execution.test.ts` |
+| Installer and policy at 95% branches (09 §3.1) | Not met: 93.64% and 93.98%; not enforced | coverage report |
 
 Working assumptions adopted to start (reversible until merge): ADR-010 (YAML + JSON Schema) and
 ADR-011 (TypeScript) from [10 §4](10-architecture-decisions.md#4-proposed-decisions-not-approved).

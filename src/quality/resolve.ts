@@ -55,7 +55,7 @@ export function validateGateConfig(value: unknown): { config: GateConfig; proble
   const config: GateConfig = {};
   for (const key of Object.keys(raw)) if (key !== 'gates' && key !== 'required') problems.push(`unknown key "${key}"`);
   if (raw.required !== undefined) {
-    if (Array.isArray(raw.required) && raw.required.every((item) => typeof item === 'string')) config.required = raw.required as string[];
+    if (Array.isArray(raw.required) && raw.required.every((item) => typeof item === 'string')) config.required = raw.required;
     else problems.push('"required" must be a list of gate ids');
   }
   if (raw.gates !== undefined) {
@@ -69,7 +69,7 @@ export function validateGateConfig(value: unknown): { config: GateConfig; proble
           (item.timeoutMs === undefined || (Number.isInteger(item.timeoutMs) && (item.timeoutMs as number) > 0)) &&
           (item.artifact === undefined || typeof item.artifact === 'string');
         if (!ok) problems.push(`gates["${id}"]: command must be a non-empty string, timeoutMs a positive integer, artifact a path`);
-        else config.gates[id] = item as NonNullable<GateConfig['gates']>[string];
+        else config.gates[id] = item;
       }
     }
   }

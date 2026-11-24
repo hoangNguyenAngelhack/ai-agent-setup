@@ -9,8 +9,8 @@ interface IO {
   write: (text: string) => void;
 }
 
-/** Exit codes for verification commands: 0 PASS/SUCCEEDED, 1 FAIL, 2 NOT_VERIFIED or CANCELLED. */
-const EXIT: Record<string, number> = { PASS: 0, SUCCEEDED: 0, FAIL: 1, FAILED: 1, NOT_VERIFIED: 2, CANCELLED: 2 };
+/** Exit codes for verification commands: 0 PASS/SUCCEEDED, 1 FAIL, 2 NOT_VERIFIED, OUTCOME_VERIFIED or CANCELLED. */
+const EXIT: Record<string, number> = { PASS: 0, SUCCEEDED: 0, FAIL: 1, FAILED: 1, NOT_VERIFIED: 2, CANCELLED: 2, OUTCOME_VERIFIED: 2 };
 
 /** Free text may contain commas, which the parser splits on; join them back. */
 const text = (args: ParsedArgs, name: string) => args.values.get(name)?.join(', ');
@@ -68,7 +68,8 @@ function eventInput(args: ParsedArgs): EventInput {
   if (!type || !allowed.includes(type)) throw new UsageError(`run event needs --type ${allowed.join('|')}`);
   const stepId = single(args, 'step');
   if (!stepId) throw new UsageError('run event needs --step <step-id>');
-  const reason = text(args, 'reason') ?? '';
+  const reason = text(args, 'reason')?.trim() ?? '';
+  if (!reason && ['APPROVAL_REQUIRED', 'STEP_FAILED', 'STEP_BLOCKED'].includes(type)) throw new UsageError(`run event --type ${type} needs --reason "<why>"`);
   const evidence = args.values.get('evidence') ?? [];
   const extra: Record<string, unknown> = {
     STEP_PROGRESS: { message: text(args, 'message') ?? '' },

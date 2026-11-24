@@ -18,13 +18,15 @@ import {
 } from '../../../src/core/execution';
 import { TaskClassifier } from '../../../src/core/planning';
 import { routeTask } from '../../../src/core/routing';
-import { KnowledgeIndex, Registry, validateCatalog, type ProfileEntry } from '../../../src/registry';
+import { KnowledgeIndex, Registry, SchemaValidator, validateCatalog, type ProfileEntry } from '../../../src/registry';
 import { REPO_ROOT } from '../../helpers/v1-cli';
 
 const report = validateCatalog(join(REPO_ROOT, 'catalog'));
 const registry = new Registry(report.entries);
 const classifier = new TaskClassifier(registry);
 const AT = '2026-11-24T10:00:00.000Z';
+const schemas = new SchemaValidator(join(REPO_ROOT, 'catalog', 'schemas'));
+const RUN_RESULT = 'urn:ai-agent-setup:contracts:v1:run-result';
 
 function routed(task: string, overrides: PlanOverrides = {}) {
   return routeTask({
@@ -44,7 +46,7 @@ function routed(task: string, overrides: PlanOverrides = {}) {
 
 const TASK = 'Implement the orders API endpoint and build the orders page in the React app';
 const base = routed(TASK, { domains: ['backend', 'frontend'] });
-const draft = createExecutionPlan(base, { runId: 'run-1', project: { name: 'demo', commit: 'abc123' } });
+const draft = createExecutionPlan(base, { runId: 'run-20261124T100000Z-abcdef', project: { name: 'demo', commit: 'abc123' } });
 const approved = approveExecutionPlan(draft, 'user', AT);
 const [first, second] = approved.steps.map((step) => step.id) as [string, string];
 
@@ -53,6 +55,8 @@ function event<T extends ExecutionEvent['type']>(type: T, extra: Record<string, 
   counter += 1;
   return { eventId: `e${counter}`, runId: plan.runId, planDigest: plan.approval.digest!, at: AT, source: 'orchestrator', type, ...extra } as ExecutionEvent;
 }
+
+const hostStarted = (stepId: string) => ({ ...event('STEP_STARTED', { stepId }), source: 'host' as const });
 
 const passAll = (stepId: string) => {
   const spec = approved.steps.find((step) => step.id === stepId)!;
@@ -66,7 +70,7 @@ function run(events: ExecutionEvent[], plan: ExecutionPlan = approved): Executio
 
 describe('ExecutionPlan (ADR-009)', () => {
   it('should carry every contract field with stable step ids', () => {
-    expect(draft).toMatchObject({ schemaVersion: 'execution-plan/v1', runId: 'run-1', planId: base.id, revision: 1, supersedes: null, objective: TASK });
+    expect(draft).toMatchObject({ schemaVersion: 'execution-plan/v1', runId: 'run-20261124T100000Z-abcdef', planId: base.id, revision: 1, supersedes: null, objective: TASK });
     expect(draft.steps.map((step) => step.id)).toEqual(base.steps.map((step) => step.id));
     expect(draft.steps[1]).toMatchObject({ dependsOn: [first], inputs: ['objective', `outputs of ${first}`] });
     expect([...draft.domains].sort()).toEqual(['backend', 'frontend']);
@@ -203,7 +207,7 @@ describe('step states (W2.1-09)', () => {
 
   it('should cancel open steps and never report a cancelled run as success', () => {
     const state = run([event('STEP_STARTED', { stepId: first }), passAll(first), event('RUN_CANCELLED', { reason: 'user stopped' }), passAll(second)]);
-    const result = reconcile(approved, state);
+    const result = reconcile(approved, state, AT);
 
     expect(state.steps[second]!.state).toBe('CANCELLED');
     expect(result.status).toBe('CANCELLED');
@@ -219,17 +223,54 @@ describe('step states (W2.1-09)', () => {
 });
 
 describe('reconcile', () => {
-  it('should succeed only when every step succeeded', () => {
-    const state = run([event('RUN_STARTED'), passAll(first), passAll(second), event('RUN_COMPLETED')]);
-    const result = reconcile(approved, state);
+  it.each([
+    ['succeeded', () => [event('RUN_STARTED'), hostStarted(first), passAll(first), hostStarted(second), passAll(second), event('RUN_COMPLETED')]],
+    ['outcome verified', () => [passAll(first), passAll(second)]],
+    ['failed', () => [event('STEP_FAILED', { stepId: first, reason: 'boom', evidence: ['e.log'] })]],
+    ['not verified', () => [event('RUN_STARTED'), event('RUN_COMPLETED')]],
+    ['cancelled', () => [passAll(first), event('RUN_CANCELLED', { reason: 'stop' })]],
+    ['declined approval', () => [event('STEP_STARTED', { stepId: first }), event('APPROVAL_REQUIRED', { stepId: first, reason: 'x' }), { ...event('APPROVAL_RESOLVED', { stepId: first, approved: false, by: 'user' }), source: 'user' }]],
+  ] as const)('should produce a result that satisfies the run-result contract (%s)', (_name, events) => {
+    const result = reconcile(approved, run([...events()] as ExecutionEvent[]), AT);
 
-    expect(result).toMatchObject({ status: 'SUCCEEDED', counts: { SUCCEEDED: 2 } });
-    expect(result.steps.map((step) => step.final)).toEqual(['SUCCEEDED', 'SUCCEEDED']);
+    expect(schemas.validate(RUN_RESULT, result)).toEqual({ valid: true, errors: [] });
+    expect(result).toMatchObject({ planId: base.id, profile: base.profile, generatedAt: AT, approval: { by: 'user', at: AT } });
+  });
+
+  it('should succeed only when every step was reported executed and passed its gates', () => {
+    const state = run([event('RUN_STARTED'), hostStarted(first), passAll(first), hostStarted(second), passAll(second), event('RUN_COMPLETED')]);
+    const result = reconcile(approved, state, AT);
+
+    expect(result).toMatchObject({
+      status: 'SUCCEEDED',
+      counts: { SUCCEEDED: 2 },
+      verification: { stepsTotal: 2, stepsSucceeded: 2, stepsWithExecutionEvidence: 2, gates: { FAIL: 0, NOT_VERIFIED: 0 } },
+    });
+    expect(result.steps.map((step) => step.execution)).toEqual([
+      { evidenced: true, reports: ['STEP_STARTED'] },
+      { evidenced: true, reports: ['STEP_STARTED'] },
+    ]);
+  });
+
+  it('should report OUTCOME_VERIFIED, not SUCCEEDED, when gates pass without execution evidence', () => {
+    const result = reconcile(approved, run([hostStarted(first), passAll(first), passAll(second)]), AT);
+
+    expect(result).toMatchObject({ status: 'OUTCOME_VERIFIED', reason: `every step passed its gates, but no execution was reported for: ${second}` });
+    expect(result.steps[1]!.execution).toEqual({ evidenced: false, reports: [] });
+  });
+
+  it('should not count rejected or non-host reports as execution evidence', () => {
+    const lateReport = { ...event('STEP_STARTED', { stepId: second }), source: 'host' as const };
+    const state = run([hostStarted(first), passAll(first), passAll(second), lateReport, event('STEP_STARTED', { stepId: first })]);
+
+    expect(state.steps[second]!.reports).toEqual([]);
+    expect(state.anomalies.at(-2)).toMatchObject({ type: 'STEP_STARTED', reason: 'step already SUCCEEDED' });
+    expect(reconcile(approved, state, AT).status).toBe('OUTCOME_VERIFIED');
   });
 
   it('should report a host "done" with open steps as NOT_VERIFIED', () => {
     const state = run([event('RUN_STARTED'), event('RUN_COMPLETED')]);
-    const result = reconcile(approved, state);
+    const result = reconcile(approved, state, AT);
 
     expect(result.status).toBe('NOT_VERIFIED');
     expect(result.steps.find((step) => step.id === first)).toMatchObject({ state: 'READY', final: 'NOT_VERIFIED', reason: 'no final result (state READY)' });
@@ -238,6 +279,6 @@ describe('reconcile', () => {
   it('should fail the run when a step failed', () => {
     const state = run([event('STEP_FAILED', { stepId: first, reason: 'boom', evidence: [] })]);
 
-    expect(reconcile(approved, state)).toMatchObject({ status: 'FAILED', counts: { FAILED: 1, BLOCKED: 1 } });
+    expect(reconcile(approved, state, AT)).toMatchObject({ status: 'FAILED', counts: { FAILED: 1, BLOCKED: 1 } });
   });
 });

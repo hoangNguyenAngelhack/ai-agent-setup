@@ -2,7 +2,7 @@ import { readFileSync, statSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { GateCategory, GateStatus } from '../core/contracts';
 import { redactText } from '../shared/redact';
-import { parseCoverageSummary, parseNpmAudit, scanDiff, scanFilesForSecrets } from './checks';
+import { COVERAGE_METRICS, parseCoverageSummary, parseNpmAudit, scanDiff, scanFilesForSecrets } from './checks';
 import { runCommand, type CommandOutcome } from './execute';
 import { gateById, type GateDefinition } from './gates';
 import { missingCommandReason, resolveCommand, type GateConfig, type ProjectFacts } from './resolve';
@@ -203,14 +203,16 @@ class GateRunner {
     } catch {
       return { ...base, status: 'NOT_VERIFIED', reason: `${relative} not found; enable the json-summary coverage reporter` };
     }
-    const pct = parseCoverageSummary(text);
-    if (pct === null) return { ...base, status: 'NOT_VERIFIED', reason: `${relative} is not an Istanbul json-summary file` };
-    const copy = this.ctx.evidence.write(definition.id, 'coverage-summary.json', text);
-    const evidence = [...base.evidence, { type: 'artifact' as const, artifact: copy.path, checksum: copy.checksum, summary: { linesPct: pct, threshold: definition.threshold } }];
+    const totals = parseCoverageSummary(text);
+    if (totals === null) return { ...base, status: 'NOT_VERIFIED', reason: `${relative} is not an Istanbul json-summary file with statements, branches, functions and measured lines` };
     const threshold = definition.threshold ?? 0;
-    return pct >= threshold
-      ? { ...base, evidence, status: 'PASS', reason: null }
-      : { ...base, evidence, status: 'FAIL', reason: `line coverage ${pct}% is below ${threshold}%` };
+    const copy = this.ctx.evidence.write(definition.id, 'coverage-summary.json', text);
+    const evidence = [...base.evidence, { type: 'artifact' as const, artifact: copy.path, checksum: copy.checksum, summary: { ...totals, threshold } }];
+    const below = COVERAGE_METRICS.filter((metric) => totals[metric] !== null && totals[metric] < threshold);
+    const notApplicable = COVERAGE_METRICS.filter((metric) => totals[metric] === null);
+    return below.length === 0
+      ? { ...base, evidence, status: 'PASS', reason: notApplicable.length ? `nothing to cover for ${notApplicable.join(', ')} (not applicable)` : null }
+      : { ...base, evidence, status: 'FAIL', reason: `coverage below ${threshold}%: ${below.map((metric) => `${metric} ${totals[metric]}%`).join(', ')}` };
   }
 }
 

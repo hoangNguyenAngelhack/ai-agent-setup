@@ -1,6 +1,6 @@
 import { join, relative, resolve } from 'node:path';
 import { checkContextBudget, measureContext, selectProfileEntries } from '../core/context';
-import { ADAPTER_IDS, ENTITY_KINDS, KnowledgeIndex, Registry, validateCatalog, type ProfileEntry } from '../registry';
+import { ADAPTER_IDS, ENTITY_KINDS, KnowledgeIndex, Registry, validateCatalog } from '../registry';
 
 /** `catalog validate`: prints diagnostics and per-kind counts; returns the process exit code. */
 export function runCatalogValidate(catalogDir: string, write: (line: string) => void): number {
@@ -26,7 +26,7 @@ export function runCatalogValidate(catalogDir: string, write: (line: string) => 
 
 /** Measured always-loaded (T0) catalog bytes per profile and adapter budget (docs/v2/05 §8). */
 function writeContextSummary(registry: Registry, knowledge: KnowledgeIndex, write: (line: string) => void): void {
-  for (const profile of registry.list('Profile') as ProfileEntry[]) {
+  for (const profile of registry.list('Profile')) {
     const context = measureContext(selectProfileEntries(registry, profile), knowledge);
     const budgets = ADAPTER_IDS.map((adapter) => {
       const check = checkContextBudget(context, profile, adapter);

@@ -25,6 +25,6 @@ export const claudeCodeDelivery: HostDelivery = {
     if (message.type === 'system' && message.subtype === 'init') return { kind: 'started' };
     if (message.type !== 'result') return null;
     if (message.subtype === 'success' && message.is_error !== true) return { kind: 'completed' };
-    return { kind: 'failed', reason: `claude result ${String(message.subtype ?? 'error')}` };
+    return { kind: 'failed', reason: `claude result ${typeof message.subtype === 'string' ? message.subtype : 'error'}` };
   },
 };

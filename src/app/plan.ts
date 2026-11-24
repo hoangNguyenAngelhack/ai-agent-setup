@@ -9,7 +9,7 @@ import { ensureIgnoredDir, RUNS_DIR } from './run-files';
 import { detectProject } from '../core/project-detection';
 import { routeTask } from '../core/routing';
 import { MANIFEST_PATH } from '../installer';
-import { KnowledgeIndex, Registry, validateCatalog, type ProfileEntry } from '../registry';
+import { KnowledgeIndex, Registry, validateCatalog } from '../registry';
 
 const PACKAGE_ROOT = join(__dirname, '..', '..');
 
@@ -71,7 +71,7 @@ export function runPlan(options: PlanOptions): PlanOutcome {
     policies: report.policies,
     project: detectedProject(options.root),
     overrides: options.overrides ?? {},
-    contextT0Bytes: measureContext(selectProfileEntries(registry, profile as ProfileEntry), knowledge).tiers.T0.bytes,
+    contextT0Bytes: measureContext(selectProfileEntries(registry, profile), knowledge).tiers.T0.bytes,
     impact: impactFor(options),
   });
 

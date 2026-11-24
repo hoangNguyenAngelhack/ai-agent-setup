@@ -42,7 +42,7 @@ describe('plan and explain', () => {
     expect(id).toBeDefined();
     const explained = cli(root, ['explain', id!, '--json']);
     expect(explained.status).toBe(0);
-    expect(JSON.parse(explained.stdout)).toMatchObject({ cost: { label: 'estimated' }, verification: expect.arrayContaining(['gate.build']) });
+    expect(JSON.parse(explained.stdout)).toMatchObject({ cost: { label: 'estimated' }, verification: expect.arrayContaining(['gate.build']) as unknown });
     expect(cli(root, ['doctor']).status).toBe(0);
   });
 

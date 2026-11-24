@@ -60,7 +60,7 @@ node bin/cli.js rollback ../my-project      # undo the last install
 | `explain <plan-id>` | Show a saved plan with its explanation |
 | `impact [files...]` *(V2.1 preview)* | What changed files touch: modules, areas, risk, related tests, CODEOWNERS owners; without files it reads uncommitted git changes, `--since <ref>` diffs against a ref. `plan --files`, `--changed` and `--since` use the same analysis |
 | `gates list\|run\|history [dir]` *(V2.2 preview)* | Quality gates with evidence: `list` shows every gate, its support status and the command it would run; `run` executes the required gates (profile + `.ai-agent-setup/gates.json`) and writes redacted, checksummed evidence; exit 0 PASS, 1 FAIL, 2 NOT_VERIFIED. `--gate`, `--skip`, `--run`, `--profile`, `--json` |
-| `run <action>` *(V2.1 preview)* | Execution runs (ADR-009): `create <plan-id>`, `approve`, `deliver --host claude-code\|codex [--dry-run]`, `event`, `verify <run-id> <step>`, `approve-step`, `cancel`, `status`. A run succeeds only when every step passed its gates |
+| `run <action>` *(V2.1 preview)* | Execution runs (ADR-009): `create <plan-id>`, `approve`, `deliver --host claude-code\|codex [--dry-run]`, `event`, `verify <run-id> <step>`, `approve-step`, `cancel`, `status`. A run SUCCEEDS only when every step was reported executed and passed its gates; gates passing without execution reports give OUTCOME_VERIFIED (exit 2) |
 
 ### Create options (same as V1)
 
@@ -156,7 +156,9 @@ is on the roadmap.
 ```bash
 npm ci
 npm run typecheck
+npm run lint              # ESLint with type-aware rules, zero warnings
 npm test                  # unit, contract, golden, installer and end-to-end tests
+npm run test:coverage     # the same with V8 coverage; fails below 80% on any metric
 npm run catalog:validate  # also prints the measured always-loaded context per profile
 npm run docs:summary      # refresh the catalog table in both READMEs
 ```

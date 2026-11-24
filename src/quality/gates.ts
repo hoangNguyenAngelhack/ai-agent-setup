@@ -58,8 +58,9 @@ export const GATES: readonly GateDefinition[] = [
   gate({ id: 'gate.typecheck', category: 'static-analysis', title: 'Type check', support: 'project-command', scripts: ['typecheck', 'type-check', 'tsc'] }),
   gate({ id: 'gate.security-scan', category: 'security', title: 'Secret scan of uncommitted and untracked changes', support: 'built-in', defaults: {}, check: 'secret-scan', timeoutMs: MINUTE }),
   gate({ id: 'gate.dependency-audit', category: 'dependency-audit', title: 'Dependency audit (high and critical)', support: 'built-in', check: 'npm-audit', timeoutMs: 2 * MINUTE }),
-  gate({ id: 'gate.coverage-80', category: 'unit', title: 'Line coverage >= 80%', support: 'built-in', scripts: ['test:coverage', 'coverage'], check: 'coverage', threshold: 80 }),
-  gate({ id: 'gate.coverage-95', category: 'unit', title: 'Line coverage >= 95%', support: 'built-in', scripts: ['test:coverage', 'coverage'], check: 'coverage', threshold: 95 }),
+  // 1.1.0: every metric (statements, branches, functions, lines) must meet the threshold; 1.0.0 checked lines only.
+  gate({ id: 'gate.coverage-80', version: '1.1.0', category: 'unit', title: 'Coverage >= 80% (statements, branches, functions, lines)', support: 'built-in', scripts: ['test:coverage', 'coverage'], check: 'coverage', threshold: 80 }),
+  gate({ id: 'gate.coverage-95', version: '1.1.0', category: 'unit', title: 'Coverage >= 95% (statements, branches, functions, lines)', support: 'built-in', scripts: ['test:coverage', 'coverage'], check: 'coverage', threshold: 95 }),
   gate({ id: 'gate.performance', category: 'performance', title: 'Performance budget', support: 'project-command', scripts: ['test:perf', 'perf', 'bench'] }),
   gate({ id: 'gate.accessibility', category: 'accessibility', title: 'Accessibility check', support: 'project-command', scripts: ['test:a11y', 'a11y'] }),
   gate({ id: 'gate.documentation', category: 'documentation', title: 'Documentation check', support: 'project-command', scripts: ['docs:check', 'lint:docs'] }),

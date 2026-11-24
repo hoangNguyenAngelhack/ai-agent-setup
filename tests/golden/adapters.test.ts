@@ -105,7 +105,7 @@ describe.each([
 
     expect(files.has(`${hookDir}/policy-check.cjs`)).toBe(true);
     expect(files.has(`${hookDir}/policy/policy-engine.cjs`)).toBe(true);
-    expect(JSON.parse(files.get(`${hookDir}/policies.json`)!).map((policy: { id: string }) => policy.id)).toEqual(
+    expect((JSON.parse(files.get(`${hookDir}/policies.json`)!) as Array<{ id: string }>).map((policy) => policy.id)).toEqual(
       report.policies.map((policy) => policy.id),
     );
   });
@@ -162,12 +162,15 @@ describe('Claude Code adapter specifics', () => {
   });
 
   it('should register the policy hook and least-privilege permissions without any allow list', () => {
-    const settings = JSON.parse(files.get('.claude/settings.json')!);
+    const settings = JSON.parse(files.get('.claude/settings.json')!) as {
+      permissions: { allow?: string[]; ask: string[] };
+      hooks: { PreToolUse: unknown[] };
+    };
 
     expect(settings.permissions.allow).toBeUndefined();
     expect(settings.permissions.ask).toEqual(expect.arrayContaining(['Bash(npm publish *)', 'Bash(git push --force *)', 'Bash(git push * --force *)']));
     // In-token wildcards (rm -*r*) are enforced by the hook only, to avoid asking for unrelated commands.
-    expect(settings.permissions.ask.some((rule: string) => rule.startsWith('Bash(rm'))).toBe(false);
+    expect(settings.permissions.ask.some((rule) => rule.startsWith('Bash(rm'))).toBe(false);
     expect(settings.hooks.PreToolUse[0]).toEqual({
       matcher: 'Bash|Write|Edit|MultiEdit',
       hooks: [{ type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/ai-agent-setup/policy-check.cjs" --host claude-code' }],
@@ -182,7 +185,7 @@ describe('Claude Code adapter specifics', () => {
   });
 
   it('should write .mcp.json only for enabled MCP servers', () => {
-    const mcp = JSON.parse(generateTree(claudeCodeAdapter, { enabledTools: ['tool.mcp-github'] }).files.get('.mcp.json')!);
+    const mcp = JSON.parse(generateTree(claudeCodeAdapter, { enabledTools: ['tool.mcp-github'] }).files.get('.mcp.json')!) as { mcpServers: Record<string, unknown> };
 
     expect(Object.keys(mcp.mcpServers)).toEqual(['github']);
   });
@@ -232,10 +235,10 @@ describe('Codex adapter specifics', () => {
   });
 
   it('should register the hook with a project-root path and say it needs trust', () => {
-    const hooks = JSON.parse(files.get('.codex/hooks.json')!);
+    const hooks = JSON.parse(files.get('.codex/hooks.json')!) as { hooks: { PreToolUse: Array<{ matcher: string; hooks: Array<{ command: string }> }> } };
 
-    expect(hooks.hooks.PreToolUse[0].matcher).toBe('^(Bash|apply_patch)$');
-    expect(hooks.hooks.PreToolUse[0].hooks[0].command).toContain('$(git rev-parse --show-toplevel)');
+    expect(hooks.hooks.PreToolUse[0]!.matcher).toBe('^(Bash|apply_patch)$');
+    expect(hooks.hooks.PreToolUse[0]!.hooks[0]!.command).toContain('$(git rev-parse --show-toplevel)');
     expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toContain('W_CODEX_TRUST');
   });
 

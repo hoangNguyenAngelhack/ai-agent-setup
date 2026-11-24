@@ -39,10 +39,10 @@ describe('gates CLI', () => {
   });
 
   it('should list every gate with its support status', () => {
-    const listing = JSON.parse(cli(installedProject(), ['gates', 'list', '--json']).stdout);
+    const listing = JSON.parse(cli(installedProject(), ['gates', 'list', '--json']).stdout) as { gates: Array<{ id: string; support: string }> };
 
-    expect(listing.gates.map((gate: { id: string }) => gate.id)).toContain('gate.deployment-readiness');
-    expect(listing.gates.every((gate: { support: string }) => gate.support)).toBe(true);
+    expect(listing.gates.map((gate) => gate.id)).toContain('gate.deployment-readiness');
+    expect(listing.gates.every((gate) => gate.support)).toBe(true);
   });
 });
 
@@ -50,7 +50,7 @@ describe('run CLI', () => {
   it('should create, approve, record events and reconcile a run without claiming success', () => {
     const root = installedProject();
     const planOut = cli(root, ['plan', 'Implement the orders API endpoint', '--json']);
-    const planId = JSON.parse(planOut.stdout).id as string;
+    const planId = (JSON.parse(planOut.stdout) as { id: string }).id;
     expect(existsSync(join(root, '.ai-agent-setup', 'runs', planId, 'plan.json'))).toBe(true);
 
     const created = cli(root, ['run', 'create', planId]);
@@ -58,7 +58,7 @@ describe('run CLI', () => {
     expect(cli(root, ['run', 'event', runId, '--type', 'STEP_STARTED', '--step', 'x']).status).toBe(1);
     expect(cli(root, ['run', 'approve', runId]).stdout).toContain('The plan is now immutable');
 
-    const step = JSON.parse(cli(root, ['run', 'status', runId, '--json']).stdout).steps[0].id as string;
+    const step = (JSON.parse(cli(root, ['run', 'status', runId, '--json']).stdout) as { steps: Array<{ id: string }> }).steps[0]!.id;
     expect(cli(root, ['run', 'event', runId, '--type', 'STEP_STARTED', '--step', step]).stdout).toBe('Recorded.\n');
     expect(cli(root, ['run', 'event', runId, '--type', 'STEP_COMPLETED', '--step', step, '--evidence', 'notes.md']).status).toBe(0);
 
@@ -73,7 +73,7 @@ describe('run CLI', () => {
 
   it('should print the delivery command for a host without running it', () => {
     const root = installedProject();
-    const planId = JSON.parse(cli(root, ['plan', 'Implement the orders API endpoint', '--json']).stdout).id as string;
+    const planId = (JSON.parse(cli(root, ['plan', 'Implement the orders API endpoint', '--json']).stdout) as { id: string }).id;
     const runId = /Created (run-\S+)/.exec(cli(root, ['run', 'create', planId]).stdout)![1]!;
     cli(root, ['run', 'approve', runId]);
 

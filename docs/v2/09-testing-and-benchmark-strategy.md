@@ -16,8 +16,12 @@ and (c) a reproducible benchmark that compares a no-toolkit baseline, V1 and V2.
 
 ## 2. Current state
 
-`EXISTING`: no automated tests, no CI, `npm test` is a placeholder (F-14). There are no V1 performance
-measurements. All targets below are **hypotheses**.
+At the V1 baseline: no automated tests, no CI, `npm test` was a placeholder (F-14), and there are no
+V1 performance measurements. Benchmark targets below are **hypotheses**.
+
+Implemented since (2026-11-24): the layers of §3.1 except host compatibility, lint (§3.4), measured
+coverage with enforced thresholds (§3.1), and contract tests for `gate-result`, `gate-record`,
+`manifest` and `run-result`.
 
 ## 3. Toolkit test strategy
 
@@ -34,8 +38,21 @@ measurements. All targets below are **hypotheses**.
 | Eval | Routing and context quality (§4) | — | V2.1+, tracked trend |
 | Benchmark | End-to-end outcome comparison (§5) | — | V2.2, per release |
 
-Coverage target for `src/`: 80% lines (aligned with the `standard` tier the project prescribes).
-Coverage of `installer` and `policy`: 95% branches, because of their safety role.
+Coverage of `src/` is measured with V8 (`npm run test:coverage`) and **enforced at 80% for statements,
+branches, functions and lines** (aligned with the `standard` profile; `gate.coverage-80` 1.1.0 checks
+all four). Code that runs only in child processes (the CLI launched by end-to-end tests, the policy
+hook) is not instrumented; the CLI is also tested in-process through `main()`
+(`tests/unit/cli/main.test.ts`) so that its branches are measured. Nothing is excluded from `src/`.
+
+Measured 2026-11-24 (600 tests): statements 94.01%, branches 85.31%, functions 96.03%, lines 96.45%.
+
+Target for `installer` and `policy`: 95% branches, because of their safety role. **Not met and not
+enforced yet:** measured 93.64% (installer) and 93.98% (policy) on 2026-11-24.
+
+Contract fixtures: `tests/contract/fixtures/run-result/` holds a valid result for each run status
+(SUCCEEDED, FAILED, NOT_VERIFIED, CANCELLED) and invalid results (for example SUCCEEDED with an
+unverified step, a SUCCEEDED step without gates or with a failed gate, an unapproved required step, a
+missing plan id, an unknown property). Every result produced by `reconcile` is also validated.
 
 ### 3.2 V1 characterization tests
 
@@ -71,9 +88,11 @@ the content of the tagged release `v1.6.1` (offline mirror) so that snapshots ar
 
 ### 3.4 CI
 
-GitHub Actions matrix: `ubuntu-latest`, `macos-latest`, `windows-latest` × supported Node versions
-(OQ-07). Jobs: lint, unit + contract + golden, installer, e2e, `catalog validate`, docs link-check.
-CI runs with networking disabled after dependency install, to enforce NFR-01.
+GitHub Actions matrix: `ubuntu-latest`, `macos-latest`, `windows-latest` × Node 20, 22, 24 (OQ-07).
+Implemented steps: `typecheck`, `lint` (ESLint with type-aware typescript-eslint rules, zero
+warnings), the test suite, `catalog:validate`. Coverage with thresholds runs on Ubuntu / Node 22
+only: Windows skips shell-dependent tests by design, so its figures would differ. Not yet
+implemented: docs link-check and running CI with networking disabled after install (NFR-01).
 
 ### 3.5 Host compatibility checks
 

@@ -20,11 +20,13 @@ import {
   type GateOutcome,
   type RunResult,
 } from '../core/execution';
+import { SchemaValidator } from '../registry';
 import { redactValue } from '../shared/redact';
 import { runQualityGates } from './gates';
 import { readPlan } from './plan';
 import { assertRunId, newRunId, projectIdentity, readJsonLines, RUNS_DIR, runDir, writeJson } from './run-files';
 
+const PACKAGE_ROOT = join(__dirname, '..', '..');
 const DELIVERIES: Record<string, HostDelivery> = { 'claude-code': claudeCodeDelivery, codex: codexDelivery };
 
 function files(root: string, runId: string) {
@@ -100,10 +102,54 @@ export function recordEvent(root: string, runId: string, input: EventInput, now:
   return next;
 }
 
-/** Reconciles every step and writes result.json. */
-export function finishRun(root: string, runId: string): RunResult {
+const RUN_RESULT_SCHEMA = 'urn:ai-agent-setup:contracts:v1:run-result';
+
+type Validate = (value: unknown) => { valid: boolean; errors: string[] };
+
+/**
+ * A result that fails the run-result contract is never reported as it stands: SUCCEEDED and
+ * OUTCOME_VERIFIED become NOT_VERIFIED with the validation errors (FAILED and CANCELLED are kept: they are not success). If
+ * the result is still invalid, nothing is written and the error is raised.
+ */
+/** What JSON Schema cannot express: totals that must agree with the step list. */
+export function consistencyErrors(result: RunResult): string[] {
+  const errors: string[] = [];
+  const finals = result.steps.map((step) => step.final);
+  for (const [state, count] of Object.entries(result.counts)) {
+    const actual = finals.filter((final) => final === state).length;
+    if (count !== actual) errors.push(`/counts/${state}: ${count} but ${actual} step(s) are ${state}`);
+  }
+  if (result.verification.stepsTotal !== result.steps.length) errors.push(`/verification/stepsTotal: ${result.verification.stepsTotal} but ${result.steps.length} step(s)`);
+  if (result.verification.stepsSucceeded !== result.counts.SUCCEEDED) errors.push('/verification/stepsSucceeded: does not match counts.SUCCEEDED');
+  const evidenced = result.steps.filter((step) => step.execution.evidenced).length;
+  if (result.verification.stepsWithExecutionEvidence !== evidenced) errors.push(`/verification/stepsWithExecutionEvidence: ${result.verification.stepsWithExecutionEvidence} but ${evidenced} step(s) have execution evidence`);
+  for (const [status, count] of Object.entries(result.verification.gates)) {
+    const actual = result.steps.flatMap((step) => step.gates).filter((gate) => gate.status === status).length;
+    if (count !== actual) errors.push(`/verification/gates/${status}: ${count} but ${actual} gate result(s)`);
+  }
+  return errors;
+}
+
+export function checkedRunResult(result: RunResult, validateSchema: Validate): RunResult {
+  const validate: Validate = (value) => {
+    const check = validateSchema(value);
+    const errors = [...check.errors, ...(check.valid ? consistencyErrors(value as RunResult) : [])];
+    return { valid: errors.length === 0, errors };
+  };
+  const check = validate(result);
+  if (check.valid) return result;
+  const status = result.status === 'SUCCEEDED' || result.status === 'OUTCOME_VERIFIED' ? 'NOT_VERIFIED' : result.status;
+  const downgraded = { ...result, status, reason: `result failed contract validation: ${check.errors.join('; ')}` };
+  const recheck = validate(downgraded);
+  if (!recheck.valid) throw new Error(`Run result for ${result.runId} is invalid: ${recheck.errors.join('; ')}`);
+  return downgraded;
+}
+
+/** Reconciles every step, checks the result against the contract and writes result.json. */
+export function finishRun(root: string, runId: string, now: Date = new Date()): RunResult {
   const { plan, state } = loadRun(root, runId);
-  const result = reconcile(plan, state);
+  const validator = new SchemaValidator(join(PACKAGE_ROOT, 'catalog', 'schemas'));
+  const result = checkedRunResult(reconcile(plan, state, now.toISOString()), (value) => validator.validate(RUN_RESULT_SCHEMA, value));
   writeJson(files(root, runId).result, result);
   return result;
 }

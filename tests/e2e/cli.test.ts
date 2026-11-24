@@ -33,12 +33,12 @@ function cli(cwd: string, args: string[], input = '') {
 }
 
 const read = (path: string) => readFileSync(path, 'utf8');
-const manifestOf = (project: string) => JSON.parse(read(join(project, '.ai-agent-setup', 'manifest.json')));
+const manifestOf = (project: string) => JSON.parse(read(join(project, '.ai-agent-setup', 'manifest.json'))) as { profile: string };
 const lastCommit = (project: string) => spawnSync('git', ['-C', project, 'log', '-1', '--format=%s'], { encoding: 'utf8' }).stdout.trim();
 
 describe('V2 CLI — basics', () => {
   it('should report the package version (fixes F-02) under the published name (fixes F-03)', () => {
-    const { version } = JSON.parse(read(join(REPO_ROOT, 'package.json')));
+    const { version } = JSON.parse(read(join(REPO_ROOT, 'package.json'))) as { version: string };
 
     expect(cli(workdir(), ['--version']).stdout.trim()).toBe(`create-ai-agent-setup ${version}`);
   });

@@ -34,7 +34,10 @@ export function redactText(input: string): Redacted {
     text = text.replace(pattern, (...match: unknown[]) => {
       redactions[label] = (redactions[label] ?? 0) + 1;
       if (!replace) return `[REDACTED:${label}]`;
-      return replace.replace(/\$(\d)/g, (_, index: string) => String(match[Number(index)] ?? ''));
+      return replace.replace(/\$(\d)/g, (_, index: string) => {
+        const group = match[Number(index)];
+        return typeof group === 'string' ? group : '';
+      });
     });
   }
   return { text, redactions };
@@ -43,7 +46,7 @@ export function redactText(input: string): Redacted {
 /** Deep copy of a JSON value with every string redacted. */
 export function redactValue<T>(value: T): T {
   if (typeof value === 'string') return redactText(value).text as T;
-  if (Array.isArray(value)) return value.map((item) => redactValue(item)) as T;
+  if (Array.isArray(value)) return (value as unknown[]).map((item) => redactValue(item)) as T;
   if (value && typeof value === 'object') {
     return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, item]) => [key, redactValue(item)])) as T;
   }

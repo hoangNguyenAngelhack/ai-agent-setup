@@ -1,13 +1,16 @@
-import type { ExecutionEvent, ExecutionPlan, ExecutionState, GateOutcome, RunResult, StepRecord, StepState } from './contracts';
-import { STEP_STATES } from './contracts';
+import type { GateStatus } from '../contracts';
+import type { ExecutionEvent, ExecutionPlan, ExecutionState, GateOutcome, RunResult, RunResultStep, StepRecord, StepState } from './contracts';
+import { EXECUTION_EVENT_TYPES, STEP_STATES } from './contracts';
 import { assertApproved } from './plan';
 
 /** States a step does not leave, except NOT_VERIFIED, which the orchestrator may verify later. */
 const FINAL: ReadonlySet<StepState> = new Set(['SUCCEEDED', 'FAILED', 'BLOCKED', 'SKIPPED', 'CANCELLED', 'NOT_VERIFIED']);
+/** Host step events that count as execution evidence once accepted. */
+const EXECUTION_REPORTS: ReadonlySet<string> = new Set(['STEP_STARTED', 'STEP_PROGRESS', 'STEP_COMPLETED', 'STEP_FAILED']);
 const OPEN: ReadonlySet<StepState> = new Set(['PENDING', 'READY', 'RUNNING', 'WAITING_FOR_APPROVAL']);
 
 function emptyStep(id: string): StepRecord {
-  return { id, state: 'PENDING', reason: null, approved: false, gates: [], evidence: [], lastProgress: null, history: [] };
+  return { id, state: 'PENDING', reason: null, approved: false, gates: [], evidence: [], lastProgress: null, reports: [], history: [] };
 }
 
 /** Initial state of an approved plan revision; refuses unapproved or modified plans. */
@@ -170,11 +173,36 @@ function applyRunEvent(state: ExecutionState, event: Exclude<ExecutionEvent, { s
   }
 }
 
+function isExecutionEvent(value: unknown): value is ExecutionEvent {
+  const raw = value as Record<string, unknown> | null;
+  return typeof raw === 'object' && raw !== null && typeof raw.eventId === 'string' && EXECUTION_EVENT_TYPES.includes(raw.type as ExecutionEvent['type']);
+}
+
+/** Best-effort id and type of something that is not a valid event, for the anomaly list. */
+function anomalyIdentity(value: unknown): { eventId: string; type: string } {
+  const raw = (typeof value === 'object' && value !== null ? value : {}) as Record<string, unknown>;
+  const text = (field: unknown, fallback: string) => (typeof field === 'string' && field ? field : fallback);
+  return { eventId: text(raw.eventId, 'unknown'), type: text(raw.type, 'UNKNOWN') };
+}
+
+/** Every step that did not succeed carries a reason, even when the reporter gave none. */
+function finalReason(step: StepRecord, open: boolean): string | null {
+  if (open) return `no final result (state ${step.state})`;
+  if (step.state === 'SUCCEEDED') return step.reason;
+  return step.reason || `${step.state} (no reason recorded)`;
+}
+
 /**
  * Applies one event (W2.1-09). Idempotent: a repeated event id is a no-op. Events for another plan
  * revision, unknown steps, or impossible transitions are recorded as anomalies and change nothing.
  */
 export function applyEvent(plan: ExecutionPlan, current: ExecutionState, event: ExecutionEvent): ExecutionState {
+  // Lines read from events.jsonl are untyped: anything that is not an event is recorded, never applied.
+  if (!isExecutionEvent(event)) {
+    const state = clone(current);
+    state.anomalies.push({ ...anomalyIdentity(event), reason: 'not an execution event' });
+    return state;
+  }
   if (current.processed.includes(event.eventId)) return current;
   const state = clone(current);
   state.processed.push(event.eventId);
@@ -195,6 +223,7 @@ export function applyEvent(plan: ExecutionPlan, current: ExecutionState, event: 
   if (state.run === 'CANCELLED') return reject('run is cancelled');
   const problem = stepHandler(event)(step, spec);
   if (problem) reject(problem);
+  else if (event.source === 'host' && EXECUTION_REPORTS.has(event.type) && !step.reports.includes(event.type)) step.reports.push(event.type);
   return refreshReadiness(plan, state);
 }
 
@@ -211,17 +240,21 @@ export function readySteps(state: ExecutionState): string[] {
  * Final report: every step is accounted for. A run SUCCEEDS only when every step SUCCEEDED;
  * cancelled is never success; open steps are reported as NOT_VERIFIED.
  */
-export function reconcile(plan: ExecutionPlan, state: ExecutionState): RunResult {
-  const steps = plan.steps.map((spec) => {
+export function reconcile(plan: ExecutionPlan, state: ExecutionState, generatedAt: string): RunResult {
+  const steps = plan.steps.map((spec): RunResultStep => {
     const step = state.steps[spec.id]!;
     const open = OPEN.has(step.state);
     return {
       id: spec.id,
+      capability: spec.capability,
+      agent: spec.agent,
       state: step.state,
-      final: open ? ('NOT_VERIFIED' as const) : step.state,
-      reason: open ? `no final result (state ${step.state})` : step.reason,
+      final: open ? 'NOT_VERIFIED' : (step.state as RunResultStep['final']),
+      reason: finalReason(step, open),
+      approval: { required: spec.approval === 'required', approved: step.approved },
       gates: step.gates,
       evidence: step.evidence,
+      execution: { evidenced: step.reports.length > 0, reports: [...step.reports] },
     };
   });
   const counts = Object.fromEntries(STEP_STATES.map((name) => [name, steps.filter((step) => step.final === name).length])) as RunResult['counts'];
@@ -230,7 +263,32 @@ export function reconcile(plan: ExecutionPlan, state: ExecutionState): RunResult
   let reason: string;
   if (state.run === 'CANCELLED') [status, reason] = ['CANCELLED', `run cancelled: ${state.runReason}`];
   else if (failed.length || state.run === 'FAILED') [status, reason] = ['FAILED', state.runReason ?? `failed steps: ${failed.map((step) => step.id).join(', ')}`];
-  else if (steps.every((step) => step.final === 'SUCCEEDED')) [status, reason] = ['SUCCEEDED', 'every step succeeded with verified evidence'];
+  else if (steps.every((step) => step.final === 'SUCCEEDED')) {
+    const unevidenced = steps.filter((step) => !step.execution.evidenced).map((step) => step.id);
+    [status, reason] = unevidenced.length
+      ? ['OUTCOME_VERIFIED', `every step passed its gates, but no execution was reported for: ${unevidenced.join(', ')}`]
+      : ['SUCCEEDED', 'every step was reported executed and passed its gates'];
+  }
   else [status, reason] = ['NOT_VERIFIED', `unverified steps: ${steps.filter((step) => step.final !== 'SUCCEEDED').map((step) => `${step.id} (${step.final})`).join(', ')}`];
-  return { schemaVersion: 'run-result/v1', runId: plan.runId, planDigest: state.planDigest, revision: plan.revision, status, reason, steps, counts, anomalies: state.anomalies };
+  const gates = { PASS: 0, FAIL: 0, NOT_VERIFIED: 0 } as Record<GateStatus, number>;
+  for (const outcome of steps.flatMap((step) => step.gates)) gates[outcome.status] += 1;
+  return {
+    schemaVersion: 'run-result/v1',
+    runId: plan.runId,
+    planId: plan.planId,
+    planDigest: state.planDigest,
+    revision: plan.revision,
+    project: plan.project,
+    profile: plan.profile,
+    generatedAt,
+    // assertApproved (createExecutionState) guarantees both are set.
+    approval: { by: plan.approval.by!, at: plan.approval.at! },
+    status,
+    reason,
+    run: state.run,
+    steps,
+    counts,
+    verification: { stepsTotal: steps.length, stepsSucceeded: counts.SUCCEEDED, stepsWithExecutionEvidence: steps.filter((step) => step.execution.evidenced).length, gates },
+    anomalies: state.anomalies,
+  };
 }

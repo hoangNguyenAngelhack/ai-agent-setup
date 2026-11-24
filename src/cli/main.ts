@@ -150,7 +150,7 @@ async function commandSetup(args: ParsedArgs, io: CliIO, diffOnly: boolean): Pro
 }
 
 async function commandCreate(args: ParsedArgs, io: CliIO): Promise<number> {
-  const ask: Ask = io.ask ?? (async () => '');
+  const ask: Ask = io.ask ?? (() => Promise.resolve(''));
   const config = await resolveCreateConfig(args, ask);
   io.write(`Creating ${config.projectName} (${[config.type, config.framework, config.ui].filter(Boolean).join('/')}, ${config.tier}, adapters: ${config.adapters.join(', ')})…\n`);
   const outcome = createProject({ cwd: io.cwd, ...config });

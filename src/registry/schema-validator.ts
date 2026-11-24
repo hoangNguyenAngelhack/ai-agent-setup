@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import Ajv2020, { type ErrorObject, type ValidateFunction } from 'ajv/dist/2020';
+import Ajv2020, { type AnySchema, type ErrorObject, type ValidateFunction } from 'ajv/dist/2020';
 import { ENTITY_KINDS, type EntityKind } from './types';
 
 const SCHEMA_FILE = /\.schema\.json$/;
@@ -24,7 +24,7 @@ export class SchemaValidator {
     // (GateResult evidence, Tool type); every other strict check stays on.
     this.ajv = new Ajv2020({ allErrors: true, strict: true, strictRequired: false });
     for (const name of readdirSync(schemasDir).filter((file) => SCHEMA_FILE.test(file)).sort()) {
-      this.ajv.addSchema(JSON.parse(readFileSync(join(schemasDir, name), 'utf8')));
+      this.ajv.addSchema(JSON.parse(readFileSync(join(schemasDir, name), 'utf8')) as AnySchema);
     }
   }
 

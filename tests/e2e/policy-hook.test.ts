@@ -7,6 +7,8 @@ import { loadPolicyHookAssets } from '../../src/app/policy-hook-assets';
 import { validateCatalog } from '../../src/registry';
 import { REPO_ROOT } from '../helpers/v1-cli';
 
+type HookOutput = { hookSpecificOutput: { permissionDecision: string } };
+
 /**
  * Runs the generated policy hook as a real process, exactly as a host would: JSON on stdin,
  * decision on stdout / exit code (fixes TD-03: the V1 hooks never received their input).
@@ -38,7 +40,7 @@ describe('generated policy hook (end to end)', () => {
     const result = runHook('claude-code', { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command: 'rm -rf build' } });
 
     expect(result.status).toBe(0);
-    expect(JSON.parse(result.stdout).hookSpecificOutput).toMatchObject({ permissionDecision: 'ask' });
+    expect((JSON.parse(result.stdout) as HookOutput).hookSpecificOutput).toMatchObject({ permissionDecision: 'ask' });
   });
 
   it('should deny writing an AWS access key', () => {
@@ -46,7 +48,7 @@ describe('generated policy hook (end to end)', () => {
 
     const result = runHook('claude-code', { tool_name: 'Write', tool_input: { file_path: 'a.py', content } });
 
-    expect(JSON.parse(result.stdout).hookSpecificOutput.permissionDecision).toBe('deny');
+    expect((JSON.parse(result.stdout) as HookOutput).hookSpecificOutput.permissionDecision).toBe('deny');
   });
 
   it('should stay silent for harmless commands', () => {

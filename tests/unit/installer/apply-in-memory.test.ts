@@ -45,7 +45,7 @@ describe('applyInMemory', () => {
       source: null,
     };
 
-    const merged = JSON.parse(applyInMemory([op], new Map([['s.json', existing]])).get('s.json')!);
+    const merged = JSON.parse(applyInMemory([op], new Map([['s.json', existing]])).get('s.json')!) as unknown;
 
     expect(merged).toEqual({ model: 'x', permissions: { ask: ['Bash(a *)', 'Bash(b *)'], allow: ['Read'] }, hooks: { PreToolUse: [] } });
   });

@@ -1,0 +1,701 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:contracts:v1:run-result",
+  "title": "Execution run result",
+  "description": "Final, reconciled report of an execution run (ADR-009, W2.1-09). Two axes: the outcome (orchestrator gate results per step) and execution evidence (step events the host reported). SUCCEEDED requires both for every step; OUTCOME_VERIFIED means every outcome passed its gates but at least one step has no execution evidence. A SUCCEEDED step requires at least one orchestrator gate result with every gate PASS. CANCELLED is never success. Cross-field consistency (counts, verification totals) is checked by the toolkit when it writes the result. See docs/v2/05 §12.4.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "runId",
+    "planId",
+    "planDigest",
+    "revision",
+    "project",
+    "profile",
+    "generatedAt",
+    "approval",
+    "status",
+    "reason",
+    "run",
+    "steps",
+    "counts",
+    "verification",
+    "anomalies"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": "run-result/v1"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^run-[0-9TZ]+-[0-9a-f]{6}$"
+    },
+    "planId": {
+      "type": "string",
+      "pattern": "^plan-[0-9TZ]+-[0-9a-f]{6}$"
+    },
+    "planDigest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "project": {
+      "type": "object",
+      "required": [
+        "name",
+        "commit"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "profile": {
+      "type": "string",
+      "pattern": "^profile\\.[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "generatedAt": {
+      "$ref": "#/$defs/timestamp"
+    },
+    "approval": {
+      "description": "Approval of the plan revision this run executed.",
+      "type": "object",
+      "required": [
+        "by",
+        "at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "by": {
+          "type": "string",
+          "minLength": 1
+        },
+        "at": {
+          "$ref": "#/$defs/timestamp"
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "SUCCEEDED",
+        "OUTCOME_VERIFIED",
+        "FAILED",
+        "CANCELLED",
+        "NOT_VERIFIED"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run": {
+      "description": "Run-level state reported through events.",
+      "enum": [
+        "PENDING",
+        "RUNNING",
+        "HOST_COMPLETED",
+        "FAILED",
+        "CANCELLED"
+      ]
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/step"
+      }
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "PENDING",
+        "READY",
+        "RUNNING",
+        "WAITING_FOR_APPROVAL",
+        "SUCCEEDED",
+        "FAILED",
+        "BLOCKED",
+        "SKIPPED",
+        "CANCELLED",
+        "NOT_VERIFIED"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "PENDING": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "READY": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "RUNNING": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "WAITING_FOR_APPROVAL": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "SUCCEEDED": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "FAILED": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "BLOCKED": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "SKIPPED": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "CANCELLED": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "NOT_VERIFIED": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": [
+        "stepsTotal",
+        "stepsSucceeded",
+        "stepsWithExecutionEvidence",
+        "gates"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "stepsTotal": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "stepsSucceeded": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gates": {
+          "type": "object",
+          "required": [
+            "PASS",
+            "FAIL",
+            "NOT_VERIFIED"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "PASS": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "FAIL": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "NOT_VERIFIED": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "stepsWithExecutionEvidence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "anomalies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "eventId",
+          "type",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "SUCCEEDED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "run": {
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "HOST_COMPLETED"
+            ]
+          },
+          "steps": {
+            "items": {
+              "properties": {
+                "final": {
+                  "const": "SUCCEEDED"
+                },
+                "execution": {
+                  "type": "object",
+                  "properties": {
+                    "evidenced": {
+                      "const": true
+                    }
+                  }
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "counts": {
+            "properties": {
+              "FAILED": {
+                "const": 0
+              },
+              "BLOCKED": {
+                "const": 0
+              },
+              "SKIPPED": {
+                "const": 0
+              },
+              "CANCELLED": {
+                "const": 0
+              },
+              "NOT_VERIFIED": {
+                "const": 0
+              }
+            },
+            "type": "object"
+          },
+          "verification": {
+            "properties": {
+              "gates": {
+                "properties": {
+                  "FAIL": {
+                    "const": 0
+                  },
+                  "NOT_VERIFIED": {
+                    "const": 0
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "OUTCOME_VERIFIED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "run": {
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "HOST_COMPLETED"
+            ]
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "final": {
+                  "const": "SUCCEEDED"
+                }
+              }
+            },
+            "contains": {
+              "type": "object",
+              "properties": {
+                "execution": {
+                  "type": "object",
+                  "properties": {
+                    "evidenced": {
+                      "const": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "counts": {
+            "properties": {
+              "FAILED": {
+                "const": 0
+              },
+              "BLOCKED": {
+                "const": 0
+              },
+              "SKIPPED": {
+                "const": 0
+              },
+              "CANCELLED": {
+                "const": 0
+              },
+              "NOT_VERIFIED": {
+                "const": 0
+              }
+            },
+            "type": "object"
+          },
+          "verification": {
+            "properties": {
+              "gates": {
+                "properties": {
+                  "FAIL": {
+                    "const": 0
+                  },
+                  "NOT_VERIFIED": {
+                    "const": 0
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "CANCELLED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "run": {
+            "const": "CANCELLED"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "run": {
+            "const": "CANCELLED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "CANCELLED"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "stepState": {
+      "enum": [
+        "PENDING",
+        "READY",
+        "RUNNING",
+        "WAITING_FOR_APPROVAL",
+        "SUCCEEDED",
+        "FAILED",
+        "BLOCKED",
+        "SKIPPED",
+        "CANCELLED",
+        "NOT_VERIFIED"
+      ]
+    },
+    "gateOutcome": {
+      "type": "object",
+      "required": [
+        "gate",
+        "status",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "gate": {
+          "$ref": "urn:ai-agent-setup:catalog:v1:envelope#/$defs/gateId"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT_VERIFIED"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "FAIL",
+              "NOT_VERIFIED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": [
+        "id",
+        "capability",
+        "agent",
+        "state",
+        "final",
+        "reason",
+        "approval",
+        "gates",
+        "evidence",
+        "execution"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capability": {
+          "type": "string",
+          "minLength": 1
+        },
+        "agent": {
+          "type": "string",
+          "pattern": "^agent\\."
+        },
+        "state": {
+          "$ref": "#/$defs/stepState"
+        },
+        "final": {
+          "description": "Always terminal: open steps are reported as NOT_VERIFIED.",
+          "enum": [
+            "SUCCEEDED",
+            "FAILED",
+            "BLOCKED",
+            "SKIPPED",
+            "CANCELLED",
+            "NOT_VERIFIED"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "approval": {
+          "type": "object",
+          "required": [
+            "required",
+            "approved"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "approved": {
+              "type": "boolean"
+            }
+          }
+        },
+        "gates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gateOutcome"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "execution": {
+          "description": "Execution evidence: accepted step events reported by the host. Shows that execution was reported in this run, not that the report is true.",
+          "type": "object",
+          "required": [
+            "evidenced",
+            "reports"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "evidenced": {
+              "type": "boolean"
+            },
+            "reports": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "STEP_STARTED",
+                  "STEP_PROGRESS",
+                  "STEP_COMPLETED",
+                  "STEP_FAILED"
+                ]
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "evidenced": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reports": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "reports": {
+                "type": "array",
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "final": {
+                "const": "SUCCEEDED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "const": "SUCCEEDED"
+              },
+              "gates": {
+                "minItems": 1,
+                "items": {
+                  "properties": {
+                    "status": {
+                      "const": "PASS"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "approval": {
+                "if": {
+                  "properties": {
+                    "required": {
+                      "const": true
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "approved": {
+                      "const": true
+                    }
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "final": {
+                "not": {
+                  "const": "SUCCEEDED"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
