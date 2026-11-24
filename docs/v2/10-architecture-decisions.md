@@ -158,6 +158,7 @@ None of these reopens an approved decision. Each one has a proposed resolution.
 | OQ-07 | Minimum Node.js version (V1 says ≥ 18, which is past upstream end of life; check current LTS dates at implementation) | CI matrix, users | Maintainer |
 | OQ-08 | Support window for 1.x after V2.0 GA, and whether the V1.x patch track ([08 §2](08-implementation-roadmap.md#2-v1x-maintenance-track-proposed)) is approved | Users on 1.x | Maintainer |
 | OQ-09 | Organization policy file location and format (path flag, environment variable, or managed host settings) | Enterprise | Maintainer |
+| OQ-11 | Should mentions of payments, tokens, passwords or personal data, and capabilities rated high risk (such as app store release), always add an independent review step? They currently do, which keeps routing minimality at 0.903 against the ≥ 0.95 hypothesis (benchmarks/eval/README.md). | Routing, review cost | Maintainer |
 | OQ-10 | Should the default profile for Codex set `sandbox_mode = "workspace-write"` with `approval_policy = "on-request"`? | Security defaults | Security review |
 
 ## 6. Acceptance criteria

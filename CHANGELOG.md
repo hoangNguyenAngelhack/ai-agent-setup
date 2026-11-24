@@ -23,6 +23,10 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   `--strategy` and `--enable-tool`.
 - Project detection for JavaScript/TypeScript, Python, Java/Kotlin, Go, .NET, Rust, Ruby, PHP,
   Flutter, native mobile, CI providers and monorepo workspaces.
+- `plan` and `explain` (V2.1 preview): a deterministic task classifier and hybrid router that
+  propose domains, agents, skills, gates and an estimated cost, with an explanation record.
+  Manual selections only narrow the plan; conflicts are reported. Routing is measured on a
+  140-task development set with `npm run eval:routing`.
 - Test suite (unit, contract, golden, installer, end-to-end, V1 characterization) and CI on Linux,
   macOS and Windows with Node 20, 22 and 24.
 

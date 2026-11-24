@@ -56,6 +56,8 @@ node bin/cli.js rollback ../my-project      # hoàn tác lần cài gần nhất
 | `doctor [thư mục]` | Đối chiếu file và section được quản lý với `.ai-agent-setup/manifest.json` |
 | `rollback [thư mục] [--force]` | Trả lại đúng từng byte trạng thái trước lần cài gần nhất |
 | `catalog validate [thư mục]` | Kiểm tra catalog (schema, tham chiếu, policy, ngân sách context) |
+| `plan "<task>"` *(bản xem trước V2.1)* | Đề xuất kế hoạch: domain, agent, skill, gate và chi phí ước lượng, kèm giải thích; `--mode`, `--domain`, `--agent`, `--exclude-agent`, `--allow-tools`, `--budget`, `--approve-at`, `--json` |
+| `explain <plan-id>` | Xem lại kế hoạch đã lưu và phần giải thích |
 
 Tuỳ chọn của `create` giữ nguyên V1: `-t` (`backend`, `frontend`, `fullstack`, `mobile`), `-f`
 (backend: `express`, `nestjs` · frontend: `nextjs`, `vite` · mobile: `expo`, `cli`), `-u` (chỉ

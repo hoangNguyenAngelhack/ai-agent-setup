@@ -10,7 +10,9 @@ category: backend
 status: experimental
 dependencies: []
 requiredContext:
-  projectSignals: []
+  projectSignals:
+    - express
+    - fastify
   files: []
 supportedAdapters:
   claude-code: native

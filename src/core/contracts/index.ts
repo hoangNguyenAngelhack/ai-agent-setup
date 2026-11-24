@@ -72,3 +72,81 @@ export interface Quantity {
   unit: string;
   label: 'measured' | 'estimated';
 }
+
+export type TaskType = 'feature' | 'bug' | 'refactor' | 'test' | 'docs' | 'review' | 'ops' | 'analysis';
+export type RiskLevel = 'low' | 'medium' | 'high';
+export type TaskSize = 'S' | 'M' | 'L';
+
+/** Output of the Task Planner (docs/v2/05 §7.3 step 1); deterministic, no model calls. */
+export interface TaskClassification {
+  type: TaskType;
+  /** Cue words that decided the type; empty when the type is a default guess. */
+  typeCues: string[];
+  domains: Array<{ id: string; score: number; confidence: number; matched: string[] }>;
+  capabilities: Array<{ id: string; score: number; matched: string[] }>;
+  risk: RiskLevel;
+  riskReasons: string[];
+  size: TaskSize;
+  /** Single domain, risk not high, size S: the router must stay minimal (<= 1 agent, <= 3 skills). */
+  simple: boolean;
+}
+
+export type PlanMode = 'automatic' | 'manual' | 'hybrid';
+export type ApprovalPoint = 'plan' | 'each-step' | 'gates';
+
+/** Rank 4/5 user selections (docs/v2/05 §7.4). They may narrow, never widen, policy. */
+export interface PlanOverrides {
+  domains?: string[];
+  agents?: string[];
+  excludeAgents?: string[];
+  skills?: string[];
+  workflow?: string;
+  allowTools?: string[];
+  budgetBytes?: number;
+  approveAt?: ApprovalPoint[];
+}
+
+export interface PlanStep {
+  id: string;
+  capability: string;
+  agent: string;
+  gates: string[];
+  approval: 'none' | 'required';
+}
+
+export interface Reasoned {
+  id: string;
+  why: string;
+}
+
+/** Explainability record (docs/v2/05 §7.6): answers the eight routing questions. */
+export interface ExplainRecord {
+  domains: Array<Reasoned & { confidence: number }>;
+  agents: Reasoned[];
+  excluded: Reasoned[];
+  skills: Array<Reasoned & { bytes: number }>;
+  rules: Reasoned[];
+  assumptions: string[];
+  tools: { allow: string[]; approvalRequired: string[]; denied: string[] };
+  cost: { contextBytes: number; steps: number; approxTokens: number; label: 'estimated'; basis: string };
+  verification: string[];
+  overrides: Array<{ field: string; value: unknown; effect: string }>;
+  conflicts: string[];
+}
+
+export interface Plan {
+  schema: 'plan/v1';
+  id: string;
+  task: string;
+  mode: PlanMode;
+  status: 'proposed' | 'ready' | 'needs-approval' | 'invalid';
+  profile: string;
+  classification: TaskClassification;
+  workflow: string | null;
+  steps: PlanStep[];
+  agents: string[];
+  skills: string[];
+  rules: string[];
+  gates: string[];
+  explain: ExplainRecord;
+}

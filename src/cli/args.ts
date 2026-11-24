@@ -1,4 +1,4 @@
-export const COMMANDS = ['create', 'setup', 'diff', 'doctor', 'rollback', 'catalog'] as const;
+export const COMMANDS = ['create', 'setup', 'diff', 'doctor', 'rollback', 'catalog', 'plan', 'explain'] as const;
 export type Command = (typeof COMMANDS)[number] | 'help' | 'version';
 
 export class UsageError extends Error {}
@@ -20,6 +20,16 @@ const VALUE_FLAGS: Record<string, string> = {
   '--profile': 'profile',
   '--strategy': 'strategy',
   '--enable-tool': 'enable-tool',
+  '--mode': 'mode',
+  '--domain': 'domain',
+  '--agent': 'agent',
+  '--exclude-agent': 'exclude-agent',
+  '--skill': 'skill',
+  '--workflow': 'workflow',
+  '--allow-tools': 'allow-tools',
+  '--budget': 'budget',
+  '--approve-at': 'approve-at',
+  '--project': 'project',
 };
 
 const SWITCHES: Record<string, string> = {
@@ -35,6 +45,7 @@ const SWITCHES: Record<string, string> = {
   '--version': 'version',
   '--dry-run': 'dry-run',
   '--force': 'force',
+  '--json': 'json',
 };
 
 export interface ParsedArgs {
