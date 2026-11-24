@@ -189,6 +189,11 @@ export async function commandRun(args: ParsedArgs, io: IO): Promise<number> {
         io.write(`${outcome.status}: ${outcome.reason}\n$ ${outcome.invocation.executable} ${outcome.invocation.args.map((arg) => (arg.includes('\n') ? '<prompt>' : arg)).join(' ')}\n`);
         for (const item of outcome.invocation.unsupported) io.write(`  unsupported: ${item}\n`);
         if (outcome.transcript) io.write(`  transcript: ${outcome.transcript}\n`);
+        if (outcome.usage) {
+          const { tokens, samples, cost } = outcome.usage;
+          const counts = `input ${tokens.input}, output ${tokens.output}, cache read ${tokens.cacheRead}, cache write ${tokens.cacheWrite}`;
+          io.write(`  usage: ${samples ? `${counts} (measured)` : `none in the ${host} stream`}; cost: ${cost ? `${cost.usd} USD (${cost.label}: ${cost.basis})` : 'not reported by the host'}\n`);
+        }
         if (outcome.isolation) {
           const applied = outcome.isolation;
           io.write(`  isolation: requested ${applied.requested}, applied ${applied.applied} (${applied.provider} on ${applied.platform}, network ${applied.network})\n`);

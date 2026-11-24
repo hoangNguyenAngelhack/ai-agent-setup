@@ -1,9 +1,16 @@
-import { deliveryPrompt, jsonLine, type HostDelivery } from '../common/delivery';
+import { deliveryPrompt, jsonLine, usageCounts, type HostDelivery } from '../common/delivery';
+
+/** Claude Code usage fields (Anthropic message `usage`); input excludes cache reads and writes. */
+const USAGE_FIELDS = { input: 'input_tokens', output: 'output_tokens', cacheRead: 'cache_read_input_tokens', cacheWrite: 'cache_creation_input_tokens' };
 
 /**
  * Claude Code headless mode: `claude -p <prompt> --output-format stream-json --verbose` prints one
  * JSON message per line; `system/init` opens the session and a `result` message closes it.
  * Message shapes follow the published docs and are NOT yet verified against an installed CLI (W2.0-15).
+ * Usage: every `assistant` message carries `message.usage` and `message.model`, and one message is
+ * repeated over several lines with the same `message.id` (verified 2026-11-25 on local Claude Code
+ * 2.1.33x session transcripts: 411 lines, 181 ids, same usage on each repeat). The `result` message
+ * adds `total_cost_usd` and a session `usage` (published docs; not verified on an installed CLI).
  */
 export const claudeCodeDelivery: HostDelivery = {
   host: 'claude-code',
@@ -26,5 +33,24 @@ export const claudeCodeDelivery: HostDelivery = {
     if (message.type !== 'result') return null;
     if (message.subtype === 'success' && message.is_error !== true) return { kind: 'completed' };
     return { kind: 'failed', reason: `claude result ${typeof message.subtype === 'string' ? message.subtype : 'error'}` };
+  },
+  parseUsage(line) {
+    const message = jsonLine(line);
+    if (message?.type === 'assistant') {
+      const body = message.message as Record<string, unknown> | undefined;
+      const tokens = usageCounts(body?.usage, USAGE_FIELDS);
+      if (!tokens) return null;
+      return {
+        tokens,
+        ...(typeof body?.id === 'string' ? { messageId: body.id } : {}),
+        ...(typeof body?.model === 'string' ? { model: body.model } : {}),
+      };
+    }
+    if (message?.type !== 'result') return null;
+    const tokens = usageCounts(message.usage, USAGE_FIELDS);
+    const cost = message.total_cost_usd;
+    const costUsd = typeof cost === 'number' && Number.isFinite(cost) && cost >= 0 ? cost : undefined;
+    if (!tokens && costUsd === undefined) return null;
+    return { total: true, ...(tokens ? { tokens } : {}), ...(costUsd !== undefined ? { costUsd } : {}) };
   },
 };

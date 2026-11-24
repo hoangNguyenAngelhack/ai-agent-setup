@@ -11,6 +11,12 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
 
 ### Added
+- Token usage per accepted outcome (W2.2-04): `run deliver` reads the token usage each host prints
+  in its own stream (Claude Code: per message, each message id counted once; Codex: per turn) and
+  keeps it as a `host-usage` file signed with the transcript; `report` adds tokens per host and per
+  accepted outcome (SUCCEEDED run), only from signed usage files, and gives no per-outcome figure
+  while any delivery is unproved. Money is never computed: only Claude Code's own `total_cost_usd`,
+  labelled estimated. Real host streams are not yet verified (no CLI installed here).
 - Execution reports (W2.2-05): `gate-report` and `execution-report` JSON Schemas; every gate
   report is checked against its records before it is stored (an inconsistent PASS becomes
   NOT_VERIFIED); `report [--since date] [--json]` aggregates execution runs and gate history from
