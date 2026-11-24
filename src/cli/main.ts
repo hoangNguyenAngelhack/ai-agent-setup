@@ -82,6 +82,8 @@ Gate options:
 
 Run options:
       --host <id>          deliver: claude-code or codex (needs the CLI on PATH; --dry-run prints it)
+      --timeout <seconds>  deliver: stop the host after this long (default 3600); Ctrl-C cancels
+      --event-command <c>  deliver: how the agent reports events (default: npx create-ai-agent-setup run event <run-id>)
       --type, --step, --reason, --message, --evidence   event: what the agent reports
       --decline            approve-step: decline instead of approve
 

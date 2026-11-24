@@ -1,45 +1,31 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { claudeCodeDelivery } from '../../../src/adapters/claude-code';
 import { codexDelivery } from '../../../src/adapters/codex';
 import { approveRun, checkedRunResult, createRun, deliverRun, finishRun, loadRun, recordEvent, reportRun, verifyStep } from '../../../src/app/runs';
-import type { ExecutionStep, RunResult } from '../../../src/core/execution';
-import { TaskClassifier } from '../../../src/core/planning';
-import { routeTask } from '../../../src/core/routing';
-import { KnowledgeIndex, Registry, SchemaValidator, validateCatalog, type ProfileEntry } from '../../../src/registry';
+import { approveExecutionPlan, type ExecutionPlan, type ExecutionStep, type RunResult } from '../../../src/core/execution';
+import { SchemaValidator } from '../../../src/registry';
 import { writeTree } from '../../helpers/fs-tree';
+import { PLAN_ID, projectWithPlan } from '../../helpers/run-project';
 import { REPO_ROOT } from '../../helpers/v1-cli';
 
-const report = validateCatalog(join(REPO_ROOT, 'catalog'));
-const registry = new Registry(report.entries);
-const PLAN_ID = 'plan-20261124T100000Z-abcdef';
 const validator = new SchemaValidator(join(REPO_ROOT, 'catalog', 'schemas'));
 const RUN_RESULT = 'urn:ai-agent-setup:contracts:v1:run-result';
 const SECRET = `ghp_${'Qw8'.repeat(12)}`; // synthetic
 
-function projectWithPlan(): string {
-  const task = 'Implement the orders API endpoint and build the orders page in the React app';
-  const plan = routeTask({
-    id: PLAN_ID,
-    task,
-    mode: 'hybrid',
-    classification: new TaskClassifier(registry).classify(task),
-    registry,
-    knowledge: new KnowledgeIndex(report.loaded),
-    profile: registry.get('profile.starter') as ProfileEntry,
-    policies: report.policies,
-    project: null,
-    overrides: { domains: ['backend', 'frontend'] },
-    contextT0Bytes: 0,
-  });
-  const root = writeTree({
-    'scripts/ok.js': 'console.log("ok")',
-    '.ai-agent-setup/gates.json': JSON.stringify({ gates: { 'gate.build': { command: 'node scripts/ok.js' }, 'gate.unit-tests': { command: 'node scripts/ok.js' } } }),
-  });
-  mkdirSync(join(root, '.ai-agent-setup', 'runs', PLAN_ID), { recursive: true });
-  writeFileSync(join(root, '.ai-agent-setup', 'runs', PLAN_ID, 'plan.json'), JSON.stringify(plan));
-  return root;
+
+/**
+ * A run created before signing existed (ADR-016 backward compatibility): an old run id, approved
+ * without integrity.json, in a project that has no key yet.
+ */
+function legacyRun(root: string): ExecutionPlan {
+  const draft = createRun(root, PLAN_ID, new Date('2020-01-01T00:00:00Z'));
+  const approved = approveExecutionPlan(draft, 'user', '2020-01-01T00:01:00.000Z');
+  const dir = join(root, '.ai-agent-setup', 'runs', draft.runId);
+  writeFileSync(join(dir, 'execution-plan.json'), JSON.stringify(approved));
+  writeFileSync(join(dir, 'events.jsonl'), '');
+  return approved;
 }
 
 describe('run artifacts (ADR-009)', () => {
@@ -110,9 +96,9 @@ describe('run artifacts (ADR-009)', () => {
     expect(result).toMatchObject({ status: 'FAILED', steps: [{ final: 'FAILED', reason: 'FAILED (no reason recorded)' }, { final: 'BLOCKED' }] });
   });
 
-  it('should record lines that are not events and still report the run', () => {
+  it('should record lines that are not events and still report the run (unsigned run)', () => {
     const root = projectWithPlan();
-    const { runId } = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
+    const { runId } = legacyRun(root);
     writeFileSync(join(root, '.ai-agent-setup', 'runs', runId, 'events.jsonl'), '{"foo":1}\nnull\n{"eventId":"e9","type":"STEP_EXPLODED"}\n');
     const result = finishRun(root, runId);
 
@@ -124,9 +110,9 @@ describe('run artifacts (ADR-009)', () => {
     ]);
   });
 
-  it('should skip an unreadable event line and report it', () => {
+  it('should skip an unreadable event line and report it (unsigned run)', () => {
     const root = projectWithPlan();
-    const { runId, steps } = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
+    const { runId, steps } = legacyRun(root);
     recordEvent(root, runId, { type: 'STEP_STARTED', source: 'host', stepId: steps[0]!.id });
     writeFileSync(join(root, '.ai-agent-setup', 'runs', runId, 'events.jsonl'), '{"torn":', { flag: 'a' });
 
@@ -198,8 +184,8 @@ describe('ADR-015 in the run store', () => {
     writeFileSync(file, JSON.stringify({ status: 'OUTCOME_VERIFIED', steps: [{ id: first.id, final: 'SUCCEEDED' }, { id: second.id, final: 'SUCCEEDED' }] }));
 
     const { result, changes } = reportRun(root, runId);
-    expect(result).toMatchObject({ status: 'SUCCEEDED', rulesVersion: 2, anomalies: [], deferred: [] });
-    expect(changes).toEqual(['rules 1 → 2 (recomputed from the event log)', 'status OUTCOME_VERIFIED → SUCCEEDED']);
+    expect(result).toMatchObject({ status: 'SUCCEEDED', rulesVersion: 3, anomalies: [], deferred: [], integrity: { status: 'VERIFIED', violations: 0 } });
+    expect(changes).toEqual(['rules 1 → 3 (recomputed from the event log)', 'status OUTCOME_VERIFIED → SUCCEEDED']);
     expect(reportRun(root, runId).changes).toEqual([]);
   }, 30000);
 });

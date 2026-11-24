@@ -106,6 +106,15 @@
                   "minLength": 1
                 },
                 "description": "Globs for project-relative paths being written; for a write, every write criterion present must match."
+              },
+              "readPaths": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "description": "Globs for project-relative paths being read through the host's file tools."
               }
             }
           }

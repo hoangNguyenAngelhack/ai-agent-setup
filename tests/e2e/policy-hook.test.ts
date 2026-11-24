@@ -100,4 +100,14 @@ describe('generated policy hook (end to end)', () => {
     expect((JSON.parse(runHook('claude-code', { tool_name: 'Bash', tool_input: { command: 'echo {} >> .ai-agent-setup/runs/r/events.jsonl' } }).stdout) as HookOutput).hookSpecificOutput.permissionDecision).toBe('deny');
     expect(runHook('claude-code', { tool_name: 'Bash', tool_input: { command: 'npx create-ai-agent-setup run event run-1 --type STEP_STARTED --step a' } }).stdout).toBe('');
   });
+
+  it('should deny the packaged hook reading the integrity key, whatever the path spelling', () => {
+    const keys = process.env.AI_AGENT_SETUP_KEY_DIR!;
+    const cwd = mkdtempSync(join(tmpdir(), 'project-'));
+    const decision = (input: unknown) => (JSON.parse(runHook('claude-code', input).stdout) as HookOutput).hookSpecificOutput.permissionDecision;
+
+    expect(decision({ cwd, tool_name: 'Read', tool_input: { file_path: join(keys, 'x.key') } })).toBe('deny');
+    expect(decision({ cwd, tool_name: 'Grep', tool_input: { pattern: 'key', path: join(keys, '..') } })).toBe('deny');
+    expect(runHook('claude-code', { cwd, tool_name: 'Read', tool_input: { file_path: join(cwd, 'README.md') } }).stdout).toBe('');
+  });
 });

@@ -102,7 +102,7 @@ function generateSettings(context: GenerationContext): void {
     path: '.claude/settings.json',
     value: {
       permissions: { ...(ask.length > 0 ? { ask } : {}), ...(deny.length > 0 ? { deny } : {}) },
-      hooks: { PreToolUse: [{ matcher: 'Bash|Write|Edit|MultiEdit', hooks: [{ type: 'command', command: HOOK_COMMAND }] }] },
+      hooks: { PreToolUse: [{ matcher: 'Bash|Write|Edit|MultiEdit|Read|Grep|Glob', hooks: [{ type: 'command', command: HOOK_COMMAND }] }] },
     },
     source: null,
   });

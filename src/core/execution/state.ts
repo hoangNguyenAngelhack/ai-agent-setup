@@ -329,7 +329,7 @@ export function readySteps(state: ExecutionState): string[] {
  * Final report: every step is accounted for. A run SUCCEEDS only when every step SUCCEEDED;
  * cancelled is never success; open steps are reported as NOT_VERIFIED.
  */
-export function reconcile(plan: ExecutionPlan, state: ExecutionState, generatedAt: string): RunResult {
+export function reconcile(plan: ExecutionPlan, state: ExecutionState, generatedAt: string, signing: { signed: boolean; scheme: string | null } = { signed: false, scheme: null }): RunResult {
   const steps = plan.steps.map((spec): RunResultStep => {
     const step = state.steps[spec.id]!;
     const open = OPEN.has(step.state);
@@ -363,6 +363,11 @@ export function reconcile(plan: ExecutionPlan, state: ExecutionState, generatedA
   const pending = steps.filter((step) => step.approval.pending).map((step) => step.id);
   if (pending.length && (status === 'SUCCEEDED' || status === 'OUTCOME_VERIFIED')) status = 'NOT_VERIFIED';
   if (pending.length) reason = `approval pending: ${pending.join(', ')}; ${reason}`;
+  // ADR-016: an unsigned, changed or removed event or piece of evidence rules out success.
+  const violations = state.anomalies.filter((anomaly) => anomaly.code === 'INTEGRITY_VIOLATION').length;
+  if (violations && (status === 'SUCCEEDED' || status === 'OUTCOME_VERIFIED')) status = 'NOT_VERIFIED';
+  if (violations) reason = `integrity violated (${violations}); ${reason}`;
+  const integrity = { status: violations ? 'VIOLATED' : signing.signed ? 'VERIFIED' : 'UNSIGNED', scheme: signing.scheme, violations } as const;
   const gates = { PASS: 0, FAIL: 0, NOT_VERIFIED: 0 } as Record<GateStatus, number>;
   for (const outcome of steps.flatMap((step) => step.gates)) gates[outcome.status] += 1;
   return {
@@ -385,5 +390,6 @@ export function reconcile(plan: ExecutionPlan, state: ExecutionState, generatedA
     verification: { stepsTotal: steps.length, stepsSucceeded: counts.SUCCEEDED, stepsWithExecutionEvidence: steps.filter((step) => step.execution.evidenced).length, gates },
     anomalies: state.anomalies,
     deferred: state.deferred.map(({ event, reason: why }) => ({ eventId: event.eventId, type: event.type, stepId: 'stepId' in event ? event.stepId : '', reason: why })),
+    integrity,
   };
 }

@@ -3,10 +3,23 @@ import { listGates, readGateHistory, runQualityGates } from '../app/gates';
 import { approveRun, createRun, deliverRun, loadRun, recordEvent, reportRun, verifyStep, type EventInput } from '../app/runs';
 import { renderGateReport } from '../quality';
 import { single, UsageError, type ParsedArgs } from './args';
+import type { Ask } from './create-config';
 
 interface IO {
   cwd: string;
   write: (text: string) => void;
+  /** Interactive question; null when stdin is not a terminal. */
+  ask?: Ask | null;
+}
+
+/**
+ * Approvals are a person's decision (ADR-016, T11): they need an interactive terminal and the id
+ * typed back. An agent's shell has no terminal, so it cannot approve, however the command is spelled.
+ */
+async function confirmByPerson(io: IO, what: string, expected: string): Promise<void> {
+  if (!io.ask) throw new UsageError(`${what} needs an interactive terminal: approvals are made by a person, not by an agent or a script`);
+  const answer = (await io.ask(`${what}: type ${expected} to confirm\n→ `)).trim();
+  if (answer !== expected) throw new UsageError(`${what} not confirmed (expected ${expected})`);
 }
 
 /** Exit codes for verification commands: 0 PASS/SUCCEEDED, 1 FAIL, 2 NOT_VERIFIED, OUTCOME_VERIFIED or CANCELLED. */
@@ -93,6 +106,7 @@ export async function commandRun(args: ParsedArgs, io: IO): Promise<number> {
       return 0;
     }
     case 'approve': {
+      await confirmByPerson(io, `Approve run ${id}`, id);
       const plan = approveRun(project, id, single(args, 'by') ?? 'user');
       io.write(`Approved ${plan.runId} revision ${plan.revision} (${plan.approval.digest}). The plan is now immutable.\n`);
       return 0;
@@ -106,6 +120,7 @@ export async function commandRun(args: ParsedArgs, io: IO): Promise<number> {
     case 'approve-step': {
       if (!stepId) throw new UsageError('Usage: run approve-step <run-id> <step-id> [--decline]');
       const approved = !args.switches.has('decline');
+      await confirmByPerson(io, `${approved ? 'Approve' : 'Decline'} step ${stepId}`, stepId);
       recordEvent(project, id, { type: 'APPROVAL_RESOLVED', source: 'user', stepId, approved, by: single(args, 'by') ?? 'user' });
       io.write(`${approved ? 'Approved' : 'Declined'} ${stepId}.\n`);
       return 0;
@@ -138,13 +153,29 @@ export async function commandRun(args: ParsedArgs, io: IO): Promise<number> {
       const host = single(args, 'host');
       if (!host) throw new UsageError('run deliver needs --host claude-code|codex');
       loadRun(project, id);
-      const outcome = await deliverRun(project, id, host, { dryRun: args.switches.has('dry-run') });
+      const seconds = single(args, 'timeout');
+      if (seconds !== undefined && !/^\d+$/.test(seconds)) throw new UsageError('--timeout must be a number of seconds');
+      const controller = new AbortController();
+      const onInterrupt = () => controller.abort();
+      process.once('SIGINT', onInterrupt);
+      let outcome;
+      try {
+        outcome = await deliverRun(project, id, host, {
+          dryRun: args.switches.has('dry-run'),
+          signal: controller.signal,
+          ...(seconds !== undefined ? { timeoutMs: Number(seconds) * 1000 } : {}),
+          ...(text(args, 'event-command') ? { eventCommand: text(args, 'event-command')! } : {}),
+        });
+      } finally {
+        process.removeListener('SIGINT', onInterrupt);
+      }
       if (args.switches.has('json')) json(io, outcome);
       else {
         io.write(`${outcome.status}: ${outcome.reason}\n$ ${outcome.invocation.executable} ${outcome.invocation.args.map((arg) => (arg.includes('\n') ? '<prompt>' : arg)).join(' ')}\n`);
         for (const item of outcome.invocation.unsupported) io.write(`  unsupported: ${item}\n`);
+        if (outcome.transcript) io.write(`  transcript: ${outcome.transcript}\n`);
       }
-      return outcome.status === 'NOT_VERIFIED' ? 2 : 0;
+      return outcome.status === 'NOT_VERIFIED' || outcome.status === 'CANCELLED' ? 2 : 0;
     }
     default:
       throw new UsageError(`Unknown run action "${action}"`);

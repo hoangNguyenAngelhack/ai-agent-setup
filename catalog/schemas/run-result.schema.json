@@ -22,7 +22,8 @@
     "counts",
     "verification",
     "anomalies",
-    "deferred"
+    "deferred",
+    "integrity"
   ],
   "additionalProperties": false,
   "properties": {
@@ -30,8 +31,8 @@
       "const": "run-result/v1"
     },
     "rulesVersion": {
-      "description": "Reconciliation rules the result was computed with; 2 = ADR-015.",
-      "const": 2
+      "description": "Reconciliation rules the result was computed with; 2 = ADR-015, 3 = ADR-016.",
+      "const": 3
     },
     "runId": {
       "type": "string",
@@ -254,7 +255,8 @@
           },
           "code": {
             "enum": [
-              "DEPENDENCY_ORDER_VIOLATION"
+              "DEPENDENCY_ORDER_VIOLATION",
+              "INTEGRITY_VIOLATION"
             ]
           }
         }
@@ -290,6 +292,61 @@
           }
         }
       }
+    },
+    "integrity": {
+      "description": "ADR-016: whether the applied events and recorded evidence carried valid local signatures.",
+      "type": "object",
+      "required": [
+        "status",
+        "scheme",
+        "violations"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "VERIFIED",
+            "UNSIGNED",
+            "VIOLATED"
+          ]
+        },
+        "scheme": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "violations": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "VIOLATED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "violations": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "violations": {
+                "const": 0
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "allOf": [
@@ -364,6 +421,17 @@
               }
             },
             "type": "object"
+          },
+          "integrity": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "enum": [
+                  "VERIFIED",
+                  "UNSIGNED"
+                ]
+              }
+            }
           }
         }
       }
@@ -444,6 +512,17 @@
               }
             },
             "type": "object"
+          },
+          "integrity": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "enum": [
+                  "VERIFIED",
+                  "UNSIGNED"
+                ]
+              }
+            }
           }
         }
       }

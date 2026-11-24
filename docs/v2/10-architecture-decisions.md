@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | ADR-001–008 **Accepted** (approved in [EXECUTION-SPECIFICATION §3, §13](EXECUTION-SPECIFICATION.md)). ADR-009, ADR-014 and ADR-015 **Accepted** by the Product Owner on 2026-11-24. ADR-010–013 **Proposed, not approved.** |
+| Status | ADR-001–008 **Accepted** (approved in [EXECUTION-SPECIFICATION §3, §13](EXECUTION-SPECIFICATION.md)). ADR-009, ADR-014, ADR-015 and ADR-016 **Accepted** by the Product Owner on 2026-11-24. ADR-010–013 **Proposed, not approved.** |
 | Date | 2026-11-23 |
 | Related | [04 Product](04-product-specification.md) · [05 Architecture](05-architecture-specification.md) · [08 Roadmap](08-implementation-roadmap.md) |
 
@@ -11,7 +11,7 @@
 This document records the approved architecture decisions, the conflicts found between the approved
 direction and the current repository, the proposed (unapproved) decisions, and the open questions.
 
-No approval is implied for anything outside ADR-001–009, ADR-014 and ADR-015.
+No approval is implied for anything outside ADR-001–009 and ADR-014–016.
 
 ## 2. Accepted decisions
 
@@ -280,6 +280,47 @@ anomalies), but they no longer influence the state.
   previous `result.json`, so a log replayed under the new rules shows its new outcome (for example
   `rules 1 → 2`, `status OUTCOME_VERIFIED → SUCCEEDED`).
 - Unchanged: event log format, the ten step states, run statuses and exit codes.
+
+### ADR-016: Local integrity of run artifacts
+
+- **Status:** Accepted by the Product Owner, 2026-11-24. Threat model: [11](11-runtime-threat-model.md).
+- **Scope of protection (as accepted):** **ADR-016 does not create a security boundary against an
+  agent or attacker that can run arbitrary code under the same operating-system account.** Such code
+  can read the key and sign anything. Neither the HMAC nor the hook is claimed to stop it. The
+  boundary for that case is Runtime Isolation (W2.2-09, planned).
+- **Context:** Run artifacts live in the project. An agent with write access could forge orchestrator
+  events, widen an approved plan and recompute its unkeyed digest, or replace evidence. A checksum
+  stored next to the data does not help when both can be rewritten.
+- **Decision:**
+  - A per-project HMAC-SHA256 key is created by the toolkit in the user's configuration directory
+    (`ai-agent-setup/keys`, mode 0600, never in the project or the repository).
+  - The toolkit signs the plan approval (run, revision, digest, approver, time), every event it
+    appends (position + exact line, in `integrity.jsonl` next to an unchanged `events.jsonl`) and
+    the checksums of the evidence it records with an event (gate records, gate logs, host transcript).
+    The log head (count, last signature) is kept with the key.
+  - On load, only signed events are applied; unsigned, changed, removed or truncated entries and
+    changed evidence become `INTEGRITY_VIOLATION` anomalies and rule out SUCCEEDED; a plan or approval
+    changed outside the toolkit, or a signed run without its key, is refused.
+  - Signed events must appear in the order they were written.
+  - Runs approved before the key existed stay readable as UNSIGNED (backward compatibility); their
+    list is recorded with the key when it is created, so nothing in the project can make a later run
+    count as unsigned.
+  - Mandatory policy and a built-in path check in the hook deny agents the key directory (shell,
+    writes, Claude Code read tools; resolved paths, case-insensitive where the OS is). A key
+    directory inside the project is refused.
+  - `run approve` and `run approve-step` need an interactive terminal and the id typed back.
+  - An independent security review on 2026-11-24 found two HIGH issues (a signed run could pass as
+    unsigned; signed events could be reordered) and two MEDIUM ones (key-path bypasses, approval via
+    an obfuscated command); all four are fixed with regression tests.
+- **Unchanged:** event log format, step states, run statuses, exit codes. `run-result` rules version 3
+  adds `integrity`.
+- **Alternatives considered:** checksums only (rejected: rewritable with the data); a remote or cloud
+  witness (rejected: local-first); an OS keychain (deferred: platform-specific and prompts the user);
+  a separate OS user or sandbox for the agent (the only real boundary; left to the user, see the
+  threat model §6).
+- **Consequences:** (+) tampering through host tools and ordinary scripts that do not read the key is
+  detected and cannot produce SUCCEEDED. (−) Not a boundary against code the agent runs under the
+  same OS account; the result reports what was verified, not more.
 
 ## 3. Conflicts between the specification and the repository
 

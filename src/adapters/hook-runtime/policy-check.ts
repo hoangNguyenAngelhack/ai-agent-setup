@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
-import { isAbsolute, join, relative } from 'node:path';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import { PolicyEngine, type PolicyAction, type PolicyDecision } from '../../core/policy';
 import type { PolicyDocument } from '../../registry';
+import { touchesKeyDirectory } from '../../shared/key-location';
 
 /**
  * PreToolUse hook runtime (replaces the inert V1 hooks, TD-03). Copied into projects as
@@ -21,6 +22,8 @@ type HookInput = { tool_name?: unknown; tool_input?: unknown; cwd?: unknown } | 
 function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
 }
+
+const READ_TOOLS = new Set(['Read', 'Grep', 'Glob', 'NotebookRead']);
 
 /** Project-relative path with forward slashes (hosts may send absolute paths). */
 function projectPath(path: string, cwd: string): string {
@@ -52,6 +55,9 @@ export function actionsFromHookInput(input: HookInput, fallbackCwd: string = pro
   const toolInput = asRecord(input?.tool_input);
   const cwd = typeof input?.cwd === 'string' ? input.cwd : fallbackCwd;
   const path = filePathOf(toolInput, cwd);
+
+  // File tools that read (Claude Code): policies with `readPaths` apply to them (ADR-016).
+  if (typeof input?.tool_name === 'string' && READ_TOOLS.has(input.tool_name)) return path ? [{ type: 'read', path }] : [];
 
   if (input?.tool_name === 'apply_patch' && typeof toolInput.command === 'string') {
     // One write per file in the patch, so path rules apply to each of them.
@@ -97,10 +103,28 @@ export function hookResponse(host: HookHost, decision: PolicyDecision): HookResp
   return { exitCode: 2, stdout: '', stderr: `${prefix} ${reason}` };
 }
 
-function strictestDecision(engine: PolicyEngine, actions: PolicyAction[]): PolicyDecision {
+/**
+ * Built-in guard for the integrity key (ADR-016), independent of glob patterns: a file action whose
+ * resolved path is the key directory, inside it, or a parent of it is denied. Case-insensitive where
+ * the file system is.
+ */
+export function keyDirectoryDecision(action: PolicyAction, cwd: string): PolicyDecision | null {
+  if (action.type !== 'read' && action.type !== 'write') return null;
+  if (!action.path || !touchesKeyDirectory(resolve(cwd, action.path))) return null;
+  const match = {
+    policyId: 'policy.safety',
+    ruleId: 'safety.integrity-key-access',
+    layer: 'mandatory' as const,
+    effect: 'deny' as const,
+    description: 'The local integrity key is used by the toolkit only (built-in path check).',
+  };
+  return { effect: 'deny', matches: [match], ignoredAllows: [] };
+}
+
+export function strictestDecision(engine: PolicyEngine, actions: PolicyAction[], cwd: string = process.cwd()): PolicyDecision {
   const rank = { allow: 0, ask: 1, deny: 2 } as const;
   return actions
-    .map((action) => engine.evaluate(action))
+    .map((action) => keyDirectoryDecision(action, cwd) ?? engine.evaluate(action))
     .reduce<PolicyDecision>((worst, current) => (rank[current.effect] > rank[worst.effect] ? current : worst), {
       effect: 'allow',
       matches: [],
@@ -114,7 +138,8 @@ function main(): void {
   try {
     const input = JSON.parse(readFileSync(0, 'utf8')) as HookInput;
     const policies = JSON.parse(readFileSync(join(__dirname, 'policies.json'), 'utf8')) as PolicyDocument[];
-    response = hookResponse(host, strictestDecision(new PolicyEngine(policies), actionsFromHookInput(input)));
+    const cwd = typeof input?.cwd === 'string' ? input.cwd : process.cwd();
+    response = hookResponse(host, strictestDecision(new PolicyEngine(policies), actionsFromHookInput(input, cwd), cwd));
   } catch (error) {
     // Fail open but visibly: a broken hook must not block every tool; host permissions still apply.
     response = { exitCode: 1, stdout: '', stderr: `ai-agent-setup policy hook error: ${(error as Error).message}` };

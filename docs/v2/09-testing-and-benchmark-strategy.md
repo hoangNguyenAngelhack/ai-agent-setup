@@ -44,10 +44,25 @@ all four). Code that runs only in child processes (the CLI launched by end-to-en
 hook) is not instrumented; the CLI is also tested in-process through `main()`
 (`tests/unit/cli/main.test.ts`) so that its branches are measured. Nothing is excluded from `src/`.
 
-Measured 2026-11-24 (600 tests): statements 94.01%, branches 85.31%, functions 96.03%, lines 96.45%.
+Measured 2026-11-24 (729 tests): statements 94.44%, branches 86.44%, functions 96.71%, lines 96.85%.
 
-Target for `installer` and `policy`: 95% branches, because of their safety role. **Not met and not
-enforced yet:** measured 93.64% (installer) and 93.98% (policy) on 2026-11-24.
+Target for `installer` and `policy`: 95% branches, because of their safety role. **Met and enforced**
+per area in `vitest.config.mts` since 2026-11-24: installer 98.84% (171/173), policy 96.88% (93/96).
+
+Runtime integrity (ADR-016) is tested threat by threat in `tests/unit/app/integrity.test.ts` (forged,
+changed, removed and truncated events; widened plans; changed approvers; replaced evidence; deleted
+integrity files; missing or foreign keys; key permissions; stale locks; policy denial of the key).
+Every test process uses a temporary key directory (`tests/setup-env.ts`), never the user's.
+
+Host delivery is tested end to end in `tests/e2e/host-flow.test.ts` (11 scenarios) with
+`tests/helpers/fake-host.cjs` installed as `codex` and `claude`: real processes, real CLI calls for
+events, the hosts' native stream formats as documented, Ctrl-C sent to `run deliver`, credential
+redaction in the stored transcript. It proves the toolkit's side of the protocol only.
+
+Real-host smoke test (W2.0-15), when a CLI is installed and signed in by the user: Claude Code first,
+then Codex. Same flow as the harness with a one-step plan in a scratch project, a bounded timeout,
+and evidence kept (version, transcript, result). Without the CLI the item stays NOT_VERIFIED; the
+fake host is never reported as host verification.
 
 Execution-state rules (ADR-015) have a dedicated suite, `tests/unit/core/execution-adr015.test.ts`:
 host events before the dependency is verified, replay after it succeeds, a failed dependency blocking

@@ -830,6 +830,30 @@ there and asks before other shell access; the hook makes host paths project-rela
 sends absolute paths) and checks each file of a Codex patch. This is a guard against mistakes, not a
 security boundary against code the agent runs under the same account (docs/v2/08 §9.2).
 
+### 12.6 Run integrity (ADR-016, implemented)
+
+The toolkit signs what it writes about a run with a per-project HMAC-SHA256 key kept in the user's
+configuration directory (`ai-agent-setup/keys`, mode 0600), never in the project:
+
+| Artifact | Signed | Stored |
+|---|---|---|
+| Plan approval | run id, revision, digest, approver, time | `runs/<id>/integrity.json` |
+| Each event | position + exact line of `events.jsonl` (format unchanged) | `runs/<id>/integrity.jsonl` |
+| Evidence recorded with an event | sha256 of gate records, gate logs, host transcript | same entry |
+| Log head | count and last signature | key directory (outside the project) |
+
+Loading a signed run applies only signed events; anything else is an `INTEGRITY_VIOLATION`, and
+`run-result.integrity` (VERIFIED, UNSIGNED, VIOLATED) reports it. Policies gain `readPaths` and the
+Claude Code hook also sees `Read`, `Grep` and `Glob`, so the key directory can be denied to agents.
+Limits: [threat model §5](11-runtime-threat-model.md#5-residual-risks-why-this-is-partial).
+
+### 12.7 Host delivery (W2.1-10, implemented; real hosts not verified)
+
+`run deliver` starts the host CLI with the approved revision (plan path, digest, run and step ids,
+the event command). Run-level start and end come from the host's native stream; step events and
+approval requests come back through `run event`; the toolkit stops the host process tree on timeout
+or cancellation. The redacted transcript is kept as signed evidence of that run only.
+
 ## 13. Cross-cutting concerns
 
 | Concern | Approach |

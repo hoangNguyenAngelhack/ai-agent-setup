@@ -51,8 +51,14 @@ describe('actionsFromHookInput', () => {
   });
 
   it('should return no actions for tools it does not understand', () => {
-    expect(actionsFromHookInput({ tool_name: 'Read', tool_input: { file_path: 'a.ts' } })).toEqual([]);
+    expect(actionsFromHookInput({ tool_name: 'WebFetch', tool_input: { url: 'https://example.com' } })).toEqual([]);
     expect(actionsFromHookInput(null)).toEqual([]);
+  });
+
+  it('should turn the Claude Code read tools into read actions (ADR-016)', () => {
+    expect(actionsFromHookInput({ tool_name: 'Read', tool_input: { file_path: 'a.ts' } })).toEqual([{ type: 'read', path: 'a.ts' }]);
+    expect(actionsFromHookInput({ tool_name: 'Grep', tool_input: { pattern: 'x', path: 'src' } })).toEqual([{ type: 'read', path: 'src' }]);
+    expect(actionsFromHookInput({ tool_name: 'Glob', tool_input: { pattern: '*.ts' } })).toEqual([]);
   });
 });
 
@@ -95,4 +101,3 @@ describe('hookResponse', () => {
     expect(actionsFromHookInput({ cwd, tool_name: 'Write', tool_input: { file_path: join(cwd, 'src', 'a.ts'), content: 'A' } })).toEqual([{ type: 'write', path: 'src/a.ts', content: 'A' }]);
   });
 });
-

@@ -20,7 +20,8 @@
 | 07 | [Migration Strategy](07-migration-strategy.md) | How V1 assets, CLI flags and V1 projects move to V2 |
 | 08 | [Implementation Roadmap](08-implementation-roadmap.md) | V2.0, V2.1 and V2.2 work items, dependencies and exit criteria (`W*`) |
 | 09 | [Testing & Benchmark Strategy](09-testing-and-benchmark-strategy.md) | How the toolkit is tested and how baseline, V1 and V2 are compared |
-| 10 | [Architecture Decisions](10-architecture-decisions.md) | ADR-001–009 and ADR-014 (accepted), conflicts, proposed ADRs, open questions |
+| 10 | [Architecture Decisions](10-architecture-decisions.md) | ADR-001–009 and ADR-014–016 (accepted), conflicts, proposed ADRs, open questions |
+| 11 | [Runtime Threat Model](11-runtime-threat-model.md) | What protects approvals, events and evidence, and what does not |
 
 User-facing upgrade steps: [Migrating from V1](../guides/migrating-from-v1.md).
 

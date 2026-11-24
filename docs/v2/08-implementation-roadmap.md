@@ -116,6 +116,26 @@ every routing decision is explainable; context loading is task-relevant (measure
 | W2.2-06 | Regression detection (8) | 02, 03 | Detects seeded regressions in the eval set |
 | W2.2-07 | Performance analysis (9) | 03, 04 | Report per KPI ([09 §6](09-testing-and-benchmark-strategy.md#6-metrics-and-kpis)) |
 | W2.2-08 | Documentation and release readiness (10) | all | Release checklist gates PASS |
+| W2.2-09 | **Runtime Isolation** (added 2026-11-24): the agent runs where it cannot reach the integrity key, the toolkit's run state or the approval channel. Options: separate OS user, container or VM, host sandbox. Covers filesystem access control, secret isolation, process and network restrictions, an approval boundary, and macOS / Linux / Windows | ADR-016, W2.0-15 | See §5.1 |
+
+### 5.1 W2.2-09 Runtime Isolation: acceptance criteria
+
+Threat model: [11 §5a, §6](11-runtime-threat-model.md#6-upgrading-to-a-real-boundary-runtime-isolation-w22-09).
+An ADR is required before implementation; Docker or any other container runtime is never a default
+dependency.
+
+1. Code the agent runs (scripts, interpreters) cannot read or write the key directory: a test agent
+   process that tries is refused by the OS, not only by the hook.
+2. The agent cannot write `.ai-agent-setup/` except through the toolkit CLI, enforced by the OS or the
+   sandbox.
+3. Approvals are possible only from the user's own session; an agent process cannot produce one.
+4. Secrets the user did not grant are not visible to the agent's processes (environment, files).
+5. Process limits and outbound network rules are configurable per run and default to deny-by-default
+   for network where the host supports it.
+6. Each option documents, per OS, what it enforces and what it does not; anything unverifiable on a
+   platform is NOT_VERIFIED, never assumed.
+7. Every forged-event and key-read scenario of [11 §5a](11-runtime-threat-model.md#5a-attack-scenarios-that-are-not-protected)
+   has an automated test that fails without isolation and passes with it.
 
 **Exit criteria:** every quality result has evidence or is NOT_VERIFIED; benchmark conditions are
 reproducible; V1 and V2 are compared under equivalent conditions; cost is measured per accepted
@@ -180,7 +200,7 @@ Branch `feature/v2-foundation`, merged into `main` (PR #1, PR #2). CI is green o
 | W2.0-12 Backup, atomic apply, rollback, manifest, doctor | Done: write-ahead journal, backups, atomic writes with verification, automatic rollback on failure (tested by locking a directory), manual rollback byte-identical, stale-plan guard, doctor | `src/installer/{apply,transaction,rollback,doctor,manifest}.ts`; `tests/installer/installer.test.ts` |
 | W2.0-13 `create` workflow, V1-compatible CLI | Done: `bin/cli.js` launcher → `src/cli/`; commands `create` (default), `setup`, `diff`, `doctor`, `rollback`, `catalog validate`; V1 flags and prompts kept, F-02–F-06 and F-11 fixed (07 §3.1) | `src/cli/`, `src/app/{create,templates}.ts`; `tests/e2e/cli.test.ts`, `tests/unit/cli/` |
 | W2.0-14 Setup workflow | Done (CLI `setup` with `--dry-run`, `--yes`, `--strategy`, `--adapter`, `--profile`, `--enable-tool`; refuses to write without `--yes` when not interactive). Not done: `pristine-v1` replacement of unmodified V1 files | `src/app/setup.ts`; `tests/e2e/setup.test.ts`, `tests/e2e/cli.test.ts` |
-| W2.0-15 Static workflows verified in hosts | **NOT_VERIFIED.** Requirement (Product Owner, 2026-11-24): at least one real host CLI must pass a bounded smoke test (version, start, authentication without exposing credentials, canonical plan, structured output, event normalisation, result schema, exit status and evidence); the second adapter needs its own real-host run before claiming full compatibility. Checked 2026-11-24: neither `claude` nor `codex` is on PATH on the build machine. The VS Code extension's bundled binary was not used: it is not an installed CLI, and CLIs must not be installed silently | — |
+| W2.0-15 Static workflows verified in hosts | **NOT_VERIFIED.** Requirement (Product Owner, 2026-11-24): at least one real host CLI must pass a bounded smoke test before claiming compatibility; Claude Code first, then Codex. Checked 2026-11-24 11:27Z: neither `claude` nor `codex` is on PATH; no CLI was installed, no login or account setting was touched. **End-to-end harness: PASS with a fake host** (11 scenarios, real processes, real `run event` calls, the hosts' documented stream formats): success through both hosts, failure with a blocked dependant, approval pending, timeout, cancellation through the API and with Ctrl-C in `run deliver`, order violation, silent host, credential redaction in the transcript, changed transcript. To verify for real: install and sign in to `claude`, run the same flow against it, then `codex` | `tests/e2e/host-flow.test.ts`, `tests/helpers/fake-host.cjs` |
 | W2.0-16 Migration docs + generated catalog reference | Done: README and README.vi rewritten (V2 preview status, commands, known limitations, no unmeasured claims), catalog table generated by `npm run docs:summary` and checked by a test, user guide `docs/guides/migrating-from-v1.md`, CHANGELOG `[Unreleased] 2.0.0` + missing `[1.6.1]` entry | `README.md`, `README.vi.md`, `docs/guides/migrating-from-v1.md`, `CHANGELOG.md`, `src/app/catalog-summary.ts`; `tests/docs/readme.test.ts` |
 
 ### 9.1 V2.1 status
@@ -199,7 +219,7 @@ Branches `feature/v2.1-orchestration` and `feature/v2.1-intelligence`, merged in
 | W2.1-02 Impact Analysis | Done: changed files → modules, areas, capabilities, domains, risk, related tests, owners, unmapped files. Sources: explicit files, `git status` (renames included) or `git diff <ref>`. `impact` command and `plan --files / --changed / --since` | `src/core/project-intelligence/impact.ts`, `src/app/impact.ts`; `tests/e2e/impact.test.ts` |
 | W2.1-04 Context Engine (dynamic ranking) | Partial: path-scoped rules enter a plan only when a changed file matches them; ranked context list (T1 path rules, then capability rules, then skills). Not done: ranking T3 references, relevance scoring beyond this order | router; `tests/unit/core/router-impact.test.ts` |
 | W2.1-09 Workflow Orchestrator (dynamic) + cross-domain dependencies | Done (2026-11-24): canonical `ExecutionPlan` (ADR-009 fields, stable step ids, sha256 digest; approved revisions are immutable, a scope change is a new revision) and `ExecutionEvent` contracts; step states PENDING, READY, RUNNING, WAITING_FOR_APPROVAL, SUCCEEDED, FAILED, BLOCKED, SKIPPED, CANCELLED, NOT_VERIFIED; dependencies enforced; approvals pause steps and are resolved by the user only; host completion claims and evidence paths leave a step NOT_VERIFIED until the orchestrator's gates pass (`run verify`; a step without its own gates is verified against the profile's required gates); failure evidence kept; cancelled is never success; duplicate and out-of-order events tolerated (anomalies recorded, never dropped silently); state rebuilt from `events.jsonl` after a restart; a final reconciliation reports every step | `src/core/execution/`, `src/app/runs.ts`; `tests/unit/core/execution.test.ts`, `tests/unit/app/runs.test.ts`, `tests/e2e/run.test.ts` |
-| W2.1-10 Plan delivery to hosts | Partial: `run deliver --host claude-code|codex` passes the exact approved revision (plan path + digest) with run and step ids, maps the host's native stream (`stream-json` / `exec --json`) to run-level events only, lists unsupported capabilities, never widens host permissions, and reports NOT_VERIFIED when the CLI is missing or its stream carries no signal. Step progress comes from the agent through `run event` (source `host`, never verification); approvals through `run approve-step` (policy rule `project.run-approval` makes an agent ask). Tested only against a synthetic host script; real-host delivery is **NOT_VERIFIED** (W2.0-15) and the host message shapes are taken from published docs, not observed | `src/adapters/{common,claude-code,codex}/delivery.ts`, `src/app/runs.ts`; `tests/unit/app/runs.test.ts` |
+| W2.1-10 Plan delivery to hosts | **PARTIAL** until a real-host smoke test passes. *Verified with the fake host:* exact approved revision with run and step ids in the delivery prompt; run-level start and end from the native stream (Claude `stream-json`, Codex `exec --json` shapes); step events, approval requests and evidence through `run event`; host completion is only a report (gates decide); timeout (`--timeout`, default 3600 s) and Ctrl-C stop the host process tree and record RUN_FAILED / RUN_CANCELLED; the transcript is redacted, kept as signed evidence of that run only, never passed to another provider; a host without run-level signals is NOT_VERIFIED; `--event-command` for installs without `npx`. *Not verifiable without the real CLIs:* the actual message shapes, flags and exit codes; whether the hosts give the agent a terminal; behaviour of the hosts' own permission prompts. *Known limitation:* on Windows a host installed as a `.cmd` wrapper cannot be started without a shell (the prompt is a multi-line argument); delivery records RUN_FAILED and reports NOT_VERIFIED | `src/app/runs.ts`, `src/adapters/*/delivery.ts`; `tests/e2e/host-flow.test.ts`, `tests/unit/app/runs.test.ts` |
 
 Measured on the development set (see [benchmarks/eval/README.md](../../benchmarks/eval/README.md)):
 domain precision 0.955, domain recall 0.932, multi-domain recall 0.732, type accuracy 0.843,
@@ -220,26 +240,20 @@ NOT_VERIFIED; fixed in `900473c`. Updated 2026-11-24.
 | W2.2-01 Quality Gate Engine + evidence capture | Done for local execution: registry of 14 gates covering all 11 categories, each with an explicit support status (`project-command`, `built-in`, `composite`); commands from `.ai-agent-setup/gates.json`, known scripts or stack defaults; timeout and cancellation (process tree killed); missing command, missing tool (exit 127/9009), timeout, cancellation, unreadable audit output, stale or missing coverage → NOT_VERIFIED; built-in secret scan of uncommitted and untracked changes (locations only, values never stored; `secret-scan:allow` lines are counted), npm audit parse, Istanbul coverage threshold, composite deployment readiness; every record validated against `gate-record` (a record failing validation is downgraded to NOT_VERIFIED, never PASS); evidence logs redacted with sha256 checksums; records, report (JSON + Markdown) and history stored in git-ignored folders; required gates = profile + configuration (configuration can only add); a skipped required gate is NOT_VERIFIED; the overall status is PASS only when every required gate passed | `src/quality/`, `src/shared/redact.ts`, `src/app/gates.ts`, `catalog/schemas/gate-record.schema.json`; `tests/unit/quality/gate-engine.test.ts`, `tests/unit/shared/redact.test.ts`, `tests/e2e/run.test.ts` |
 | W2.2-05 Execution reports | Partial: `run status` writes `result.json` validated against the `run-result` schema (identity, profile, approval, steps with gates and evidence, counts, verification summary, anomalies) and `gates run` writes `report.json` / `report.md`. Not yet: a schema for the gate report, aggregated reports across runs | `src/core/execution/state.ts`, `src/app/runs.ts`, `catalog/schemas/run-result.schema.json` |
 | W2.2-02, -03, -04, -06, -07, -08 | Not started | — |
+| W2.2-09 Runtime Isolation | Not started (planned 2026-11-24; acceptance criteria in §5.1) | — |
 
 Open risks from the independent review of 2026-11-24 (not fixed: they change the trust model or the
 event semantics and need a decision):
 
-- **Local artifacts are guarded, not tamper-proof.** Decision 2026-11-24 (Product Owner): control
-  writes through the hosts' permissions rather than an HMAC, whose key an agent under the same account
-  could read. Implemented and merged (PR #6, `92045ae`):
-  - `.ai-agent-setup/**` is runtime state written by the toolkit only. Mandatory rules in
-    `policy.safety` (no layer can loosen them): `safety.runtime-state-write` denies file-tool writes
-    (Claude Code `Write`/`Edit`, Codex `apply_patch`, per file in the patch);
-    `safety.runtime-state-shell-write` denies shell writes (redirects, `tee`, `sed -i`, `mv`, `cp`,
-    `rm`, PowerShell `Set-Content`, …); `safety.runtime-state-shell-access` asks before any other
-    shell command that names the folder. The toolkit CLI (`run event`, `gates run`) is not affected.
-  - An approved plan cannot change: a scope change is a new revision that needs approval again.
-  - A gate never PASSes on a command or package script that checks nothing (`echo`, `true`,
-    `exit 0`, an empty script): NOT_VERIFIED.
-  - **Limit:** this guards against mistakes and ordinary agent behaviour. It is not a security
-    boundary: a program the agent runs under the same OS account (for example `node script.js`) can
-    still write the files, and the hook only sees command text. It must not be described as
-    protection against a malicious agent.
+- **Runtime integrity (ADR-016, accepted 2026-11-24; threat model in [11](11-runtime-threat-model.md)): PARTIAL.**
+  Approvals, events and recorded evidence are signed with a per-project key kept outside the
+  project; unsigned or changed events, changed evidence and truncated logs become
+  `INTEGRITY_VIOLATION` and rule out SUCCEEDED; changed plans or approvals are refused; agents are
+  denied the key directory and `.ai-agent-setup/**` through the policy hook (shell, writes, Claude
+  Code read tools); approvals need an interactive terminal and the id typed back. An independent
+  security review found 2 HIGH and 2 MEDIUM issues; all fixed with regression tests. **Not a boundary
+  against code the agent runs under the same OS account**, which can read the key; that is
+  W2.2-09 Runtime Isolation (planned, §5.1).
 - **Early step events (resolved by ADR-015, accepted 2026-11-24).** Host events for a step whose
   dependencies the host finished are accepted (host-ready) even before the orchestrator verified the
   dependencies; events that are early even at host level are kept, replayed in log order and flagged
@@ -274,7 +288,7 @@ Self-run on this repository:
 | Lint (standard profile `gate.lint`) | Done: ESLint 9 + typescript-eslint `recommendedTypeChecked` on `src`, `tests`, `scripts`, `bin`; no rule disabled globally (one option: `ignoreRestSiblings`); shipped content (`templates/`, `examples/`, catalog bodies) is not linted; findings were fixed in code | `eslint.config.mjs`, `npm run lint`; `tests/tooling/lint-config.test.ts` |
 | Coverage (standard profile `gate.coverage-80`) | Done: V8 coverage of all of `src/`, thresholds 80% on four metrics enforced by Vitest and by the gate (1.1.0); CLI tested in-process so its branches are measured | `vitest.config.mts`, `npm run test:coverage`; `tests/unit/cli/main.test.ts` |
 | `run-result` contract | Done (rules version 2 since ADR-015: `deferred`, `approval.pending`, anomaly `code`): JSON Schema with conditional rules (SUCCEEDED needs every step SUCCEEDED with at least one gate and all gates PASS **and** execution evidence; OUTCOME_VERIFIED when the gates pass but execution was not reported — decided 2026-11-24; CANCELLED never success; reasons required for non-success); `run status` validates the result and turns an invalid SUCCEEDED into NOT_VERIFIED, or refuses to write it | `catalog/schemas/run-result.schema.json`, `src/app/runs.ts`; `tests/contract/` (4 valid, 14 invalid fixtures), `tests/unit/core/execution.test.ts` |
-| Installer and policy at 95% branches (09 §3.1) | Not met: 93.64% and 93.98%; not enforced | coverage report |
+| Installer and policy at 95% branches (09 §3.1) | **Done:** installer 93.64% → 98.84% (171/173), policy 94.62% → 96.88% (93/96), enforced per area in `vitest.config.mts` (a 99.5% trial threshold fails the run, so the check is live). New tests check behaviour: doctor findings for deleted, invalid and hand-edited sections, unknown manifest schema, backup-overwrite of a hand-edited shared section, rollback with user-deleted files and user files in created directories, diffs into empty files, JSON type changes, case-insensitive and multi-wildcard command matching. Not covered: a write that reads back different bytes, and a tokenizer fallback that cannot be reached | `tests/installer/edge-cases.test.ts`, `tests/unit/core/policy-engine.test.ts` |
 
 Working assumptions adopted to start (reversible until merge): ADR-010 (YAML + JSON Schema) and
 ADR-011 (TypeScript) from [10 §4](10-architecture-decisions.md#4-proposed-decisions-not-approved).

@@ -41,6 +41,8 @@ const VALUE_FLAGS: Record<string, string> = {
   '--reason': 'reason',
   '--evidence': 'evidence',
   '--by': 'by',
+  '--timeout': 'timeout',
+  '--event-command': 'event-command',
 };
 
 const SWITCHES: Record<string, string> = {

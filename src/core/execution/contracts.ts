@@ -150,7 +150,8 @@ export interface ExecutionState {
   deferred: Array<{ event: ExecutionEvent; reason: string }>;
 }
 
-export type AnomalyCode = 'DEPENDENCY_ORDER_VIOLATION';
+/** DEPENDENCY_ORDER_VIOLATION: ADR-015. INTEGRITY_VIOLATION: ADR-016 (unsigned, changed or missing events and evidence). */
+export type AnomalyCode = 'DEPENDENCY_ORDER_VIOLATION' | 'INTEGRITY_VIOLATION';
 
 export interface Anomaly {
   eventId: string;
@@ -161,7 +162,18 @@ export interface Anomaly {
 }
 
 /** Version of the reconciliation rules; results computed under older rules may differ on replay. */
-export const RESULT_RULES_VERSION = 2;
+export const RESULT_RULES_VERSION = 3;
+
+/**
+ * ADR-016. VERIFIED: every applied event and recorded evidence carried a valid signature.
+ * UNSIGNED: a run created before signing existed (shown, not trusted more than before).
+ * VIOLATED: something was unsigned, changed or removed; the run cannot be SUCCEEDED.
+ */
+export interface RunIntegrity {
+  status: 'VERIFIED' | 'UNSIGNED' | 'VIOLATED';
+  scheme: string | null;
+  violations: number;
+}
 
 /**
  * SUCCEEDED: every step's outcome passed its gates AND every step has execution evidence.
@@ -193,7 +205,7 @@ export interface RunResultStep {
 /** Contract `urn:ai-agent-setup:contracts:v1:run-result` (catalog/schemas/run-result.schema.json). */
 export interface RunResult {
   schemaVersion: 'run-result/v1';
-  /** 2: ADR-015 (host-ready steps, deferred events, pending approvals). */
+  /** 2: ADR-015 (host-ready steps, deferred events, pending approvals). 3: ADR-016 (integrity). */
   rulesVersion: typeof RESULT_RULES_VERSION;
   runId: string;
   planId: string;
@@ -213,4 +225,5 @@ export interface RunResult {
   anomalies: ExecutionState['anomalies'];
   /** Events still waiting at reconciliation: never applied, listed with why. */
   deferred: Array<{ eventId: string; type: string; stepId: string; reason: string }>;
+  integrity: RunIntegrity;
 }

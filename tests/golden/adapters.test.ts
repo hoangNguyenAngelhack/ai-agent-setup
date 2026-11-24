@@ -172,7 +172,7 @@ describe('Claude Code adapter specifics', () => {
     // In-token wildcards (rm -*r*) are enforced by the hook only, to avoid asking for unrelated commands.
     expect(settings.permissions.ask.some((rule) => rule.startsWith('Bash(rm'))).toBe(false);
     expect(settings.hooks.PreToolUse[0]).toEqual({
-      matcher: 'Bash|Write|Edit|MultiEdit',
+      matcher: 'Bash|Write|Edit|MultiEdit|Read|Grep|Glob',
       hooks: [{ type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/ai-agent-setup/policy-check.cjs" --host claude-code' }],
     });
   });

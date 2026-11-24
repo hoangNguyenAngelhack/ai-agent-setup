@@ -177,6 +177,8 @@ export interface PolicyMatch {
    * write criterion present (`paths`, `contentRegex`) must match.
    */
   paths?: string[];
+  /** Globs for project-relative paths being read through the host's file tools (ADR-016). */
+  readPaths?: string[];
 }
 
 export interface PolicyRule {

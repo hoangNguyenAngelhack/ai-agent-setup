@@ -111,5 +111,10 @@
     "stepsWithExecutionEvidence": 2
   },
   "anomalies": [],
-  "deferred": []
+  "deferred": [],
+  "integrity": {
+    "status": "VERIFIED",
+    "scheme": "hmac-sha256",
+    "violations": 0
+  }
 }

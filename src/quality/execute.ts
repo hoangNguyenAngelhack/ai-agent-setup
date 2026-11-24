@@ -14,7 +14,8 @@ export interface CommandOutcome {
 const MAX_OUTPUT = 1024 * 1024;
 const KILL_GRACE_MS = 2000;
 
-function killTree(pid: number, signal: NodeJS.Signals): void {
+/** Stops a process and its children (a detached process group on POSIX, `taskkill /T` on Windows). */
+export function killTree(pid: number, signal: NodeJS.Signals): void {
   try {
     if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(pid), '/T', '/F'], { stdio: 'ignore' });
     else process.kill(-pid, signal);

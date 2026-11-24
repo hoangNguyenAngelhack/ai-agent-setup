@@ -240,7 +240,10 @@ describe('main — gates and runs', () => {
     configure(root, { 'gate.build': 'node ok.js', 'gate.unit-tests': 'node ok.js', 'gate.lint': 'node ok.js', 'gate.security-scan': 'node ok.js', 'gate.coverage-80': 'node cov.cjs' });
     const plan = JSON.parse((await cli(root, ['plan', 'Implement the orders API endpoint', '--json'])).out) as { id: string; steps: Array<{ id: string }> };
     const runId = /Created (run-\S+)/.exec((await cli(root, ['run', 'create', plan.id])).out)![1]!;
-    expect((await cli(root, ['run', 'approve', runId, '--by', 'tester'])).out).toContain('immutable');
+    const unattended = await cli(root, ['run', 'approve', runId]);
+    expect(unattended).toMatchObject({ code: 1, err: expect.stringContaining('needs an interactive terminal') as unknown });
+    expect((await cli(root, ['run', 'approve', runId], ['wrong'])).err).toContain(`not confirmed (expected ${runId})`);
+    expect((await cli(root, ['run', 'approve', runId, '--by', 'tester'], [runId])).out).toContain('immutable');
 
     const step = plan.steps[0]!.id;
     expect((await cli(root, ['run', 'event', runId, '--type', 'STEP_STARTED', '--step', step])).out).toBe('Recorded.\n');
@@ -277,13 +280,14 @@ describe('main — gates and runs', () => {
     await cli(root, ['setup', '--yes', '--profile', 'profile.starter']);
     const plan = JSON.parse((await cli(root, ['plan', 'Implement the orders API endpoint', '--approve-at', 'each-step', '--json'])).out) as { id: string; steps: Array<{ id: string }> };
     const runId = /Created (run-\S+)/.exec((await cli(root, ['run', 'create', plan.id])).out)![1]!;
-    await cli(root, ['run', 'approve', runId]);
+    await cli(root, ['run', 'approve', runId], [runId]);
     const step = plan.steps[0]!.id;
 
     await cli(root, ['run', 'event', runId, '--type', 'STEP_STARTED', '--step', step]);
-    expect((await cli(root, ['run', 'approve-step', runId, step])).out).toBe(`Approved ${step}.\n`);
+    expect((await cli(root, ['run', 'approve-step', runId, step])).err).toContain('needs an interactive terminal');
+    expect((await cli(root, ['run', 'approve-step', runId, step], [step])).out).toBe(`Approved ${step}.\n`);
     await cli(root, ['run', 'event', runId, '--type', 'APPROVAL_REQUIRED', '--step', step, '--reason', 'runs a migration']);
-    expect((await cli(root, ['run', 'approve-step', runId, step, '--decline'])).out).toBe(`Declined ${step}.\n`);
+    expect((await cli(root, ['run', 'approve-step', runId, step, '--decline'], [step])).out).toBe(`Declined ${step}.\n`);
     expect((await cli(root, ['run', 'approve-step', runId])).err).toContain('Usage: run approve-step');
     expect((await cli(root, ['run', 'event', runId, '--type', 'STEP_FAILED', '--step', step, '--reason', 'boom', '--evidence', 'a.log'])).out).toContain('not applied');
     expect((await cli(root, ['run', 'event', runId, '--type', 'STEP_BLOCKED', '--step', step, '--reason', 'no access'])).out).toContain('not applied');
@@ -296,7 +300,7 @@ describe('main — gates and runs', () => {
     await cli(root, ['setup', '--yes']);
     const plan = JSON.parse((await cli(root, ['plan', 'Implement the orders API endpoint and build the orders page in the React app', '--domain', 'backend,frontend', '--json'])).out) as { id: string; steps: Array<{ id: string }> };
     const runId = /Created (run-\S+)/.exec((await cli(root, ['run', 'create', plan.id])).out)![1]!;
-    await cli(root, ['run', 'approve', runId]);
+    await cli(root, ['run', 'approve', runId], [runId]);
     const [first, second] = plan.steps.map((item) => item.id) as [string, string];
 
     await cli(root, ['run', 'event', runId, '--type', 'STEP_STARTED', '--step', second]);
@@ -311,4 +315,3 @@ describe('main — gates and runs', () => {
     expect((await cli(root, ['run', 'verify', runId, second])).err).toContain(`depends on ${first}`);
   });
 });
-

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "run-result/v1",
-  "rulesVersion": 2,
+  "rulesVersion": 3,
   "runId": "run-20261124T100000Z-abcdef",
   "planId": "plan-20261124T095900Z-123abc",
   "planDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -42,5 +42,10 @@
     "stepsWithExecutionEvidence": 0
   },
   "anomalies": [],
-  "deferred": []
+  "deferred": [],
+  "integrity": {
+    "status": "VERIFIED",
+    "scheme": "hmac-sha256",
+    "violations": 0
+  }
 }
