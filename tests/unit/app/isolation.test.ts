@@ -114,7 +114,7 @@ describe.skipIf(process.platform === 'win32')('ProcessTree (host-side process tr
     expect(tree.alive()).toEqual([]);
   });
 
-  it('should find an orphan by its run mark on stop', async () => {
+  it.runIf(process.platform === 'darwin')('should find an orphan by its run mark on stop (macOS ps -E)', async () => {
     const mark = 'a'.repeat(32);
     const orphan = spawn(process.execPath, ['-e', 'setInterval(()=>{},1000)'], { stdio: 'ignore', detached: true, env: { ...process.env, [RUN_MARK_ENV]: mark } });
     const tree = new ProcessTree(999_999_999, mark);

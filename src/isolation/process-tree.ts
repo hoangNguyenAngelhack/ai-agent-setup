@@ -14,7 +14,9 @@ interface ProcessRow {
  * Every process as pid, parent pid and start time (POSIX `ps`, run outside the sandbox). With a
  * mark, also whether the process environment carries it (`ps -E`; same-user processes only).
  */
-function processTable(mark: string | null): ProcessRow[] {
+function processTable(requested: string | null): ProcessRow[] {
+  // `ps -E` (environment) is BSD; the mark is only searched where it exists (macOS, the Seatbelt host).
+  const mark = process.platform === 'darwin' ? requested : null;
   const columns = mark ? ['-A', '-E', '-o', 'pid=,ppid=,lstart=,command='] : ['-A', '-o', 'pid=,ppid=,lstart='];
   const listing = spawnSync('/bin/ps', columns, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
   if (listing.status !== 0) return [];
@@ -32,7 +34,7 @@ function processTable(mark: string | null): ProcessRow[] {
  * child can call setsid() and leave it, and its parent can exit so it is re-parented to launchd.
  * Two nets: descendants are recorded while the launch runs (with their start time, so a reused pid
  * is never signalled), and on stop every process whose environment carries the launch's random
- * mark is added. Stopping freezes all of them until no new one appears, then kills them. A process
+ * mark is added (macOS). Stopping freezes all of them until no new one appears, then kills them. A process
  * that leaves the tree before a scan sees it AND drops the mark from its environment is not found
  * (ADR-017); it stays inside the sandbox.
  */

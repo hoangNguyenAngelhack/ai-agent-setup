@@ -104,7 +104,7 @@ describe('providers and platform matrix', () => {
   });
 });
 
-describe('seatbeltProfile', () => {
+describe.skipIf(process.platform === 'win32')('seatbeltProfile', () => {
   it('should close the protected paths after re-opening the workspace (last rule wins)', () => {
     const profile = seatbeltProfile(policy(), '/zz/scratch');
     const lines = profile.split('\n');

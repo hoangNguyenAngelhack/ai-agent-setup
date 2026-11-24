@@ -306,10 +306,12 @@ describe.runIf(onMac)('runtime isolation: delivery lifecycle under restricted', 
     process.env.FAKE_HOST_ESCAPE = key;
     try {
       await deliver(root, runId, 'leave-behind');
-      expect(await waitFor(() => existsSync(pidFile) && existsSync(`${pidFile}.read`))).toBe(true);
+      // Without a pid file the survivor never started: the tree was stopped first (the good case).
+      if (!(await waitFor(() => existsSync(pidFile), 3000))) return;
       const pid = Number(readFileSync(pidFile, 'utf8'));
-      // Recorded as FAIL for test 12 in docs/v2/security-testing-report.md (ADR-017).
+      // Recorded as FAIL for test 12b in docs/v2/12 (ADR-017): when it escapes tracking, it must stay confined.
       if (alive(pid)) {
+        expect(await waitFor(() => existsSync(`${pidFile}.read`))).toBe(true);
         expect(readFileSync(`${pidFile}.read`, 'utf8')).toBe('EPERM');
         process.kill(pid, 'SIGKILL');
       }

@@ -90,8 +90,8 @@ switch (mode) {
       // (no run mark). The survivor keeps trying to read FAKE_HOST_ESCAPE and records the result.
       const target = JSON.stringify(process.env.FAKE_HOST_ESCAPE);
       const out = JSON.stringify(`${pidFile}.read`);
-      const survivor = `const fs=require('node:fs');setInterval(()=>{let r;try{fs.readFileSync(${target});r='read'}catch(e){r=e.code}try{fs.writeFileSync(${out},r)}catch{}},200);`;
-      const middle = `const c=require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(survivor)}],{detached:true,stdio:'ignore',env:{}});require('node:fs').writeFileSync(${JSON.stringify(pidFile)},String(c.pid));c.unref();`;
+      const survivor = `const fs=require('node:fs');fs.writeFileSync(${JSON.stringify(pidFile)},String(process.pid));setInterval(()=>{let r;try{fs.readFileSync(${target});r='read'}catch(e){r=e.code}try{fs.writeFileSync(${out},r)}catch{}},200);`;
+      const middle = `require('node:child_process').spawn(process.execPath,['-e',${JSON.stringify(survivor)}],{detached:true,stdio:'ignore',env:{}}).unref();`;
       spawn(process.execPath, ['-e', middle], { detached: true, stdio: 'ignore', env: {} }).unref();
     } else {
       const child = spawn(process.execPath, ['-e', 'setInterval(()=>{},1000)'], { detached: true, stdio: 'ignore' });
