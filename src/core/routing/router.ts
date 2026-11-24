@@ -1,7 +1,10 @@
-import type { AgentEntry, CapabilityEntry, CatalogEntry, KnowledgeIndex, PolicyDocument, ProfileEntry, Registry } from '../../registry';
+import type { AgentEntry, CapabilityEntry, CatalogEntry, KnowledgeIndex, PolicyDocument, ProfileEntry, Registry, RuleEntry } from '../../registry';
+import { matchesAnyGlob } from '../../shared/glob';
 import { selectProfileEntries } from '../context';
 import type {
+  ContextItem,
   ExplainRecord,
+  ImpactReport,
   Plan,
   PlanMode,
   PlanOverrides,
@@ -10,7 +13,9 @@ import type {
   TaskClassification,
   TaskType,
 } from '../contracts';
+import { buildExecutionGraph, PHASES, phaseOf } from '../orchestration';
 import { PolicyEngine } from '../policy';
+import { mergeImpact } from './impact-merge';
 
 export interface RouteInput {
   id: string;
@@ -26,6 +31,8 @@ export interface RouteInput {
   overrides: PlanOverrides;
   /** Measured always-loaded catalog bytes for the profile (Context Engine). */
   contextT0Bytes: number;
+  /** Changed files analysed by Impact Analysis, when known. */
+  impact?: ImpactReport | null;
 }
 
 const SIMPLE_MAX_SKILLS = 3;
@@ -69,6 +76,8 @@ class RouteState {
     verification: [],
     overrides: [],
     conflicts: [],
+    context: [],
+    impact: null,
   };
   blocking = false;
   needsApproval = false;
@@ -331,14 +340,65 @@ function stepApproval(input: RouteInput, approveAt: ReadonlySet<string>, gates: 
   return 'none';
 }
 
-function buildSteps(input: RouteInput, capabilities: CapabilityEntry[], assignment: Map<string, string>, gates: string[], approveAt: ReadonlySet<string>): PlanStep[] {
-  return capabilities.flatMap((capability, index) => {
-    const agent = assignment.get(capability.id);
-    if (!agent) return [];
-    const last = index === capabilities.length - 1;
-    const approval = stepApproval(input, approveAt, gates, index === 0, last);
-    return [{ id: capability.id.split('.')[1]!, capability: capability.id, agent, gates: last ? gates : [], approval }];
+/** Steps in execution-phase order with dependencies on the previous phase (W2.1-09). */
+function buildSteps(input: RouteInput, capabilities: CapabilityEntry[], assignment: Map<string, string>, gates: string[], approveAt: ReadonlySet<string>) {
+  const ordered = [...capabilities].sort((a, b) => PHASES.indexOf(phaseOf(a.id)) - PHASES.indexOf(phaseOf(b.id)));
+  const assigned = ordered.filter((capability) => assignment.has(capability.id));
+  const graph = buildExecutionGraph(assigned.map((capability) => ({ id: capability.id, capability: capability.id })));
+  const steps: PlanStep[] = assigned.map((capability, index) => {
+    const last = index === assigned.length - 1;
+    return {
+      id: capability.id,
+      capability: capability.id,
+      agent: assignment.get(capability.id)!,
+      gates: last ? gates : [],
+      approval: stepApproval(input, approveAt, gates, index === 0, last),
+      dependsOn: graph.dependsOn[capability.id] ?? [],
+    };
   });
+  return { steps, phases: graph.phases.map((phase) => ({ name: phase.name, steps: phase.steps })) };
+}
+
+/** Path-scoped rules whose globs match a changed file (dynamic T1 context, W2.1-04). */
+function pathRules(input: RouteInput, profileIds: Set<string>): Array<{ rule: RuleEntry; file: string }> {
+  const files = input.impact?.files ?? [];
+  if (files.length === 0) return [];
+  return input.registry.list('Rule').flatMap((rule) => {
+    if (!profileIds.has(rule.id) || !('paths' in rule.scope)) return [];
+    const globs = rule.scope.paths;
+    const file = files.find((candidate) => matchesAnyGlob(candidate, globs));
+    return file ? [{ rule, file }] : [];
+  });
+}
+
+/** Rules for the plan: path rules matching changed files first, then rules linked to capabilities. */
+function selectRules(input: RouteInput, capabilities: CapabilityEntry[], profileIds: Set<string>, state: RouteState): { rules: string[]; pathMatched: Set<string> } {
+  const byPath = pathRules(input, profileIds);
+  const linked = capabilities.flatMap((capability) => capability.rules).filter((id) => profileIds.has(id));
+  const rules = [...new Set([...byPath.map(({ rule }) => rule.id), ...linked])];
+  for (const ruleId of rules) {
+    const match = byPath.find(({ rule }) => rule.id === ruleId);
+    state.explain.rules.push({ id: ruleId, why: match ? `applies to ${match.file} (path-scoped)` : 'linked to a selected capability' });
+  }
+  return { rules, pathMatched: new Set(byPath.map(({ rule }) => rule.id)) };
+}
+
+/** Ranked context beyond T0: rules matching changed files, then capability rules, then skills. */
+function rankContext(input: RouteInput, rules: string[], pathMatched: ReadonlySet<string>, skills: string[], state: RouteState): ContextItem[] {
+  const ruleItems: ContextItem[] = rules.map((id) => {
+    const rule = input.registry.get(id) as RuleEntry;
+    const why = state.explain.rules.find((item) => item.id === id)?.why ?? '';
+    return { id, kind: 'rule', tier: 'paths' in rule.scope ? 'T1' : 'T2', bytes: input.knowledge.body(id)?.bytes ?? 0, reason: why };
+  });
+  const skillItems: ContextItem[] = skills.map((id) => ({
+    id,
+    kind: 'skill',
+    tier: 'T2',
+    bytes: input.knowledge.body(id)?.bytes ?? 0,
+    reason: state.explain.skills.find((item) => item.id === id)?.why ?? '',
+  }));
+  const byPathFirst = (item: ContextItem) => (pathMatched.has(item.id) ? 0 : 1);
+  return [...ruleItems.sort((a, b) => byPathFirst(a) - byPathFirst(b)), ...skillItems];
 }
 
 function explainAgents(input: RouteInput, capabilities: CapabilityEntry[], assignment: Map<string, string>, review: CapabilityEntry | null, state: RouteState): void {
@@ -368,11 +428,19 @@ function planStatus(input: RouteInput, state: RouteState, approveAt: ReadonlySet
  * Hybrid Agent Router (docs/v2/05 §7): turns a classified task into a minimal plan with an
  * explanation. Overrides narrow the plan; conflicts are reported, never resolved silently.
  */
-export function routeTask(input: RouteInput): Plan {
+export function routeTask(rawInput: RouteInput): Plan {
+  const input: RouteInput = { ...rawInput, classification: mergeImpact(rawInput.classification, rawInput.impact) };
   const state = new RouteState();
   const profileIds = inProfile(input);
+  if (input.impact) {
+    const { files, areas, relatedTests, owners, unmappedFiles } = input.impact;
+    state.explain.impact = { files, areas: areas.map((area) => area.id), relatedTests, owners, unmappedFiles };
+    if (rawInput.classification.domains.length === 0 && input.classification.domains.length > 0) {
+      state.explain.assumptions.push('The task text matched no domain; domains were taken from the changed files');
+    }
+  }
   if (input.classification.domains.length === 0 && !input.overrides.domains) {
-    state.conflict('The task did not match any domain; select one with --domain', true);
+    state.conflict('The task did not match any domain; select one with --domain or pass the changed files', true);
   }
 
   const domains = domainsFor(input, state);
@@ -385,8 +453,7 @@ export function routeTask(input: RouteInput): Plan {
   explainAgents(input, capabilities, assignment, review, state);
 
   const skills = selectSkills(input, capabilities, profileIds, state);
-  const rules = [...new Set(capabilities.flatMap((capability) => capability.rules).filter((id) => profileIds.has(id)))];
-  for (const ruleId of rules) state.explain.rules.push({ id: ruleId, why: 'linked to a selected capability' });
+  const { rules, pathMatched } = selectRules(input, capabilities, profileIds, state);
 
   const workflowId = input.overrides.workflow ?? WORKFLOW_BY_TYPE[type] ?? null;
   if (input.overrides.workflow) {
@@ -401,9 +468,10 @@ export function routeTask(input: RouteInput): Plan {
 
   const approveAt = new Set(input.overrides.approveAt ?? []);
   if (input.overrides.approveAt) state.override('approveAt', input.overrides.approveAt, 'added approval points');
-  const steps = buildSteps(input, capabilities, assignment, gates, approveAt);
+  const { steps, phases } = buildSteps(input, capabilities, assignment, gates, approveAt);
 
   const finalSkills = applyBudget(input, skills, rules, steps.length, state);
+  state.explain.context = rankContext(input, rules, pathMatched, finalSkills, state);
   const status = planStatus(input, state, approveAt);
 
   return {
@@ -416,6 +484,7 @@ export function routeTask(input: RouteInput): Plan {
     classification: input.classification,
     workflow,
     steps,
+    phases,
     agents,
     skills: finalSkills,
     rules,

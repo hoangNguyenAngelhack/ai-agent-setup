@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { createProject } from '../app/create';
+import { runImpact } from '../app/impact';
 import { readPlan, runPlan } from '../app/plan';
 import { runSetup, type SetupOutcome } from '../app/setup';
 import { doctor, rollback, type ConflictStrategy, type PlannedChange } from '../installer';
@@ -9,7 +10,7 @@ import type { ApprovalPoint, PlanMode, PlanOverrides } from '../core/contracts';
 import { ADAPTER_IDS, type AdapterId } from '../registry';
 import { oneOf, parseArgs, single, UsageError, type ParsedArgs } from './args';
 import { runCatalogValidate } from './catalog-validate';
-import { renderPlan } from './plan-output';
+import { renderImpact, renderPlan } from './plan-output';
 import { resolveCreateConfig, type Ask } from './create-config';
 
 const PACKAGE_ROOT = join(__dirname, '..', '..');
@@ -36,6 +37,7 @@ Usage:
   ${BIN} catalog validate [catalog-dir]  Validate a catalog
   ${BIN} plan "<task>" [options]         Propose a plan: domains, agents, skills, gates, cost (V2.1 preview)
   ${BIN} explain <plan-id>               Show the explanation of a saved plan
+  ${BIN} impact [files...] [--since ref] What changed files touch: areas, risk, tests, owners
 
 Create options (V1):
   -t, --type <type>        backend, frontend, fullstack, mobile
@@ -63,6 +65,9 @@ Plan options:
       --allow-tools <intents>  Narrow tools, e.g. fs.read,cmd
       --budget <bytes>     Context budget
       --approve-at <points>  plan, each-step, gates
+      --files <paths>      Changed files to take into account (comma separated)
+      --changed            Use uncommitted git changes as the changed files
+      --since <ref>        Use git changes since a ref
       --json               Print the plan as JSON
 
   -h, --help               Show this help
@@ -164,17 +169,29 @@ function planOverrides(args: ParsedArgs): PlanOverrides {
 function commandPlan(args: ParsedArgs, io: CliIO): number {
   const task = args.positionals.join(' ').trim();
   if (!task) throw new UsageError('Usage: plan "<task description>"');
+  const files = args.values.get('files');
+  const since = single(args, 'since');
   const { plan, savedTo } = runPlan({
     root: resolve(io.cwd, single(args, 'project') ?? '.'),
     task,
     mode: oneOf('mode', single(args, 'mode'), MODES) ?? 'hybrid',
     overrides: planOverrides(args),
+    ...(files ? { files } : {}),
+    ...(since ? { since } : {}),
+    changed: args.switches.has('changed'),
   });
   io.write(args.switches.has('json') ? `${JSON.stringify(plan, null, 2)}\n` : renderPlan(plan));
   if (!args.switches.has('json')) {
     io.write(savedTo ? `Saved: ${savedTo}. Show it again with: ${BIN} explain ${plan.id}\n` : 'Not saved: the project has no ai-agent-setup install (run setup first).\n');
   }
   return plan.status === 'invalid' ? 1 : 0;
+}
+
+function commandImpact(args: ParsedArgs, io: CliIO): number {
+  const since = single(args, 'since');
+  const outcome = runImpact({ root: resolve(io.cwd, single(args, 'project') ?? '.'), files: args.positionals, ...(since ? { since } : {}) });
+  io.write(args.switches.has('json') ? `${JSON.stringify(outcome.impact, null, 2)}\n` : renderImpact(outcome));
+  return 0;
 }
 
 function commandExplain(args: ParsedArgs, io: CliIO): number {
@@ -222,6 +239,8 @@ export async function main(argv: readonly string[], io: CliIO): Promise<number> 
         return commandPlan(args, io);
       case 'explain':
         return commandExplain(args, io);
+      case 'impact':
+        return commandImpact(args, io);
       case 'catalog':
         if (args.positionals[0] !== 'validate') throw new UsageError('Usage: catalog validate [catalog-dir]');
         return runCatalogValidate(resolve(io.cwd, args.positionals[1] ?? join(PACKAGE_ROOT, 'catalog')), (line) => io.write(`${line}\n`));

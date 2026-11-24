@@ -391,6 +391,16 @@ policyDecisions: [{rule: safety.no-force-push, effect: deny}]
     or the budget is exceeded.
   - `manual` plans are `ready` unless approval of the plan was requested.
   - Blocking conflicts make a plan `invalid`.
+- **Changed files (W2.1-02):** Impact Analysis maps file paths to areas (path conventions such as
+  `**/auth/**`, `**/*.controller.*`, `.github/workflows/**`), and areas to capabilities and risk.
+  Files raise a plan's risk and boost touched capabilities inside the classified domains. They choose
+  the domains only when the task text matched none, and that is recorded as an assumption.
+- **Dynamic context (W2.1-04):** a path-scoped rule enters a plan only when a changed file matches
+  its globs. The explanation ranks context beyond T0: matching path rules, then capability rules,
+  then skills.
+- **Execution order (W2.1-09):** each capability belongs to one of nine phases (define, design,
+  architect, build-core, build-clients, verify, review, release, document). Steps depend on the
+  previous non-empty phase; steps in one phase can run in parallel.
 - **Agents in plans are canonical ids.** Mapping them to the agent names each host has (for example
   V1 aliases) is part of W2.1-10.
 

@@ -112,6 +112,16 @@ export interface PlanStep {
   agent: string;
   gates: string[];
   approval: 'none' | 'required';
+  /** Steps that must finish first (previous execution phase). */
+  dependsOn: string[];
+}
+
+export interface ContextItem {
+  id: string;
+  kind: 'rule' | 'skill';
+  tier: 'T1' | 'T2';
+  bytes: number;
+  reason: string;
 }
 
 export interface Reasoned {
@@ -132,6 +142,15 @@ export interface ExplainRecord {
   verification: string[];
   overrides: Array<{ field: string; value: unknown; effect: string }>;
   conflicts: string[];
+  /** Ranked task context beyond the always-loaded tier (W2.1-04). */
+  context: ContextItem[];
+  impact: {
+    files: string[];
+    areas: string[];
+    relatedTests: string[];
+    owners: Array<{ owners: string[]; files: string[] }>;
+    unmappedFiles: string[];
+  } | null;
 }
 
 export interface Plan {
@@ -144,9 +163,64 @@ export interface Plan {
   classification: TaskClassification;
   workflow: string | null;
   steps: PlanStep[];
+  /** Execution phases in order; steps inside a phase can run in parallel (W2.1-09). */
+  phases: Array<{ name: string; steps: string[] }>;
   agents: string[];
   skills: string[];
   rules: string[];
   gates: string[];
   explain: ExplainRecord;
+}
+
+export interface AreaRisk {
+  level: 'medium' | 'high';
+  reason: string;
+}
+
+/** A recognised kind of code (API, auth, tests, CI, …) and the capabilities it relates to. */
+export interface ProjectArea {
+  id: string;
+  files: number;
+  capabilities: string[];
+  risk?: AreaRisk;
+  sample: string[];
+}
+
+export interface ProjectModule {
+  path: string;
+  files: number;
+  languages: string[];
+  areas: string[];
+}
+
+export interface OwnerRule {
+  pattern: string;
+  owners: string[];
+}
+
+/** Output of Project Intelligence (docs/v2/05 §5 module 2). */
+export interface ProjectModel {
+  root: string;
+  files: number;
+  /** True when the scan stopped at the file limit; areas and modules are then partial. */
+  truncated: boolean;
+  paths: string[];
+  modules: ProjectModule[];
+  areas: ProjectArea[];
+  owners: OwnerRule[];
+}
+
+/** Output of Impact Analysis for a set of changed files (W2.1-02). */
+export interface ImpactReport {
+  files: string[];
+  modules: string[];
+  areas: Array<{ id: string; files: string[]; capabilities: string[]; risk?: AreaRisk }>;
+  capabilities: string[];
+  domains: string[];
+  risk: RiskLevel;
+  riskReasons: string[];
+  relatedTests: string[];
+  owners: Array<{ owners: string[]; files: string[] }>;
+  /** Changed files that match no known area; reported, never guessed. */
+  unmappedFiles: string[];
 }
