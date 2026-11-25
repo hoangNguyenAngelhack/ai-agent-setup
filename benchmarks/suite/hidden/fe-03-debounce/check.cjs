@@ -1,34 +1,26 @@
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
 const assert = require('node:assert');
-const { spawnSync } = require('node:child_process');
-const root = path.join(__dirname, '..');
-const app = () => require(path.join(root, 'src', 'app.js'));
-const get = (url, headers = {}) => app().handle({ method: 'GET', url, headers });
-const bob = { authorization: 'Bearer token-bob' };
-const ada = { authorization: 'Bearer token-ada' };
-const runTests = (cwd, file) => spawnSync(process.execPath, ['--test', file], { cwd, encoding: 'utf8' }).status;
+const { observe } = require('./runtime/isolate.cjs');
 
-const { debounce } = require(path.join(root, 'src', 'debounce.js'));
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-(async () => {
+const seen = observe(`
+  const { debounce } = load('src/debounce.js');
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const calls = [];
   const search = debounce((...args) => calls.push(args), 50);
   search('a');
   search('ab');
   search('abc');
   await sleep(20);
-  assert.strictEqual(calls.length, 0, 'called before the wait');
+  const early = calls.length;
   await sleep(90);
-  assert.deepStrictEqual(calls, [['abc']]);
+  const settled = calls.map((call) => [...call]);
   const dropped = debounce(() => calls.push(['dropped']), 50);
   dropped();
-  assert.strictEqual(typeof dropped.cancel, 'function');
-  dropped.cancel();
+  const cancelType = typeof dropped.cancel;
+  if (cancelType === 'function') dropped.cancel();
   await sleep(100);
-  assert.deepStrictEqual(calls, [['abc']]);
-})().catch((error) => {
-  console.error(error.message);
-  process.exit(1);
-});
+  return { early, settled, cancelType, afterCancel: calls };
+`);
+assert.strictEqual(seen.early, 0, 'called before the wait');
+assert.deepStrictEqual(seen.settled, [['abc']]);
+assert.strictEqual(seen.cancelType, 'function');
+assert.deepStrictEqual(seen.afterCancel, [['abc']]);

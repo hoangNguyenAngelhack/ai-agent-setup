@@ -56,7 +56,8 @@ function gitRepo(root: string): string {
 describe('main — general', () => {
   it('should print help and version', async () => {
     expect((await cli(REPO_ROOT, ['--help'])).out).toContain('Usage:');
-    expect((await cli(REPO_ROOT, ['--version'])).out).toMatch(/^create-ai-agent-setup \d+\.\d+\.\d+\n$/);
+    const { version } = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as { version: string };
+    expect((await cli(REPO_ROOT, ['--version'])).out).toBe(`create-ai-agent-setup ${version}\n`);
   });
 
   it('should report usage errors with exit 1 and a pointer to --help', async () => {

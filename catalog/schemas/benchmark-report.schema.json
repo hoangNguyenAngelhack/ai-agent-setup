@@ -11,7 +11,7 @@
     "generatedAt": { "$ref": "urn:ai-agent-setup:contracts:v1:gate-record#/$defs/timestamp" },
     "controls": {
       "type": "object",
-      "required": ["host", "hostVersion", "model", "seed", "n", "packageCommit", "v1Commit", "fixtures", "timeLimits"],
+      "required": ["host", "hostVersion", "model", "seed", "n", "packageCommit", "packageDirty", "toolkitVersion", "evaluatorVersion", "v1Commit", "arms", "fixtures", "timeLimits", "tasks", "invocation", "secrets", "modelsObserved"],
       "additionalProperties": false,
       "properties": {
         "host": { "enum": ["claude-code", "codex"] },
@@ -20,9 +20,29 @@
         "seed": { "type": "integer" },
         "n": { "type": "integer", "minimum": 1 },
         "packageCommit": { "type": ["string", "null"] },
+        "packageDirty": { "type": "boolean" },
+        "toolkitVersion": { "type": "string", "minLength": 1 },
+        "evaluatorVersion": { "type": "string", "minLength": 1 },
         "v1Commit": { "type": "string", "minLength": 1 },
+        "arms": { "type": "array", "minItems": 1, "items": { "enum": ["A", "B", "C"] } },
         "fixtures": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{16}$" } },
-        "timeLimits": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } }
+        "timeLimits": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } },
+        "tasks": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["prompt", "hiddenChecks", "securityChecks"],
+            "additionalProperties": false,
+            "properties": {
+              "prompt": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+              "hiddenChecks": { "type": ["string", "null"], "pattern": "^[0-9a-f]{16}$" },
+              "securityChecks": { "type": ["string", "null"], "pattern": "^[0-9a-f]{16}$" }
+            }
+          }
+        },
+        "invocation": { "type": "array", "items": { "type": "string" } },
+        "secrets": { "enum": ["sandboxed", "unprotected"] },
+        "modelsObserved": { "type": "array", "items": { "type": "string", "minLength": 1 } }
       }
     },
     "validity": {

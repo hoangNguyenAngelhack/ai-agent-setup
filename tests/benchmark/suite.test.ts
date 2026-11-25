@@ -71,7 +71,8 @@ describe('benchmark suite (W2.2-03)', () => {
     it.each(tasks.map((task) => [task.id, task] as const))('%s: rejects the fixture, accepts the solution', (id, task) => {
       if (task.acceptance.hiddenTests?.command.startsWith('python3') && !python) return;
       const untouched = workspace(task.fixture);
-      expect(judge(task, SUITE, untouched.dir, untouched.before)).toMatchObject({ verdict: 'REJECTED', hiddenTests: { status: 'FAIL' } });
+      // The security regression checks pass on the untouched fixture: they only see what a change adds.
+      expect(judge(task, SUITE, untouched.dir, untouched.before)).toMatchObject({ verdict: 'REJECTED', hiddenTests: { status: 'FAIL' }, security: { status: 'PASS' } });
 
       const solved = workspace(task.fixture, join('solutions', id));
       const result = judge(task, SUITE, solved.dir, solved.before);

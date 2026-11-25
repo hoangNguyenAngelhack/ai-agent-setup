@@ -35,10 +35,10 @@ read.
 | 12b | Adversarial: double fork faster than the 100 ms scan, environment cleared | **FAIL**: the process outlives the run (3 of 3 runs). Mitigated: it stays in the sandbox (reading the key gives EPERM) | test 12 known gap |
 | — | Environment: tokens and key location not passed | **PASS** | env test, unit tests |
 | — | `isolated` requested without an OS user | **PASS** (refused before start; no event written) | tests |
-| — | Real Claude Code / Codex under `restricted` | **NOT_VERIFIED** (CLIs not installed) | — |
+| — | Real Claude Code / Codex under `restricted` | **PARTIAL** (2026-11-25): first found that npm-installed hosts could not start (Codex's launcher could not read its own `package.json`; fixed by making the host's `node_modules` install readable and executable). Now `claude --version` (2.1.332) and `codex --version` (0.172.0) start in the sandbox, and a Codex delivery under `restricted` reached its API and ended in RUN_FAILED (401, not signed in), integrity VERIFIED. NOT_VERIFIED: a full agent session with tool calls under `restricted` (needs model quota), Codex's own sandbox nested inside it | `tests/unit/app/isolation.test.ts`; `npm run smoke:host -- --host <host> --isolation restricted` |
 
 Totals for the 12 required scenarios: 12 PASS on their main case; additionally 1 FAIL (12b),
-2 NOT_VERIFIED (7c, real hosts), 1 NOT_APPLICABLE (8b).
+1 NOT_VERIFIED (7c), 1 PARTIAL (real hosts), 1 NOT_APPLICABLE (8b).
 
 ## 2. Acceptance criteria (W2.2-09)
 
@@ -65,4 +65,4 @@ Totals for the 12 required scenarios: 12 PASS on their main case; additionally 1
 - Creating a dedicated OS user and setting permissions for `isolated`: needs administrator rights
   and the user's explicit permission.
 - Linux and Windows providers: need those machines to implement and verify.
-- Real Claude Code and Codex: not installed; installing or signing in needs the user's permission.
+- Real Claude Code and Codex: installed in a user prefix; a full agent session under `restricted` uses the account's model quota and needs the user's go-ahead (`npm run smoke:host -- --host claude-code --isolation restricted`), and Codex needs `codex login` first.

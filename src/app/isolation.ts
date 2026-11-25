@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, closeSync, existsSync, openSync, readSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
-import { basename, dirname, join } from 'node:path';
+import { basename, dirname, join, sep } from 'node:path';
 import type { ExecutionEvent } from '../core/execution';
 import { policyProblems, type IsolationPolicy, type IsolationProfile, type NetworkPolicy, type PreparedLaunch } from '../core/isolation';
 import { providerFor } from '../isolation';
@@ -38,6 +38,19 @@ export interface IsolationRequest {
   home?: string;
 }
 
+/**
+ * Where the host is installed. A host installed with npm is a launcher in `node_modules` that reads
+ * its package and runs files of sibling packages (codex-cli 0.172.0: a Node script that runs a native
+ * binary from `@openai/codex-<platform>`), so the whole `node_modules` it lives in must be readable
+ * and executable; otherwise the launcher's directory is enough.
+ */
+function hostInstallDirs(executable: string): string[] {
+  const real = realPathLoose(executable);
+  const parts = real.split(sep);
+  const modules = parts.lastIndexOf('node_modules');
+  return [dirname(executable), modules > 0 ? parts.slice(0, modules + 1).join(sep) : dirname(real)];
+}
+
 /** Absolute path of a command on PATH, or null. */
 export function resolveExecutable(name: string): string | null {
   const probe = process.platform === 'win32' ? spawnSync('where.exe', [name], { encoding: 'utf8' }) : spawnSync('sh', ['-c', 'command -v "$1"', 'sh', name], { encoding: 'utf8' });
@@ -50,7 +63,6 @@ export function buildIsolationPolicy(root: string, request: IsolationRequest): I
   const home = request.home ?? homedir();
   const hostState = (HOST_STATE[request.host] ?? []).map((path) => join(home, path));
   const runtime = dirname(dirname(realPathLoose(process.execPath)));
-  const executableDirs = [dirname(request.executable), dirname(realPathLoose(request.executable))];
   const keys = keyDirectory();
   const configDir = basename(dirname(keys)) === 'ai-agent-setup' ? [dirname(keys)] : [];
   const environment: Record<string, string> = {};
@@ -65,7 +77,7 @@ export function buildIsolationPolicy(root: string, request: IsolationRequest): I
     network: request.network,
     workspace,
     workspaceReadOnly: [join(workspace, '.ai-agent-setup')],
-    readable: [PACKAGE_ROOT, runtime, ...executableDirs, ...(request.allowRead ?? [])].map(realPathLoose),
+    readable: [PACKAGE_ROOT, runtime, ...hostInstallDirs(request.executable), ...(request.allowRead ?? [])].map(realPathLoose),
     writable: [...hostState, ...(request.allowWrite ?? [])].map(realPathLoose),
     protected: [keys, ...configDir, ...homes.flatMap((dir) => SENSITIVE_IN_HOME.map((path) => join(dir, path)))].map(realPathLoose),
     confinedRoots: [...homes, tmpdir(), '/private/tmp', '/tmp'].map(realPathLoose),

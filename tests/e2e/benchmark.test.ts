@@ -26,6 +26,7 @@ describe.skipIf(process.platform === 'win32')('benchmark harness (fake host)', (
   afterEach(() => {
     process.env.PATH = originalPath;
     delete process.env.FAKE_BENCH_C_LEAKS;
+    delete process.env.FAKE_BENCH_LINGER;
   });
 
   it('should run every task × arm × repetition under one set of controls and judge each trial', async () => {
@@ -53,12 +54,25 @@ describe.skipIf(process.platform === 'win32')('benchmark harness (fake host)', (
       { category: 'backend', acceptance: { A: 0, B: 0, C: 1 } },
     ]);
     // Two tasks and n = 2: the harness ran, but nothing may be claimed.
-    expect(report.validity).toEqual({ valid: false, problems: ['2 task(s); 09 §5.3 needs at least 30', 'n = 2; 09 §5.2 needs n ≥ 3'] });
+    // Plus, depending on where the test runs: an uncommitted toolkit, or no sandbox for the checks.
+    expect(report.validity.valid).toBe(false);
+    expect(report.validity.problems).toEqual(expect.arrayContaining(['2 task(s); 09 §5.3 needs at least 30', 'n = 2; 09 §5.2 needs n ≥ 3']));
+    expect(report.controls).toMatchObject({ evaluatorVersion: 'oracle/2', arms: ['A', 'B', 'C'], modelsObserved: ['fake-model'], secrets: process.platform === 'darwin' ? 'sandboxed' : 'unprotected' });
+    expect(Object.keys(report.controls.tasks)).toEqual(['add-function', 'write-adr']);
     expect(report.hypothesis.status).toBe('INCONCLUSIVE');
     expect(report.veto).toEqual({ triggered: false, reasons: [] });
     expect(report.controls).toMatchObject({ host: 'claude-code', hostVersion: 'fake-claude 9.9.9', model: 'fake-model', seed: 7, n: 2, v1Commit: '51bfc3a', timeLimits: { 'add-function': 60, 'write-adr': 60 } });
     expect(Object.keys(report.controls.fixtures)).toEqual(['add-function', 'write-adr']);
     expect(existsSync(join(outDir, 'report.json')) && readFileSync(join(outDir, 'report.md'), 'utf8')).toContain('Valid for claims: no');
+  }, 120000);
+
+  it.skipIf(process.platform === 'win32')('should stop what the host leaves running once it exits', async () => {
+    const marker = join(writeTree({}), 'late-write');
+    process.env.FAKE_BENCH_LINGER = marker;
+    await runBenchmark({ suiteDir: SUITE, host: 'claude-code', model: 'fake-model', n: 1, arms: ['C'], outDir: writeTree({}) });
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+
+    expect(existsSync(marker)).toBe(false);
   }, 120000);
 
   it('should veto when arm C causes more security incidents than another arm', async () => {

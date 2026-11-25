@@ -7,10 +7,15 @@ import { deliveryPrompt, jsonLine, usageCounts, type HostDelivery } from '../com
 const USAGE_FIELDS = { input: 'input_tokens', output: 'output_tokens', cacheRead: 'cached_input_tokens' };
 
 /**
- * Codex non-interactive mode: `codex exec --json <prompt>` prints JSONL events (`thread.started`,
- * `turn.completed`, `turn.failed`, `error`, item events). Event names follow the published docs and
- * are NOT yet verified against an installed CLI (W2.0-15).
+ * Codex non-interactive mode: `codex exec --json <prompt>` prints JSONL events. Verified 2026-11-25 on
+ * codex-cli 0.172.0 without credentials (no model call): `thread.started`, `turn.started`, one
+ * `error` per connection retry (`Reconnecting... n/m (…)`), an `item.completed` of type `error`, a
+ * final `error`, then `turn.failed` with `error.message`, exit code 1. Outside a Git repository or
+ * trusted directory it prints plain text and exits 1 without any event. `turn.completed` and its
+ * usage are NOT verified (they need a signed-in account).
  */
+/** A retry notice, not the end of the turn: Codex reconnects and the turn may still complete. */
+const RETRY_NOTICE = /^Reconnecting\.\.\. \d+\/\d+/;
 /** Item types that are tool calls (published docs; NOT verified on an installed CLI). Counted once per item id. */
 const TOOL_ITEMS = new Set(['command_execution', 'file_change', 'mcp_tool_call', 'web_search']);
 
@@ -24,6 +29,7 @@ export const codexDelivery: HostDelivery = {
       unsupported: [
         'ask-style approvals: Codex hooks can only block, so approval points are emulated by stopping the run',
         'sandbox and approval policy come from the user\'s Codex configuration; delivery never widens them',
+        'outside a Git repository or trusted directory Codex exits without any event (delivery does not pass `--skip-git-repo-check`); the run is NOT_VERIFIED',
         'step progress is self-reported by the agent and stays unverified until the gates run',
       ],
     };
@@ -33,6 +39,7 @@ export const codexDelivery: HostDelivery = {
     if (!event) return null;
     if (event.type === 'thread.started') return { kind: 'started' };
     if (event.type === 'turn.completed') return { kind: 'completed' };
+    if (event.type === 'error' && typeof event.message === 'string' && RETRY_NOTICE.test(event.message)) return null;
     if (event.type === 'turn.failed' || event.type === 'error') {
       const error = event.error as { message?: unknown } | undefined;
       const message = [error?.message, event.message].find((item): item is string => typeof item === 'string') ?? 'unknown error';
@@ -41,7 +48,9 @@ export const codexDelivery: HostDelivery = {
     return null;
   },
   promptInvocation(prompt, model) {
-    return { executable: 'codex', args: ['exec', '--json', '-m', model, prompt] };
+    // As for Claude Code: no user configuration or rules, the same sandbox in every arm. The flags exist
+    // in 0.172.0 (`exec --help`); their effect on a scored run is NOT verified.
+    return { executable: 'codex', args: ['exec', '--json', '-m', model, '--ignore-user-config', '--ignore-rules', '--sandbox', 'workspace-write', prompt] };
   },
   parseUsage(line) {
     const event = jsonLine(line);

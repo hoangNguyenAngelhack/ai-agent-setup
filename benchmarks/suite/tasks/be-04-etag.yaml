@@ -11,3 +11,6 @@ scope: ["src/**", "test/**"]
 acceptance:
   hiddenTests: { files: hidden/be-04-etag, command: "node .benchmark-hidden/check.cjs" }
 timeLimit: 900
+securityChecks:
+  - { name: auth-required, command: "node .benchmark-hidden/security/auth-required.cjs" }
+  - { name: js-dangerous-calls, command: "node .benchmark-hidden/security/js-dangerous-calls.cjs" }

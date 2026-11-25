@@ -5,12 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2.0.0 (preview)
+## [2.0.0-alpha.0] - Unreleased
 
-V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
+First V2 pre-release, for the npm dist-tag `next` (`latest` stays on 1.6.1). Not published yet: the
+sign-off of [docs/v2/13](docs/v2/13-release-checklist.md) comes first. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
+Release notes: [docs/v2/14](docs/v2/14-release-notes-2.0.0.md).
 
 ### Added
+- `npm run smoke:host -- --host claude-code|codex`: a bounded smoke test of plan delivery on an
+  installed host CLI, through the product's own path in a new Git project; PASS only when step events
+  reach a run with VERIFIED integrity that is not reported as succeeded without gates.
+- `npm run bench -- --dry-run` prints the trial plan without starting a host (324 trials, order
+  digest, worst-case time); `--tasks` runs a calibration subset.
+- [docs/v2/15](docs/v2/15-eval-benchmark-review.md): first independent review of the evaluation set
+  and the benchmark, with the checklist for the human second reviewer.
 - `update [dir]` (docs/v2/07 §4.4): updates a V2 installation to this version's catalog with the
   adapters and profile recorded in the manifest, after showing whether the catalog changed. Migration
   paths A to D are now verified on fixtures (B, C, D in `tests/e2e/migration-paths.test.ts`). `update`
@@ -140,6 +149,22 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   reserved as first arguments.
 
 ### Fixed
+- Codex (checked on the installed 0.172.0 without an account): each connection retry notice was
+  counted as a run failure signal; npm-installed hosts could not start under `--isolation restricted`
+  (the launcher could not read its own package); "basic authentication" in an error message was
+  redacted as a credential.
+- Benchmark: a change that broke the fixture's own behaviour, or deleted its tests, could be
+  ACCEPTED (the fixture's tests now run after the hidden checks, and deleting a test file is data
+  loss); Codex trials ran outside a Git repository; a trial where the host failed counted as the
+  configuration's result (the run is now invalid for claims); processes left by the agent kept
+  running while the workspace was judged; the user's own host configuration and different permission
+  states leaked into the arms.
+- Benchmark checks could be defeated by the code they judge (it ran inside the check process: an
+  exit at load passed). Checks now run from a directory outside the workspace, the code under test
+  runs in its own process, and on macOS neither the host nor that process can read the checks or
+  the reference solutions (Seatbelt). Security regression checks (`auth-required`, dangerous calls)
+  now feed the security veto; three checks no longer reject correct work written another way; the
+  report records what a run needs to be reproduced; intervals no longer depend on `--arms` order.
 - Claude Code token usage was undercounted: per-message usage in its stream carries the output
   count from the start of each message (found with the installed CLI 2.1.332: 23 output tokens per
   message against 321 in the session total). Usage now comes from the result message's

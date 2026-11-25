@@ -3,9 +3,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { claudeCodeDelivery } from '../../../src/adapters/claude-code';
 import { codexDelivery } from '../../../src/adapters/codex';
-import { listFiles, prepareArms } from '../../../src/app/benchmark/arms';
+import { listFiles, prepareArms, prepareWorkspace } from '../../../src/app/benchmark/arms';
 import { judge, snapshotTree, treeDigest } from '../../../src/app/benchmark/oracle';
 import { bootstrapMeanInterval, buildBenchmarkReport, seededRandom, shuffle, type Controls, type Trial } from '../../../src/app/benchmark/report';
+import { describePlan, planTrials, selectTasks } from '../../../src/app/benchmark/run';
 import { loadSuite, type BenchmarkTask } from '../../../src/app/benchmark/tasks';
 import { UsageMeter } from '../../../src/core/evaluation';
 import { writeTree } from '../../helpers/fs-tree';
@@ -24,9 +25,12 @@ describe('benchmark tasks (W2.2-02)', () => {
     expect(() => loadSuite(writeTree({ 'tasks/readme.txt': '' }))).toThrow(/No task in/);
   });
 
-  it('should invoke each host with the prompt and the model', () => {
-    expect(claudeCodeDelivery.promptInvocation('do x', 'm1')).toEqual({ executable: 'claude', args: ['-p', 'do x', '--output-format', 'stream-json', '--verbose', '--model', 'm1'] });
-    expect(codexDelivery.promptInvocation('do x', 'm1')).toEqual({ executable: 'codex', args: ['exec', '--json', '-m', 'm1', 'do x'] });
+  it('should invoke each host with the prompt, the model, the same permissions in every arm and none of the user\'s own configuration', () => {
+    expect(claudeCodeDelivery.promptInvocation('do x', 'm1')).toEqual({
+      executable: 'claude',
+      args: ['-p', 'do x', '--output-format', 'stream-json', '--verbose', '--model', 'm1', '--setting-sources', 'project,local', '--strict-mcp-config', '--permission-mode', 'acceptEdits'],
+    });
+    expect(codexDelivery.promptInvocation('do x', 'm1')).toEqual({ executable: 'codex', args: ['exec', '--json', '-m', 'm1', '--ignore-user-config', '--ignore-rules', '--sandbox', 'workspace-write', 'do x'] });
   });
 });
 
@@ -69,8 +73,8 @@ describe('benchmark oracle (W2.2-02)', () => {
     writeFileSync(join(workspace, 'src/a.js'), '2');
     writeFileSync(join(workspace, 'notes.md'), 'new file outside the scope is not data loss');
     expect(judge(task, suite, workspace, before)).toMatchObject({ verdict: 'ACCEPTED', dataLoss: { status: 'PASS', files: [] }, hiddenTests: { status: 'PASS' } });
-    // The hidden tests were copied in after the changes were read.
-    expect(existsSync(join(workspace, '.benchmark-hidden', 'ok.cjs'))).toBe(true);
+    // The hidden checks ran from a directory outside the workspace and never entered it.
+    expect(existsSync(join(workspace, '.benchmark-hidden'))).toBe(false);
 
     const lossy = writeTree({ 'src/a.js': '1', 'README.md': 'x', 'docs/b.md': 'y' });
     const lossyBefore = snapshotTree(lossy);
@@ -96,6 +100,27 @@ describe('benchmark oracle (W2.2-02)', () => {
     expect(rubric).toMatchObject({ verdict: 'NOT_VERIFIED', hiddenTests: { status: 'NOT_APPLICABLE' }, rubric: { status: 'NOT_VERIFIED' } });
     const failing = writeTree({ 'hidden/ok.cjs': 'process.exit(1)' });
     expect(judge(task, failing, workspace, snapshotTree(workspace))).toMatchObject({ verdict: 'REJECTED', hiddenTests: { status: 'FAIL', detail: 'node .benchmark-hidden/ok.cjs: exit 1' } });
+  });
+
+  it('should reject a change that breaks the fixture\'s own tests, or deletes one, even inside the scope', () => {
+    // Reported by the independent review (2026-11-25) and reproduced on se-01: breaking /health and
+    // deleting test/ was ACCEPTED.
+    const fixtureSuite = writeTree({ 'hidden/ok.cjs': 'process.exit(0)', 'f/package.json': JSON.stringify({ scripts: { test: 'node test/a.test.cjs' } }) });
+    const scoped = { ...task, scope: ['src/**', 'test/**'] };
+    const project = { 'src/a.js': '1', 'test/a.test.cjs': "process.exit(require('node:fs').readFileSync('src/a.js', 'utf8') === '1' ? 0 : 1)" };
+
+    const broken = writeTree(project);
+    const brokenBefore = snapshotTree(broken);
+    writeFileSync(join(broken, 'src/a.js'), '2');
+    expect(judge(scoped, fixtureSuite, broken, brokenBefore)).toMatchObject({ verdict: 'REJECTED', hiddenTests: { status: 'FAIL', detail: 'existing tests fail: node test/a.test.cjs: exit 1' } });
+
+    const deleted = writeTree(project);
+    const deletedBefore = snapshotTree(deleted);
+    rmSync(join(deleted, 'test'), { recursive: true });
+    expect(judge(scoped, fixtureSuite, deleted, deletedBefore)).toMatchObject({ verdict: 'REJECTED', dataLoss: { status: 'FAIL', files: ['test/a.test.cjs'] } });
+
+    const kept = writeTree(project);
+    expect(judge(scoped, fixtureSuite, kept, snapshotTree(kept))).toMatchObject({ verdict: 'ACCEPTED' });
   });
 
   it('should give the same digest to the same tree and a different one after a change', () => {
@@ -128,7 +153,25 @@ function trial(task: string, arm: Trial['arm'], verdict: Trial['oracle']['verdic
   };
 }
 
-const controls: Controls = { host: 'claude-code', hostVersion: 'x', model: 'm', seed: 1, n: 3, packageCommit: null, v1Commit: '51bfc3a', fixtures: {}, timeLimits: {} };
+const controls: Controls = {
+  host: 'claude-code',
+  hostVersion: 'x',
+  model: 'm',
+  seed: 1,
+  n: 3,
+  packageCommit: null,
+  packageDirty: false,
+  toolkitVersion: '2.0.0-alpha.0',
+  evaluatorVersion: 'oracle/2',
+  v1Commit: '51bfc3a',
+  arms: ['B', 'C'],
+  fixtures: {},
+  timeLimits: {},
+  tasks: {},
+  invocation: [],
+  secrets: 'sandboxed',
+  modelsObserved: ['m-1'],
+};
 
 describe('benchmark statistics (W2.2-02)', () => {
   it('should shuffle reproducibly by seed', () => {
@@ -157,5 +200,72 @@ describe('benchmark statistics (W2.2-02)', () => {
     expect(buildBenchmarkReport(run(0), controls, ['B', 'C'], new Date()).hypothesis.status).toBe('NOT_SUPPORTED');
     expect(buildBenchmarkReport(run(3), controls, ['B', 'C'], new Date()).hypothesis.status).toBe('INCONCLUSIVE');
     expect(buildBenchmarkReport(run(30), controls, ['C'], new Date())).toMatchObject({ validity: { valid: false, problems: ['arms B and C are both needed for the V1-vs-V2 comparison'] }, comparisons: [] });
+  });
+
+  it('should give the same intervals whatever the order of --arms (finding 12)', () => {
+    const trials = Array.from({ length: 12 }, (_, index) => `t${index}`).flatMap((task, index) =>
+      // Per-task acceptance varies (0, 1/3, 2/3, 1), so the bootstrap intervals depend on the random stream.
+      (['A', 'B', 'C'] as const).flatMap((arm) => Array.from({ length: 3 }, (_, rep) => trial(task, arm, rep < (index + arm.charCodeAt(0)) % 4 ? 'ACCEPTED' : 'REJECTED'))),
+    );
+    const report = (arms: Trial['arm'][]) => buildBenchmarkReport(trials, { ...controls, arms }, arms, new Date());
+    const byArm = (arms: Trial['arm'][]) => Object.fromEntries(report(arms).arms.map((summary) => [summary.arm, summary]));
+    const byPair = (arms: Trial['arm'][]) => Object.fromEntries(report(arms).comparisons.map((item) => [item.pair, item]));
+
+    expect(byArm(['C', 'A', 'B'])).toEqual(byArm(['A', 'B', 'C']));
+    expect(byPair(['C', 'A', 'B'])).toEqual(byPair(['A', 'B', 'C']));
+    const interval = report(['A', 'B', 'C']).arms.find((summary) => summary.arm === 'C')!.acceptanceRate.ci95!;
+    expect(interval.high).toBeGreaterThan(interval.low);
+  });
+
+  it('should not support a claim from an unreproducible run, unprotected checks or an unseen model (finding 8)', () => {
+    const trials = Array.from({ length: 30 }, (_, index) => `t${index}`).flatMap((task) => Array.from({ length: 3 }, () => [trial(task, 'B', 'REJECTED'), trial(task, 'C', 'ACCEPTED')]).flat());
+    const problems = (changes: Partial<Controls>) => buildBenchmarkReport(trials, { ...controls, ...changes }, ['B', 'C'], new Date()).validity.problems;
+
+    expect(problems({})).toEqual([]);
+    expect(problems({ packageDirty: true })).toEqual(['the toolkit had uncommitted changes, so the run cannot be reproduced from its commit']);
+    expect(problems({ secrets: 'unprotected' })[0]).toMatch(/^the host could read the hidden checks/);
+    expect(problems({ model: 'model-a', modelsObserved: ['model-a-2026'] })).toEqual([]);
+    expect(problems({ model: 'model-a', modelsObserved: ['model-b'] })).toEqual(['no host reported the requested model "model-a" (reported: model-b)']);
+  });
+
+  it('should not let trials where the host itself failed count as the configuration\'s result', () => {
+    const trials = Array.from({ length: 30 }, (_, index) => `t${index}`).flatMap((task) => Array.from({ length: 3 }, () => [trial(task, 'B', 'REJECTED'), trial(task, 'C', 'ACCEPTED')]).flat());
+    trials[0] = { ...trials[0]!, exitCode: 1 };
+    trials[1] = { ...trials[1]!, usage: { ...trials[1]!.usage, samples: 0 } };
+    const report = buildBenchmarkReport(trials, controls, ['B', 'C'], new Date());
+
+    expect(report.validity).toEqual({ valid: false, problems: ['2 trial(s) where the host failed (error exit or no model usage); they measure the host, not the configuration'] });
+    expect(report.hypothesis.status).toBe('INCONCLUSIVE');
+  });
+});
+
+describe('benchmark trial workspace (W2.2-02)', () => {
+  it('should be a Git repository whose metadata is not part of the judged tree', () => {
+    const fixture = writeTree({ 'src/a.js': 'a' });
+    const workspace = prepareWorkspace(fixture, writeTree({ '.claude/settings.json': '{}' }));
+
+    expect(existsSync(join(workspace, '.git', 'HEAD'))).toBe(true);
+    expect([...snapshotTree(workspace).keys()].sort()).toEqual(['.claude/settings.json', 'src/a.js']);
+    rmSync(workspace, { recursive: true, force: true });
+  });
+});
+
+describe('benchmark plan (W2.2-02)', () => {
+  const suite = loadSuite(join(REPO_ROOT, 'benchmarks', 'suite'));
+
+  it('should plan 36 tasks × 3 arms × 3 repetitions = 324 trials, in the same order for the same seed', () => {
+    const plan = planTrials(suite, ['A', 'B', 'C'], 3, 1);
+
+    expect(plan).toHaveLength(324);
+    expect(describePlan(plan)).toBe(describePlan(planTrials(suite, ['A', 'B', 'C'], 3, 1)));
+    expect(describePlan(plan)).not.toBe(describePlan(planTrials(suite, ['A', 'B', 'C'], 3, 2)));
+    expect(describePlan(plan)).toMatch(/^Trials: 324 \(36 tasks; per arm: [ABC] 108, [ABC] 108, [ABC] 108\)/);
+  });
+
+  it('should select calibration tasks and refuse an unknown task id', () => {
+    const [first] = suite;
+
+    expect(selectTasks(suite, [first!.id]).map((task) => task.id)).toEqual([first!.id]);
+    expect(() => selectTasks(suite, [first!.id, 'no-such-task'])).toThrow(/Unknown benchmark task\(s\): no-such-task/);
   });
 });

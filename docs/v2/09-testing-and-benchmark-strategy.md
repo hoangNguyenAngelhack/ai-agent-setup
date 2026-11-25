@@ -216,7 +216,7 @@ runs the method above and writes `trials.jsonl`, `report.json` (`benchmark-repor
   - A is only C's permission files (Claude Code: `settings.json` and the policy hook; Codex: `config.toml` and hooks).
   - B is the configuration of the pinned V1 commit `51bfc3a`, read from git history. V1 had no Codex adapter, so for Codex, B is V1's `.agents/skills`.
 - **Trials:** each trial copies the fixture, puts the arm on top, runs the host with the task's time limit (the whole process tree is stopped at the limit), and then judges the workspace.
-- **Oracle:** data loss (changed or deleted files outside the scope), secrets and the task's security checks, then the hidden tests, copied in only after the agent stops. A rubric needs a blinded reviewer, so a rubric task is NOT_VERIFIED.
+- **Oracle:** data loss (changed or deleted files outside the scope), secrets and the task's security checks, then the hidden tests, run only after the agent stops, from outside the workspace, with the code under test in its own process (see [15](15-eval-benchmark-review.md)). A rubric needs a blinded reviewer, so a rubric task is NOT_VERIFIED.
 - **Controls** recorded in the report: host and version, model, seed, n, package commit, V1 commit, a digest of each fixture, and the time limits.
 - **Validity:** a run with fewer than 30 tasks or n < 3 is marked not valid. Its hypothesis is then INCONCLUSIVE whatever the numbers.
 - **Not verified yet:** the harness has only been run against a test double of the host (`tests/e2e/benchmark.test.ts`), not against installed CLIs. The task suite itself is W2.2-03.

@@ -76,7 +76,13 @@ export const claudeCodeDelivery: HostDelivery = {
     return { kind: 'failed', reason: `claude result ${typeof message.subtype === 'string' ? message.subtype : 'error'}` };
   },
   promptInvocation(prompt, model) {
-    return { executable: 'claude', args: ['-p', prompt, '--output-format', 'stream-json', '--verbose', '--model', model] };
+    // Benchmark arms must differ only in the project configuration (09 §5.2): the user's own settings,
+    // MCP servers and permission rules are not loaded, and every arm runs in the same permission mode.
+    // The flags exist in 2.1.332 (`--help`); their effect on a scored run is NOT verified.
+    return {
+      executable: 'claude',
+      args: ['-p', prompt, '--output-format', 'stream-json', '--verbose', '--model', model, '--setting-sources', 'project,local', '--strict-mcp-config', '--permission-mode', 'acceptEdits'],
+    };
   },
   parseUsage(line) {
     const message = jsonLine(line);

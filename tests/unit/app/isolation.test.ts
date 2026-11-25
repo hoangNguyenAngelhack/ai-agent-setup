@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildIsolationPolicy, inboxEvent, prepareIsolatedLaunch, queueInboxRequest, readInbox, resolveExecutable } from '../../../src/app/isolation';
@@ -75,6 +75,24 @@ describe('buildIsolationPolicy', () => {
     expect(policy.workspaceReadOnly[0]).toMatch(/\.ai-agent-setup$/);
     expect(policy.writable.some((path) => path.endsWith('.claude'))).toBe(true);
     expect(keyDirectory()).toBe(process.env.AI_AGENT_SETUP_KEY_DIR);
+  });
+
+  it('should let a host installed with npm read and run its own install, not only its launcher', () => {
+    // As codex-cli 0.172.0 is installed: a bin link to a Node launcher that reads its package.json and
+    // runs a native binary from a sibling platform package. Seen 2026-11-25: with only the launcher's
+    // directory readable, the host could not start under `restricted`.
+    const prefix = writeTree({
+      'node_modules/@openai/codex/package.json': '{}',
+      'node_modules/@openai/codex/bin/codex.js': '',
+      'node_modules/@openai/codex-darwin-arm64/vendor/codex': '',
+    });
+    mkdirSync(join(prefix, 'node_modules', '.bin'));
+    symlinkSync('../@openai/codex/bin/codex.js', join(prefix, 'node_modules', '.bin', 'codex'));
+    const policy = buildIsolationPolicy(writeTree({}), { profile: 'restricted', network: { mode: 'allow-all' }, host: 'codex', executable: join(prefix, 'node_modules', '.bin', 'codex') });
+
+    // The same normalisation as the policy (long names on Windows, /private on macOS).
+    expect(policy.readable).toContain(realpathSync.native(join(prefix, 'node_modules')));
+    expect(policy.readable).not.toContain(realpathSync.native(prefix));
   });
 
   it('should refuse to prepare a profile that cannot be enforced, before anything starts', () => {

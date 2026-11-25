@@ -1,24 +1,23 @@
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const assert = require('node:assert');
-const { spawnSync } = require('node:child_process');
-const root = path.join(__dirname, '..');
-const app = () => require(path.join(root, 'src', 'app.js'));
-const get = (url, headers = {}) => app().handle({ method: 'GET', url, headers });
-const bob = { authorization: 'Bearer token-bob' };
-const ada = { authorization: 'Bearer token-ada' };
-const runTests = (cwd, file) => spawnSync(process.execPath, ['--test', file], { cwd, encoding: 'utf8' }).status;
+const { observe, runTests } = require('./runtime/isolate.cjs');
 
-const csv = get('/orders.csv', bob);
-assert.strictEqual(csv.status, 200);
-assert.match(String(csv.headers['content-type']), /text\/csv/);
-const lines = String(csv.body).trim().split(/\r?\n/);
+const root = process.cwd();
+const seen = observe(`
+  const { handle } = load('src/app.js');
+  const get = (url, headers = {}) => handle({ method: 'GET', url, headers });
+  const csv = get('/orders.csv', { authorization: 'Bearer token-bob' });
+  return { status: csv.status, contentType: String(csv.headers && csv.headers['content-type']), body: String(csv.body), anonymous: get('/orders.csv').status };
+`);
+assert.strictEqual(seen.status, 200);
+assert.match(seen.contentType, /text\/csv/);
+const lines = seen.body.trim().split(/\r?\n/);
 assert.strictEqual(lines[0], 'id,total,status');
 assert.strictEqual(lines.length, 16);
 assert.ok(lines.slice(1).every((line) => /^\d+,\d+(\.\d+)?,(pending|shipped)$/.test(line)));
-assert.strictEqual(get('/orders.csv').status, 401);
-assert.match(fs.readFileSync(path.join(root, 'public', 'orders.html'), 'utf8'), /href="\/orders\.csv"/);
+assert.strictEqual(seen.anonymous, 401);
+assert.match(fs.readFileSync(path.join(root, 'public', 'orders.html'), 'utf8'), /href=["']?\/orders\.csv["']?/);
 assert.ok(fs.existsSync(path.join(root, 'test', 'orders-csv.test.js')), 'no test/orders-csv.test.js');
 assert.strictEqual(runTests(root, 'test/orders-csv.test.js'), 0, 'test/orders-csv.test.js fails');
 assert.match(fs.readFileSync(path.join(root, 'README.md'), 'utf8'), /csv/i);

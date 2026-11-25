@@ -11,7 +11,9 @@ const RULES: Array<[label: string, pattern: RegExp, replace?: string]> = [
   ['slack-token', /\bxox[abprs]-[A-Za-z0-9-]{10,}/g],
   ['aws-access-key', /\b(?:AKIA|ASIA)[0-9A-Z]{16}\b/g],
   ['jwt', /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g],
-  ['bearer', /\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]{8,}/gi, '$1 [REDACTED:bearer]'],
+  // The words that follow the scheme names in error messages ("missing bearer or basic authentication")
+  // are not credentials.
+  ['bearer', /\b(Bearer|Basic)\s+(?!(?:authentication|authorization|credentials|realm|token|auth)\b)[A-Za-z0-9._~+/=-]{8,}/gi, '$1 [REDACTED:bearer]'],
   [
     'assignment',
     /\b(\w*(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key|credential)\w*["']?\s*[:=]\s*)("[^"\n]*"|'[^'\n]*'|[^\s,;"']+)/gi,
