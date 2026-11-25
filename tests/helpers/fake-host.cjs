@@ -20,7 +20,14 @@ if (!planPath || !eventCommand) {
 const steps = JSON.parse(readFileSync(planPath, 'utf8')).steps.map((step) => step.id);
 const mode = process.env.FAKE_HOST_MODE ?? 'success';
 const say = (value) => process.stdout.write(`${JSON.stringify(value)}\n`);
-const report = (args) => execSync(`${eventCommand} ${args}`, { stdio: 'ignore' });
+// Claude Code's default permission mode denies the agent's Bash calls unless a rule allows them
+// (seen on 2.1.332, 2026-11-25). The fake honours only the exact rule for this run's event command;
+// without it, every report is denied and nothing reaches the run.
+const allowedTools = process.argv[process.argv.indexOf('--allowedTools') + 1];
+const mayReport = host !== 'claude' || allowedTools === `Bash(${eventCommand} *)`;
+const report = (args) => {
+  if (mayReport) execSync(`${eventCommand} ${args}`, { stdio: 'ignore' });
+};
 const start = () => say(host === 'claude' ? { type: 'system', subtype: 'init', session_id: 'fake' } : { type: 'thread.started', thread_id: 'fake' });
 // FAKE_HOST_USAGE=1: the stream carries token usage in each host's shape. Claude repeats one message
 // id over two lines (as its transcripts do), so a meter that counts lines would double it.

@@ -211,6 +211,27 @@ describe('plan delivery (W2.1-10)', () => {
     }
   });
 
+  it('should allow Claude Code to run only this run\'s event command', async () => {
+    const root = projectWithPlan();
+    const plan = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
+    const claude = await deliverRun(root, plan.runId, 'claude-code', { dryRun: true });
+    const codex = await deliverRun(root, plan.runId, 'codex', { dryRun: true });
+
+    expect(claude.invocation.args.slice(-2)).toEqual(['--allowedTools', `Bash(npx create-ai-agent-setup run event ${plan.runId} *)`]);
+    expect(codex.invocation.args).not.toContain('--allowedTools');
+  });
+
+  it('should grant nothing when the event command cannot be held by a permission rule', async () => {
+    const root = projectWithPlan();
+    const plan = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
+    for (const eventCommand of ['node "C:\\Program Files (x86)\\cli.js" run event', 'npx tool run event *', 'npx tool\nrm x']) {
+      const outcome = await deliverRun(root, plan.runId, 'claude-code', { dryRun: true, eventCommand });
+
+      expect(outcome.invocation.args, eventCommand).not.toContain('--allowedTools');
+      expect(outcome.invocation.unsupported.join('\n')).toMatch(/cannot be held by a permission rule/);
+    }
+  });
+
   it('should not deliver a cancelled run', async () => {
     const root = projectWithPlan();
     const plan = approveRun(root, createRun(root, PLAN_ID).runId, 'user');

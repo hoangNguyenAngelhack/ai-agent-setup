@@ -39,16 +39,30 @@ function toolUseIds(content: unknown): string[] {
   });
 }
 
+/**
+ * The only permission delivery grants: `Bash(<event command> *)`, this run's event command with any
+ * arguments. Checked 2026-11-25 on Claude Code 2.1.332 in the default permission mode: the rule lets
+ * the command run, while the same command followed by `&& <other>`, another run's id and any other
+ * command stay denied. Without it the agent cannot report a single step. A command with characters
+ * that would change what the rule matches (parentheses, `*`, line breaks) gets no rule.
+ */
+function eventCommandRule(eventCommand: string): string | null {
+  return /[()*\r\n]/.test(eventCommand) ? null : `Bash(${eventCommand} *)`;
+}
+
 export const claudeCodeDelivery: HostDelivery = {
   host: 'claude-code',
   executable: 'claude',
   invocation(plan, files) {
+    const rule = eventCommandRule(files.eventCommand);
     return {
       executable: 'claude',
-      args: ['-p', deliveryPrompt(plan, files), '--output-format', 'stream-json', '--verbose'],
+      args: ['-p', deliveryPrompt(plan, files), '--output-format', 'stream-json', '--verbose', ...(rule ? ['--allowedTools', rule] : [])],
       unsupported: [
         'interactive approval inside a headless run: the agent reports APPROVAL_REQUIRED and stops; the run continues after `run approve-step`',
-        'permission mode comes from the user\'s Claude Code settings; delivery never widens it',
+        rule
+          ? 'permission mode comes from the user\'s Claude Code settings; delivery allows only this run\'s event command, so edits and other commands still need the user\'s own permissions'
+          : 'permission mode comes from the user\'s Claude Code settings; the event command cannot be held by a permission rule, so step reports also need the user\'s own permissions',
         'step progress is self-reported by the agent and stays unverified until the gates run',
       ],
     };
