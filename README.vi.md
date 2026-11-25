@@ -104,8 +104,8 @@ nằm trong lộ trình.
 | Domains | 12 |
 | Capabilities | 123 |
 | Agents | 9 canonical + 10 V1 aliases |
-| Skills | 21 |
-| Rules | 24 (6 always-scoped, 14 path-scoped, 4 capability-scoped) |
+| Skills | 25 |
+| Rules | 29 (6 always-scoped, 19 path-scoped, 4 capability-scoped) |
 | Workflows | 9 |
 | Profiles | 3 |
 | Tools | 16 MCP servers (opt-in) + 1 other |

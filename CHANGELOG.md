@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Gates run the tools a project declares: RSpec or Minitest and RuboCop (Ruby), PHPUnit or Pest and
   PHPStan (PHP), Ruff and mypy (Python), `dotnet format` (.NET), `cargo check` (Rust). Detection now
   reports linters, and the test runners of Ruby, PHP and Rust.
+- Language packs, wave 2: rules for Swift, Android, Dart and Flutter, C++ and C; build skills for
+  Swift, Android, Flutter and C/C++. Installation follows stacks (language or platform), so the Android
+  pack goes to Android apps only. Detection of native Android and iOS apps, Swift packages, Dart
+  packages and CMake projects; gates for SwiftPM, Flutter, Dart, CMake/CTest and Android Lint.
 
 ## [2.0.0] - 2026-11-25
 

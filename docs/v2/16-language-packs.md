@@ -1,6 +1,6 @@
-# 16. Language packs (wave 1)
+# 16. Language packs
 
-**Status:** wave 1 implemented on `feature/language-packs-wave-1` (2026-11-25); waves 2 and 3 open. Requested by the maintainer:
+**Status:** waves 1 and 2 implemented on `feature/language-packs-wave-1` (2026-11-25); wave 3 open. Requested by the maintainer:
 the toolkit should help agents write code in every common language, and do it efficiently.
 
 ## 1. Problem
@@ -34,10 +34,25 @@ Languages: **Go, Java, Kotlin, C#, Rust, PHP, Ruby**, and the missing Python pie
    the project uses, never a guess: `bundle exec rspec`, `vendor/bin/phpunit`, `ruff check .`,
    `mypy .`, `dotnet format --verify-no-changes`, `cargo check`.
 
-Out of scope for wave 1: Swift, Kotlin Android, Dart/Flutter and C/C++ (wave 2); benchmark tasks per
-language and the measured comparison (wave 3, needs model quota).
+## 3. Wave 2 scope
 
-## 3. Acceptance criteria
+**Swift (iOS and Swift packages), Android (Kotlin), Dart/Flutter, C and C++ (CMake).**
+
+1. **Stacks, not only languages.** The installation filter covers platforms too (`android`, `ios`,
+   `flutter`): the Android rule and build skill go to Android apps, not to every Kotlin service.
+2. **Detection** of native Android apps (Android Gradle plugin at the root or in `app/`), native iOS
+   apps (an Xcode project at the root), Swift packages, plain Dart packages, and CMake projects (C or
+   C++, CTest, clang-tidy); ktlint and detekt for Gradle builds. A Flutter app's `ios/` folder does not
+   make it a Swift project.
+3. **Rules** for Swift, Android, Dart and Flutter, C++ and C; **build skills** for Swift (SwiftPM,
+   Xcode, CocoaPods), Android (Gradle and AGP), Flutter and C/C++ (CMake, linking, sanitizers).
+4. **Gates:** `swift build`/`swift test`/`swiftlint`, `flutter test`/`flutter analyze`, `dart
+   test`/`dart analyze`, CMake configure and build with `ctest`, `./gradlew lint` for Android (ktlint
+   or detekt first when declared). An Xcode app gets no default command: it needs its scheme.
+
+Out of scope: benchmark tasks per language and the measured comparison (wave 3, needs model quota).
+
+## 4. Acceptance criteria
 
 - A Go, JVM, .NET, Rust, PHP, Ruby or Python project gets its own rule and build skill, and not those
   of other languages; a Node project is unchanged; an empty directory gets everything.
