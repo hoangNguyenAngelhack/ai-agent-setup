@@ -12,10 +12,10 @@
 
 </div>
 
-> **Trạng thái: bản xem trước V2, chưa phát hành.** Bản trên npm (`npx create-ai-agent-setup`) vẫn
-> là **1.6.1 (V1)**. Nhánh này chứa nền tảng V2 mô tả bên dưới; muốn dùng thử thì build từ mã nguồn
-> (xem [Bắt đầu nhanh](#bắt-đầu-nhanh-v2-từ-mã-nguồn)). Người dùng V1: đọc
-> [Chuyển từ V1](docs/guides/migrating-from-v1.md) trước khi chạy V2 trong dự án V1.
+> **Trạng thái: 2.0.0.** `npx create-ai-agent-setup` cài V2. Các giới hạn đã biết nằm trong
+> [release notes](docs/v2/14-release-notes-2.0.0.md). Người dùng V1: đọc
+> [Chuyển từ V1](docs/guides/migrating-from-v1.md) trước khi chạy V2 trong dự án V1; bản 1.x được vá
+> bảo mật đến 2027-05-25 (`npx create-ai-agent-setup@1`).
 
 ## Công cụ làm gì
 
@@ -29,22 +29,21 @@
   huỷ (`rm -rf`, `git push --force`, `DROP TABLE`, `npm publish`, …) cần được duyệt; ghi khoá bí mật
   ở định dạng token đã biết thì bị chặn.
 
-## Bắt đầu nhanh (V2 từ mã nguồn)
+## Bắt đầu nhanh
 
 ```bash
-git clone https://github.com/hoangNguyenAngelhack/ai-agent-setup.git
-cd ai-agent-setup && git checkout feature/v2-foundation
-npm ci && npm run build
-
 # Tạo dự án mới (cờ V1 vẫn dùng được)
-node bin/cli.js my-api -t backend -f nestjs -y
+npx create-ai-agent-setup my-api -t backend -f nestjs -y
 
 # Thêm cấu hình vào dự án sẵn có: xem trước, rồi áp dụng
-node bin/cli.js diff ../my-project
-node bin/cli.js setup ../my-project --yes
-node bin/cli.js doctor ../my-project
-node bin/cli.js rollback ../my-project      # hoàn tác lần cài gần nhất
+npx create-ai-agent-setup diff ../my-project
+npx create-ai-agent-setup setup ../my-project --yes
+npx create-ai-agent-setup doctor ../my-project
+npx create-ai-agent-setup rollback ../my-project      # hoàn tác lần cài gần nhất
 ```
+
+Từ mã nguồn: `git clone https://github.com/hoangNguyenAngelhack/ai-agent-setup.git`, rồi
+`npm ci && npm run build` và chạy `node bin/cli.js …` với cùng tham số.
 
 ## Lệnh
 

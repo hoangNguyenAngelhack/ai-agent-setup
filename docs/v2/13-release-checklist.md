@@ -58,6 +58,15 @@ verification:
 | S8 | No second reviewer yet; release notes call the routing figures development-set figures |
 | S9, S10 | The proposed answers to OQ-08 and OQ-02 in [10 §5](10-architecture-decisions.md#5-open-questions), approved as written |
 
+### 2.0.0 on `latest` (2026-11-25)
+
+Later the same day, after 2.0.0-alpha.0 was published on `next`, the maintainer chose to release
+**2.0.0 on `latest`** without a beta. He signed S1 again for that version and tag; the other items
+stand as signed above, with the same release-notes conditions. Not done before this release, and
+stated in the release notes: a signed-in Codex run, a benchmark run, ADR-017 acceptance, a second
+reviewer, and the decisions D-1b, D-6 and D-9 of [15](15-eval-benchmark-review.md). The 1.x support
+window of OQ-08 starts with this release: security fixes until 2027-05-25.
+
 ## 4. Evidence on 2026-11-25 (branch `release/v2.0.0-alpha.0`)
 
 Gates: run `npm run release:check` on the release commit; the result of this branch is in its pull

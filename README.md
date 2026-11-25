@@ -12,10 +12,10 @@
 
 </div>
 
-> **Status: V2 preview, not released.** The version on npm (`npx create-ai-agent-setup`) is still
-> **1.6.1 (V1)**. This branch contains the V2 foundation described below; to try it, build it from
-> source (see [Quick start](#quick-start-v2-from-source)). V1 users: read
-> [Migrating from V1](docs/guides/migrating-from-v1.md) before running V2 in a V1 project.
+> **Status: 2.0.0.** `npx create-ai-agent-setup` installs V2. Known limitations are listed in the
+> [release notes](docs/v2/14-release-notes-2.0.0.md). V1 users: read
+> [Migrating from V1](docs/guides/migrating-from-v1.md) before running V2 in a V1 project; 1.x gets
+> security fixes until 2027-05-25 (`npx create-ai-agent-setup@1`).
 
 ## What it does
 
@@ -29,22 +29,21 @@
   Destructive commands (`rm -rf`, `git push --force`, `DROP TABLE`, `npm publish`, …) need explicit
   approval. Writing a credential in a known token format is blocked.
 
-## Quick start (V2 from source)
+## Quick start
 
 ```bash
-git clone https://github.com/hoangNguyenAngelhack/ai-agent-setup.git
-cd ai-agent-setup && git checkout feature/v2-foundation
-npm ci && npm run build
-
 # Create a new project (V1 flags work)
-node bin/cli.js my-api -t backend -f nestjs -y
+npx create-ai-agent-setup my-api -t backend -f nestjs -y
 
 # Add the configuration to an existing project: review first, then apply
-node bin/cli.js diff ../my-project
-node bin/cli.js setup ../my-project --yes
-node bin/cli.js doctor ../my-project
-node bin/cli.js rollback ../my-project      # undo the last install
+npx create-ai-agent-setup diff ../my-project
+npx create-ai-agent-setup setup ../my-project --yes
+npx create-ai-agent-setup doctor ../my-project
+npx create-ai-agent-setup rollback ../my-project      # undo the last install
 ```
+
+From source: `git clone https://github.com/hoangNguyenAngelhack/ai-agent-setup.git`, then
+`npm ci && npm run build` and `node bin/cli.js …` with the same arguments.
 
 ## Commands
 

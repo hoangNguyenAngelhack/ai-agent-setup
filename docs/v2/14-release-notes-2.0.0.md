@@ -1,9 +1,8 @@
-# 14. Release notes: create-ai-agent-setup 2.0.0 (draft)
+# 14. Release notes: create-ai-agent-setup 2.0.0
 
-> **Draft for the maintainer (sign-off S11 in [13](13-release-checklist.md)).** Proposed release:
-> `2.0.0-alpha.0` on the npm dist-tag `next` (S1; [07 §6](07-migration-strategy.md#6-rollout-plan));
-> `latest` stays on 1.6.1. The date is set at release time. Check every statement against the
-> release commit before you publish.
+> Released 2026-11-25 on the npm dist-tag `latest` (2.0.0-alpha.0 was on `next` the same day).
+> Signed off by the maintainer ([13](13-release-checklist.md)). 1.x gets security fixes until
+> 2027-05-25 (`npx create-ai-agent-setup@1`).
 
 ## Highlights
 

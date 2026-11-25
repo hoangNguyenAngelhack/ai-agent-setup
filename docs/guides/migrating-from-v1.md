@@ -1,10 +1,9 @@
 # Migrating from V1 (create-ai-agent-setup 1.x)
 
 This guide is for people who created a project with `create-ai-agent-setup` 1.x, or copied the V1
-`.claude/` folder into a project, and want to move to V2. V2 is a preview on the
-`feature/v2-foundation` branch; npm still serves 1.6.1. Until V2 is published, build it from source
-(see the [README](../../README.md#quick-start-v2-from-source)) and replace `create-ai-agent-setup` in
-the commands below with `node <path-to-ai-agent-setup>/bin/cli.js`.
+`.claude/` folder into a project, and want to move to V2. V2 is 2.0.0 on npm: run the commands below
+with `npx create-ai-agent-setup`. 1.x stays available as `npx create-ai-agent-setup@1` and gets
+security fixes until 2027-05-25.
 
 **Short version:** V2 never changes your V1 files silently. Run `diff`, then `setup --yes`; review the
 `*.ai-agent-setup.new` files it writes next to yours; remove the broad V1 `allow` rules; run `doctor`.

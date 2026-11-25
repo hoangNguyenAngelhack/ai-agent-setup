@@ -5,10 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0-alpha.0] - Unreleased
+## [2.0.0] - 2026-11-25
 
-First V2 pre-release, for the npm dist-tag `next` (`latest` stays on 1.6.1). Not published yet: the
-sign-off of [docs/v2/13](docs/v2/13-release-checklist.md) comes first. Design:
+First stable V2 release, on the npm dist-tag `latest`; the content is that of 2.0.0-alpha.0. 1.x gets
+security fixes until 2027-05-25 (OQ-08). The known limitations of the
+[release notes](docs/v2/14-release-notes-2.0.0.md) still apply: Codex is partly verified, no
+V1-vs-V2 benchmark has run, `--isolation restricted` is a macOS preview (ADR-017 proposed), and the
+routing figures come from a development set.
+
+## [2.0.0-alpha.0] - 2026-11-25
+
+First V2 pre-release, on the npm dist-tag `next`. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
 Release notes: [docs/v2/14](docs/v2/14-release-notes-2.0.0.md).
 
