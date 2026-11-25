@@ -90,8 +90,9 @@ describe('buildIsolationPolicy', () => {
     symlinkSync('../@openai/codex/bin/codex.js', join(prefix, 'node_modules', '.bin', 'codex'));
     const policy = buildIsolationPolicy(writeTree({}), { profile: 'restricted', network: { mode: 'allow-all' }, host: 'codex', executable: join(prefix, 'node_modules', '.bin', 'codex') });
 
-    expect(policy.readable).toContain(realpathSync(join(prefix, 'node_modules')));
-    expect(policy.readable).not.toContain(realpathSync(prefix));
+    // The same normalisation as the policy (long names on Windows, /private on macOS).
+    expect(policy.readable).toContain(realpathSync.native(join(prefix, 'node_modules')));
+    expect(policy.readable).not.toContain(realpathSync.native(prefix));
   });
 
   it('should refuse to prepare a profile that cannot be enforced, before anything starts', () => {
