@@ -6,7 +6,7 @@
 
 # Universal AI Engineering OS — V2 Documentation Update
 
-**Repository:** `hoangNguyenAngelhack/ai-agent-setup`\
+**Repository:** `nguyenduyhoang35/ai-agent-setup`\
 **Product:** `create-ai-agent-setup`\
 **Target:** V2\
 **Execution mode:** Documentation Only\

@@ -42,7 +42,7 @@ npx create-ai-agent-setup doctor ../my-project
 npx create-ai-agent-setup rollback ../my-project      # hoàn tác lần cài gần nhất
 ```
 
-Từ mã nguồn: `git clone https://github.com/hoangNguyenAngelhack/ai-agent-setup.git`, rồi
+Từ mã nguồn: `git clone https://github.com/nguyenduyhoang35/ai-agent-setup.git`, rồi
 `npm ci && npm run build` và chạy `node bin/cli.js …` với cùng tham số.
 
 ## Lệnh
