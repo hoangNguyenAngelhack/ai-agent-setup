@@ -3,7 +3,7 @@ import type { ProjectProfile } from '../contracts';
 import type { Detection, Detector } from './detection';
 import { detectDotnet, detectGo, detectJvm, detectPhp, detectPython, detectRuby, detectRust } from './detectors/backend-languages';
 import { detectJavaScript } from './detectors/javascript';
-import { detectDelivery, detectMobileNative } from './detectors/platform';
+import { detectCmake, detectDelivery, detectMobileNative, detectSwift } from './detectors/platform';
 import { ProjectDir } from './project-dir';
 
 const DETECTORS: readonly Detector[] = [
@@ -16,6 +16,8 @@ const DETECTORS: readonly Detector[] = [
   detectRuby,
   detectPhp,
   detectMobileNative,
+  detectSwift,
+  detectCmake,
   detectDelivery,
 ];
 

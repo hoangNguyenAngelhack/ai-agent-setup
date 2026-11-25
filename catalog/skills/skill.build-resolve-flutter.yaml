@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.build-resolve-flutter
+name: Flutter build resolution
+description: "Use when a Flutter or Dart project fails with pub, flutter analyze, tests or a platform build: SDK constraints, dependency resolution, CocoaPods and Gradle steps, generated code."
+version: 2.0.0
+category: mobile
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - flutter
+    - dart
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.build-resolve-flutter.md
+triggers: "Use when a Flutter or Dart project fails with pub, flutter analyze, tests or a platform build: SDK constraints, dependency resolution, CocoaPods and Gradle steps, generated code."
+resources: []
+disableImplicit: false

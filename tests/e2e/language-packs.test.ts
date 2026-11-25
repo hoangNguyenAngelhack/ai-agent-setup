@@ -35,4 +35,25 @@ describe('language packs through setup (docs/v2/16)', () => {
     for (const path of ['.claude/rules/go-patterns.md', '.claude/rules/typescript-patterns.md', '.claude/skills/build-resolve-node/SKILL.md']) expect(exists(root, path), path).toBe(true);
     expect(exists(root, '.claude/rules/ruby-patterns.md')).toBe(false);
   }, 60000);
+
+  it('should give mobile and systems projects their platform packs (wave 2)', () => {
+    const flutter = writeTree({ 'pubspec.yaml': 'name: shop\ndependencies:\n  flutter:\n    sdk: flutter\n', 'ios/Podfile': "platform :ios, '16.0'", 'android/build.gradle': '', 'lib/main.dart': '' });
+    runSetup({ root: flutter, distDir: DIST });
+    for (const path of ['.claude/rules/dart-patterns.md', '.claude/skills/build-resolve-flutter/SKILL.md']) expect(exists(flutter, path), path).toBe(true);
+    for (const path of ['.claude/rules/swift-patterns.md', '.claude/skills/build-resolve-node/SKILL.md', '.claude/rules/cpp-patterns.md']) expect(exists(flutter, path), path).toBe(false);
+
+    const android = writeTree({ 'settings.gradle.kts': 'include(":app")', 'build.gradle.kts': '', 'app/build.gradle.kts': 'plugins { id("com.android.application") }' });
+    runSetup({ root: android, distDir: DIST });
+    for (const path of ['.claude/rules/kotlin-patterns.md', '.claude/rules/android-patterns.md', '.claude/skills/build-resolve-android/SKILL.md']) expect(exists(android, path), path).toBe(true);
+
+    const kotlinService = writeTree({ 'build.gradle.kts': 'plugins { kotlin("jvm") }' });
+    runSetup({ root: kotlinService, distDir: DIST });
+    expect(exists(kotlinService, '.claude/rules/kotlin-patterns.md')).toBe(true);
+    expect(exists(kotlinService, '.claude/rules/android-patterns.md')).toBe(false);
+
+    const engine = writeTree({ 'CMakeLists.txt': 'project(engine CXX)\n', 'src/engine.cpp': '' });
+    runSetup({ root: engine, distDir: DIST });
+    for (const path of ['.claude/rules/cpp-patterns.md', '.claude/skills/build-resolve-cpp/SKILL.md']) expect(exists(engine, path), path).toBe(true);
+    expect(exists(engine, '.claude/rules/c-patterns.md')).toBe(false);
+  }, 120000);
 });

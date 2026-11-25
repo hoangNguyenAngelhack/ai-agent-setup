@@ -12,7 +12,33 @@ export type GateSupport = 'project-command' | 'built-in' | 'composite';
  * Stack keys for default commands: a language or build tool, or a tool the project declares (test
  * runner, linter, type checker), so a gate runs only what the project actually uses.
  */
-export type Ecosystem = 'node' | 'go' | 'maven' | 'gradle' | 'python' | 'dotnet' | 'rust' | 'rspec' | 'minitest' | 'rubocop' | 'phpunit' | 'pest' | 'phpstan' | 'ruff' | 'mypy';
+export type Ecosystem =
+  | 'node'
+  | 'go'
+  | 'maven'
+  | 'gradle'
+  | 'python'
+  | 'dotnet'
+  | 'rust'
+  | 'swiftpm'
+  | 'flutter'
+  | 'dart'
+  | 'cmake'
+  | 'ctest'
+  | 'android'
+  | 'rspec'
+  | 'minitest'
+  | 'rubocop'
+  | 'phpunit'
+  | 'pest'
+  | 'phpstan'
+  | 'ruff'
+  | 'mypy'
+  | 'swiftlint'
+  | 'ktlint'
+  | 'detekt';
+
+const CMAKE_BUILD = 'cmake -S . -B build && cmake --build build';
 
 export interface GateDefinition {
   id: string;
@@ -46,7 +72,7 @@ export const GATES: readonly GateDefinition[] = [
     title: 'Build',
     support: 'project-command',
     scripts: ['build'],
-    defaults: { go: 'go build ./...', maven: 'mvn -q -DskipTests package', gradle: './gradlew assemble', dotnet: 'dotnet build', rust: 'cargo build' },
+    defaults: { go: 'go build ./...', maven: 'mvn -q -DskipTests package', gradle: './gradlew assemble', dotnet: 'dotnet build', rust: 'cargo build', swiftpm: 'swift build', cmake: CMAKE_BUILD },
   }),
   gate({
     id: 'gate.unit-tests',
@@ -54,7 +80,7 @@ export const GATES: readonly GateDefinition[] = [
     title: 'Unit tests',
     support: 'project-command',
     scripts: ['test:unit', 'test'],
-    defaults: { go: 'go test ./...', maven: 'mvn -q test', gradle: './gradlew test', python: 'pytest -q', dotnet: 'dotnet test', rust: 'cargo test', rspec: 'bundle exec rspec', minitest: 'bundle exec rake test', phpunit: 'vendor/bin/phpunit', pest: 'vendor/bin/pest' },
+    defaults: { go: 'go test ./...', maven: 'mvn -q test', gradle: './gradlew test', python: 'pytest -q', dotnet: 'dotnet test', rust: 'cargo test', rspec: 'bundle exec rspec', minitest: 'bundle exec rake test', phpunit: 'vendor/bin/phpunit', pest: 'vendor/bin/pest', swiftpm: 'swift test', flutter: 'flutter test', dart: 'dart test', ctest: `${CMAKE_BUILD} && ctest --test-dir build --output-on-failure` },
   }),
   gate({ id: 'gate.integration-tests', category: 'integration', title: 'Integration tests', support: 'project-command', scripts: ['test:integration', 'test:int'] }),
   gate({ id: 'gate.e2e-tests', category: 'e2e', title: 'End-to-end tests', support: 'project-command', scripts: ['test:e2e', 'e2e'], timeoutMs: 20 * MINUTE }),
@@ -64,7 +90,20 @@ export const GATES: readonly GateDefinition[] = [
     title: 'Lint',
     support: 'project-command',
     scripts: ['lint'],
-    defaults: { go: 'go vet ./...', rust: 'cargo clippy -- -D warnings', dotnet: 'dotnet format --verify-no-changes', rubocop: 'bundle exec rubocop', phpstan: 'vendor/bin/phpstan analyse --no-progress', ruff: 'ruff check .' },
+    defaults: {
+      go: 'go vet ./...',
+      rust: 'cargo clippy -- -D warnings',
+      dotnet: 'dotnet format --verify-no-changes',
+      rubocop: 'bundle exec rubocop',
+      phpstan: 'vendor/bin/phpstan analyse --no-progress',
+      ruff: 'ruff check .',
+      swiftlint: 'swiftlint lint --strict',
+      flutter: 'flutter analyze',
+      dart: 'dart analyze',
+      ktlint: './gradlew ktlintCheck',
+      detekt: './gradlew detekt',
+      android: './gradlew lint',
+    },
   }),
   gate({ id: 'gate.typecheck', category: 'static-analysis', title: 'Type check', support: 'project-command', scripts: ['typecheck', 'type-check', 'tsc'], defaults: { mypy: 'mypy .', rust: 'cargo check' } }),
   gate({ id: 'gate.security-scan', category: 'security', title: 'Secret scan of uncommitted and untracked changes', support: 'built-in', defaults: {}, check: 'secret-scan', timeoutMs: MINUTE }),

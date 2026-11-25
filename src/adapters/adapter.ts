@@ -16,11 +16,11 @@ export interface GenerationInput {
   /** Tool entries (MCP servers) are opt-in per server (docs/v2/05 §10.3). */
   enabledTools: string[];
   /**
-   * Languages detected in the project (docs/v2/16). An entry that names languages in
-   * `requiredContext.projectSignals` is generated only for a project using one of them; absent or
+   * Languages and platforms detected in the project (docs/v2/16). An entry that names any in
+   * `requiredContext.projectSignals` is generated only for a project with one of them; absent or
    * empty (nothing detected), every entry is generated.
    */
-  projectLanguages?: string[];
+  projectStacks?: string[];
 }
 
 export interface GeneratedItem {

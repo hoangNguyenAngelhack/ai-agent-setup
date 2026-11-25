@@ -28,6 +28,7 @@ export const detectJvm: Detector = (dir) => {
     buildTools: [...(maven ? ['maven'] : []), ...(gradleFiles.length > 0 ? ['gradle'] : [])],
     frameworks: matchKeywords(text, { 'spring-boot': 'spring-boot', quarkus: 'quarkus', micronaut: 'micronaut' }),
     testRunners: matchKeywords(text, { junit: 'junit' }),
+    linters: matchKeywords(text, { ktlint: 'ktlint', detekt: 'detekt' }),
   };
 };
 

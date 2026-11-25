@@ -1,2 +1,2 @@
 export { detectProject } from './detect-project';
-export { LANGUAGES } from './languages';
+export { LANGUAGES, PLATFORMS, projectStacks, STACKS } from './languages';

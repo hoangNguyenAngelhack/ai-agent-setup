@@ -24,6 +24,9 @@ domain: mobile
 skills:
   - skill.react-native-mobile
   - skill.build-resolve-react-native
+  - skill.build-resolve-swift
+  - skill.build-resolve-android
+  - skill.build-resolve-flutter
 rules: []
 defaultAgents:
   - agent.implementer

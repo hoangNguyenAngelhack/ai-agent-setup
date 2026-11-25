@@ -1,11 +1,27 @@
 [
   {
+    "path": ".agents/skills/android-patterns/SKILL.md",
+    "sha256": "1ba0225dd0fc2b23dae1d5b5fa0bd73326b20c9e9ebfc7349a6d94871b3ef79f"
+  },
+  {
     "path": ".agents/skills/api-conventions/SKILL.md",
     "sha256": "391eb886390437b76246457513280234583e558a4f15fcf3463a78a7cd0e8b4a"
   },
   {
+    "path": ".agents/skills/build-resolve-android/SKILL.md",
+    "sha256": "2f7483ddb36d929fffb059ae92be499074634f3b967f8b1b17f74fc7aef07fd5"
+  },
+  {
+    "path": ".agents/skills/build-resolve-cpp/SKILL.md",
+    "sha256": "227dcbf98ba80d5d6054edd1e9dcde9bd908d3b25f9ff786ae6a37e17d903bb1"
+  },
+  {
     "path": ".agents/skills/build-resolve-dotnet/SKILL.md",
     "sha256": "9365dd7e3192c9d96b1aef2b1f16738a72d6db0814cfa2aaeea560aa2fe3d6c9"
+  },
+  {
+    "path": ".agents/skills/build-resolve-flutter/SKILL.md",
+    "sha256": "8c3f3408d41d56cd1ac0d3840f9b4bdd1b12b629efa1d577ba62514dc256dd2d"
   },
   {
     "path": ".agents/skills/build-resolve-go/SKILL.md",
@@ -48,8 +64,16 @@
     "sha256": "901d96b17ba499dba1f464c0ea85ddb484339340d3bcbea4bea0d8382ce660f3"
   },
   {
+    "path": ".agents/skills/build-resolve-swift/SKILL.md",
+    "sha256": "1df21834f58f168897dcee47f65f29342a6c53e4273e7886c4366bb636a06448"
+  },
+  {
     "path": ".agents/skills/build/SKILL.md",
     "sha256": "35f01e0aef55c97dcd6346c9d886680ca419eac568ac9d0f5496f3fe4989b7ac"
+  },
+  {
+    "path": ".agents/skills/c-patterns/SKILL.md",
+    "sha256": "da0b60e820098325bd5aab9b37a549fcf11f2496cf0bef6c72c33d8ed0b3fef2"
   },
   {
     "path": ".agents/skills/code-review/references/agent-skills-variant.md",
@@ -60,8 +84,16 @@
     "sha256": "944af983a751c2cfcb4c3cf9b1ad4e3a4afae4ff5b7e66443ba073ce930a171a"
   },
   {
+    "path": ".agents/skills/cpp-patterns/SKILL.md",
+    "sha256": "f9c9067312ba01d3bff0a9d019b483de249f0da6cae1b31d14083e3c377d4347"
+  },
+  {
     "path": ".agents/skills/csharp-patterns/SKILL.md",
     "sha256": "0ed7a13b71d423b749654bcfa9d89d2daa619ec1c97f63f99e8e4fcbcbc16800"
+  },
+  {
+    "path": ".agents/skills/dart-patterns/SKILL.md",
+    "sha256": "2683603e9c157dc872ae5f493049ee7f3540bfbf9b867b721b407d7702bd08a9"
   },
   {
     "path": ".agents/skills/data-transform/SKILL.md",
@@ -194,6 +226,10 @@
   {
     "path": ".agents/skills/sql-patterns/SKILL.md",
     "sha256": "36095163c5755020a80b2adc203381ea6c0c5f814a67fdba07adc6515784bf28"
+  },
+  {
+    "path": ".agents/skills/swift-patterns/SKILL.md",
+    "sha256": "7974b315b0f0840ae40d9d8fcaf2b8a89d4033da4e2c5cf721afd4e91f0063ef"
   },
   {
     "path": ".agents/skills/system-design/SKILL.md",

@@ -112,8 +112,16 @@
     "sha256": "b430a3fea76a3f0028cf9204e03afc3486b241b66c7b2745f549a07f3554bd9d"
   },
   {
+    "path": ".claude/rules/android-patterns.md",
+    "sha256": "bffc3a8fb0c69c4541927f63c45bef33ba4ba7e5485ce876ef58d0f712f2f4b2"
+  },
+  {
     "path": ".claude/rules/api-conventions.md",
     "sha256": "978b6eea84953849e11befabc36dce7520a208c04c8cf8359e65564ffef13db8"
+  },
+  {
+    "path": ".claude/rules/c-patterns.md",
+    "sha256": "4a28280b6cdbb84255c20b20a2f6c8103bdc6e61298ed99481660624cdbc5b4b"
   },
   {
     "path": ".claude/rules/clean-code.md",
@@ -124,8 +132,16 @@
     "sha256": "fb7fad04a6e1f095b9fec588d53208ee5595a499085863718c302e59b08d0579"
   },
   {
+    "path": ".claude/rules/cpp-patterns.md",
+    "sha256": "75500da3d2df58c351d2a0a88205771b8a75a4c054b1ec1c5f295ac1134a84b2"
+  },
+  {
     "path": ".claude/rules/csharp-patterns.md",
     "sha256": "2a9e04a81b74fc255d1fdd2856478cf18a698be14fbba43af24446f07f9e0ba5"
+  },
+  {
+    "path": ".claude/rules/dart-patterns.md",
+    "sha256": "32ff18284e66dfb194cddb9d2444119740a60950584eeab79aee3a9305839c42"
   },
   {
     "path": ".claude/rules/database.md",
@@ -180,6 +196,10 @@
     "sha256": "3aa1936705a76f5d27114d64e85d7a4247a8b690a47fe41c5d4f8576260cc0ac"
   },
   {
+    "path": ".claude/rules/swift-patterns.md",
+    "sha256": "2ec3c685dc8d8b32f9d5eb16c67269d5e00b7d116c819f9cee2b08c8cae30d25"
+  },
+  {
     "path": ".claude/rules/testing.md",
     "sha256": "d7b32c59c1f7a0a69ceda625f921869727224a673366eabe25d36a1696850cb1"
   },
@@ -192,8 +212,20 @@
     "sha256": "5993b979f308368820712231f6505ce2a62280907747ffd2782e7624b252e76c"
   },
   {
+    "path": ".claude/skills/build-resolve-android/SKILL.md",
+    "sha256": "2f7483ddb36d929fffb059ae92be499074634f3b967f8b1b17f74fc7aef07fd5"
+  },
+  {
+    "path": ".claude/skills/build-resolve-cpp/SKILL.md",
+    "sha256": "227dcbf98ba80d5d6054edd1e9dcde9bd908d3b25f9ff786ae6a37e17d903bb1"
+  },
+  {
     "path": ".claude/skills/build-resolve-dotnet/SKILL.md",
     "sha256": "9365dd7e3192c9d96b1aef2b1f16738a72d6db0814cfa2aaeea560aa2fe3d6c9"
+  },
+  {
+    "path": ".claude/skills/build-resolve-flutter/SKILL.md",
+    "sha256": "8c3f3408d41d56cd1ac0d3840f9b4bdd1b12b629efa1d577ba62514dc256dd2d"
   },
   {
     "path": ".claude/skills/build-resolve-go/SKILL.md",
@@ -234,6 +266,10 @@
   {
     "path": ".claude/skills/build-resolve-rust/SKILL.md",
     "sha256": "901d96b17ba499dba1f464c0ea85ddb484339340d3bcbea4bea0d8382ce660f3"
+  },
+  {
+    "path": ".claude/skills/build-resolve-swift/SKILL.md",
+    "sha256": "1df21834f58f168897dcee47f65f29342a6c53e4273e7886c4366bb636a06448"
   },
   {
     "path": ".claude/skills/code-review/references/agent-skills-variant.md",

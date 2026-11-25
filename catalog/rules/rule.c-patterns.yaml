@@ -1,0 +1,27 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.c-patterns
+name: C patterns
+description: "Safe C: bounds-checked buffers, ownership of every allocation, error codes checked, no undefined behaviour, sanitizers and warnings as errors."
+version: 2.0.0
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - c
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.c-patterns.md
+scope:
+  paths:
+    - "**/*.c"
+    - "**/*.h"
+enforcement: advisory

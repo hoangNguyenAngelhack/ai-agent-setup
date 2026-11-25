@@ -110,6 +110,35 @@ describe('detectProject — other ecosystems', () => {
     expect(pest).toMatchObject({ languages: ['php'], testRunners: ['pest'] });
   });
 
+  it('should detect native mobile and systems stacks (language packs wave 2)', () => {
+    const swiftPackage = detectProject(writeTree({ 'Package.swift': '// swift-tools-version:5.9\nimport PackageDescription\n', '.swiftlint.yml': 'disabled_rules: []', 'Sources/App/main.swift': '' }));
+    expect(swiftPackage).toMatchObject({ languages: ['swift'], buildTools: ['swiftpm'], testRunners: ['xctest'], linters: ['swiftlint'] });
+
+    const iosApp = detectProject(writeTree({ 'Shop.xcodeproj/project.pbxproj': '', 'Shop/ContentView.swift': 'import SwiftUI', Podfile: "platform :ios, '16.0'" }));
+    expect(iosApp).toMatchObject({ languages: ['swift'], frameworks: ['ios'] });
+
+    const androidApp = detectProject(
+      writeTree({
+        'settings.gradle.kts': 'include(":app")',
+        'build.gradle.kts': 'plugins { id("org.jlleitschuh.gradle.ktlint") version "12.1.0" }',
+        'app/build.gradle.kts': 'plugins { id("com.android.application"); kotlin("android") }',
+      }),
+    );
+    expect(androidApp).toMatchObject({ languages: ['kotlin'], frameworks: ['android'], buildTools: ['gradle'], linters: ['ktlint'] });
+
+    const flutterApp = detectProject(writeTree({ 'pubspec.yaml': 'name: shop\ndependencies:\n  flutter:\n    sdk: flutter\n', 'analysis_options.yaml': 'include: package:flutter_lints/flutter.yaml' }));
+    expect(flutterApp).toMatchObject({ languages: ['dart'], frameworks: ['flutter'], testRunners: ['flutter-test'] });
+
+    const dartPackage = detectProject(writeTree({ 'pubspec.yaml': 'name: money\ndev_dependencies:\n  test: ^1.25.0\n' }));
+    expect(dartPackage).toMatchObject({ languages: ['dart'], frameworks: [], testRunners: ['dart-test'] });
+
+    const cpp = detectProject(writeTree({ 'CMakeLists.txt': 'cmake_minimum_required(VERSION 3.20)\nproject(engine CXX)\nenable_testing()\nadd_test(NAME unit COMMAND unit)\n', '.clang-tidy': 'Checks: "*"', 'src/engine.cpp': '' }));
+    expect(cpp).toMatchObject({ languages: ['cpp'], buildTools: ['cmake'], testRunners: ['ctest'], linters: ['clang-tidy'] });
+
+    const c = detectProject(writeTree({ 'CMakeLists.txt': 'project(tool C)\n', 'src/main.c': '' }));
+    expect(c).toMatchObject({ languages: ['c'], buildTools: ['cmake'], testRunners: [] });
+  });
+
   it('should detect a Rust crate with Cargo', () => {
     const profile = detectProject(writeTree({ 'Cargo.toml': '[package]\nname = "svc"\n[dependencies]\naxum = "0.7"\n' }));
 

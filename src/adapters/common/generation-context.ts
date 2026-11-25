@@ -1,6 +1,6 @@
 import { stringify } from 'yaml';
 import { selectProfileEntries } from '../../core/context';
-import { LANGUAGES } from '../../core/project-detection';
+import { STACKS } from '../../core/project-detection';
 import type {
   AdapterId,
   CatalogEntry,
@@ -12,11 +12,11 @@ import type {
 import type { FileOperation } from '../../shared/file-operations';
 import type { GeneratedItem, GenerationInput, GenerationResult, Support } from '../adapter';
 
-/** An entry for given languages fits a project using one of them; with no language detected, all fit. */
-function fitsLanguages(entry: CatalogEntry, languages: ReadonlySet<string>): boolean {
-  if (languages.size === 0) return true;
-  const wanted = entry.requiredContext.projectSignals.filter((signal) => LANGUAGES.has(signal));
-  return wanted.length === 0 || wanted.some((language) => languages.has(language));
+/** An entry for given stacks fits a project with one of them; with no stack detected, all fit. */
+function fitsStacks(entry: CatalogEntry, stacks: ReadonlySet<string>): boolean {
+  if (stacks.size === 0) return true;
+  const wanted = entry.requiredContext.projectSignals.filter((signal) => STACKS.has(signal));
+  return wanted.length === 0 || wanted.some((stack) => stacks.has(stack));
 }
 
 /** Everything an adapter needs while generating, plus the accumulated result. */
@@ -31,10 +31,10 @@ export class GenerationContext {
     readonly input: GenerationInput,
   ) {
     const enabledTools = new Set(input.enabledTools);
-    const languages = new Set(input.projectLanguages ?? []);
+    const stacks = new Set(input.projectStacks ?? []);
     this.selected = selectProfileEntries(input.registry, input.profile)
       .filter((entry) => entry.kind !== 'Tool' || enabledTools.has(entry.id))
-      .filter((entry) => fitsLanguages(entry, languages))
+      .filter((entry) => fitsStacks(entry, stacks))
       .filter((entry) => this.isSupported(entry))
       .sort((a, b) => a.id.localeCompare(b.id));
   }

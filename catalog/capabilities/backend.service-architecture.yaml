@@ -32,6 +32,7 @@ skills:
   - skill.build-resolve-php
   - skill.build-resolve-ruby
   - skill.build-resolve-python
+  - skill.build-resolve-cpp
 rules:
   - rule.project-structure
 defaultAgents:

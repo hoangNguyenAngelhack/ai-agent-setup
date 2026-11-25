@@ -95,6 +95,27 @@ describe('gate registry', () => {
     expect(commands({ 'go.mod': 'module x\n' })).toMatchObject({ 'gate.build': 'go build ./...', 'gate.unit-tests': 'go test ./...', 'gate.lint': 'go vet ./...' });
   });
 
+  it('should run the tools of mobile and systems stacks (language packs wave 2)', () => {
+    const commands = (tree: Record<string, string>) => {
+      const facts = projectFacts(writeTree(tree));
+      return Object.fromEntries(['gate.build', 'gate.unit-tests', 'gate.lint', 'gate.typecheck'].map((id) => [id, resolveCommand(GATES.find((gate) => gate.id === id)!, facts, {}).command]));
+    };
+
+    expect(commands({ 'Package.swift': '// swift-tools-version:5.9', '.swiftlint.yml': '' })).toEqual({ 'gate.build': 'swift build', 'gate.unit-tests': 'swift test', 'gate.lint': 'swiftlint lint --strict', 'gate.typecheck': null });
+    // An Xcode app needs its scheme and destination: no guess.
+    expect(commands({ 'Shop.xcodeproj/project.pbxproj': '' })).toEqual({ 'gate.build': null, 'gate.unit-tests': null, 'gate.lint': null, 'gate.typecheck': null });
+    expect(commands({ 'pubspec.yaml': 'dependencies:\n  flutter:\n    sdk: flutter\n' })).toEqual({ 'gate.build': null, 'gate.unit-tests': 'flutter test', 'gate.lint': 'flutter analyze', 'gate.typecheck': null });
+    expect(commands({ 'pubspec.yaml': 'name: money\ndev_dependencies:\n  test: ^1.25.0\n' })).toEqual({ 'gate.build': null, 'gate.unit-tests': 'dart test', 'gate.lint': 'dart analyze', 'gate.typecheck': null });
+    expect(commands({ 'CMakeLists.txt': 'project(engine CXX)\nenable_testing()\n' })).toMatchObject({
+      'gate.build': 'cmake -S . -B build && cmake --build build',
+      'gate.unit-tests': 'cmake -S . -B build && cmake --build build && ctest --test-dir build --output-on-failure',
+    });
+    expect(commands({ 'CMakeLists.txt': 'project(tool C)\n' })).toMatchObject({ 'gate.build': 'cmake -S . -B build && cmake --build build', 'gate.unit-tests': null });
+    const android = { 'build.gradle.kts': '', 'app/build.gradle.kts': 'plugins { id("com.android.application") }' };
+    expect(commands(android)).toMatchObject({ 'gate.build': './gradlew assemble', 'gate.unit-tests': './gradlew test', 'gate.lint': './gradlew lint' });
+    expect(commands({ ...android, 'build.gradle.kts': 'plugins { id("org.jlleitschuh.gradle.ktlint") }' })).toMatchObject({ 'gate.lint': './gradlew ktlintCheck' });
+  });
+
   it('should reject malformed gate configuration', () => {
     expect(validateGateConfig({ gates: { 'gate.build': { command: '' } }, extra: 1 }).problems).toHaveLength(2);
     expect(validateGateConfig({ required: ['gate.lint'] })).toEqual({ config: { required: ['gate.lint'] }, problems: [] });

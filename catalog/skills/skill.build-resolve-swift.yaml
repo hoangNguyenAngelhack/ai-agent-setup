@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.build-resolve-swift
+name: Swift build resolution
+description: "Use when a Swift package or Xcode project fails to resolve, build, sign or test: SwiftPM and CocoaPods dependencies, Xcode versions, concurrency checking, code signing, simulator tests."
+version: 2.0.0
+category: mobile
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - swift
+    - ios
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.build-resolve-swift.md
+triggers: "Use when a Swift package or Xcode project fails to resolve, build, sign or test: SwiftPM and CocoaPods dependencies, Xcode versions, concurrency checking, code signing, simulator tests."
+resources: []
+disableImplicit: false
