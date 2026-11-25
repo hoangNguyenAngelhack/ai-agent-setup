@@ -49,9 +49,10 @@
 These are not verified, or only partly done, in this release:
 
 - **Host compatibility is partly verified.** With the installed Claude Code CLI (2.1.332), plan
-  delivery, stream events, token usage, tool calls and cost were checked on a real run. In Claude
-  Code's default permission mode the agent cannot run the toolkit's `run event` command or edit
-  files, so step progress does not reach the run unless your permission settings allow it. Codex is
+  delivery, stream events, token usage, tool calls and cost were checked on a real run. Delivery allows
+  the agent to run only that run's `run event` command, so step progress reaches the run in Claude
+  Code's default permission mode; editing files and other commands still need your own permission
+  settings, and your `deny` rules still win. Codex is
   not verified: it follows the published documentation and is tested only against a test double
   (W2.0-15, W2.1-10).
 - **Runtime isolation is a preview.** ADR-017 is still proposed, not accepted. `--isolation restricted`
