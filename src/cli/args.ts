@@ -1,4 +1,4 @@
-export const COMMANDS = ['create', 'setup', 'diff', 'doctor', 'rollback', 'catalog', 'plan', 'explain', 'impact', 'gates', 'run', 'isolation', 'report'] as const;
+export const COMMANDS = ['create', 'setup', 'update', 'diff', 'doctor', 'rollback', 'catalog', 'plan', 'explain', 'impact', 'gates', 'run', 'isolation', 'report'] as const;
 export type Command = (typeof COMMANDS)[number] | 'help' | 'version';
 
 export class UsageError extends Error {}

@@ -103,7 +103,7 @@ by `tests/e2e/cli.test.ts`:
 Further behaviour changes that are **not** in the table above and must go in release notes:
 
 - Unknown options are now an error. V1 ignored them silently.
-- `create`, `setup`, `diff`, `doctor`, `rollback` and `catalog` are reserved as first arguments, so
+- `create`, `setup`, `update`, `diff`, `doctor`, `rollback` and `catalog` are reserved as first arguments, so
   a project can no longer be named after them positionally. Use `create <name>`.
 - `.claude/CLAUDE.md` holds a generated managed section instead of the V1 document; the V1
   "Maintainer" line is gone. Author details still fill `package.json` and README placeholders.
@@ -146,6 +146,10 @@ Code when present) and `.codex/` config. It reports that the project must be tru
 `update` compares `catalogDigest` and adapter versions, plans operations by ownership class, and runs
 the same diff, backup and apply pipeline.
 
+**Implemented 2026-11-25:** `update [dir]` runs `setup` again with the adapters and profile recorded in
+the manifest, after printing whether the catalog digest changed; it refuses a project without a V2
+manifest.
+
 ## 5. Deprecations
 
 | Item | Deprecated in | Removed in | Replacement |
@@ -172,4 +176,11 @@ the same diff, backup and apply pipeline.
 - [x] Every V1 asset from [02](02-feature-inventory.md) has a destination or a deprecation.
 - [x] Every V1 CLI flag has defined V2 behaviour; behaviour changes are listed.
 - [x] V1-generated projects have a zero-write adoption path.
-- [ ] Path A to D verified on fixtures. **V2.0 test deliverable** ([09](09-testing-and-benchmark-strategy.md)).
+- [x] Path A to D verified on fixtures (2026-11-25): A in `tests/e2e/setup.test.ts` (project made by the
+  V1 CLI); B, C and D in `tests/e2e/migration-paths.test.ts` (V1 configuration copied by hand without
+  the V1 commit; Codex added next to V1 without touching `.claude/`; a changed catalog updates managed
+  files, keeps files the user changed with the new version written next to them, and rolls back byte
+  for byte). **Gap against §4.1:** adoption is not recorded in the manifest (`unmanaged-v1` and
+  `pristine-v1` exist only as types), so unmodified V1 files are not offered for safe replacement:
+  today every differing V1 file is kept and the V2 version is written as `<file>.ai-agent-setup.new`,
+  and only `.claude/CLAUDE.md` (managed section) and `.claude/settings.json` (structured merge) change.

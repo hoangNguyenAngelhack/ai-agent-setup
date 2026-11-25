@@ -53,6 +53,7 @@ node bin/cli.js rollback ../my-project      # undo the last install
 | `[name] [options]` or `create <name>` | Create a project from a template and install the AI configuration |
 | `setup [dir]` | Add the configuration to an existing project; asks before writing (`--yes` to skip, `--dry-run` to only plan) |
 | `diff [dir]` | Show the plan and a unified diff of every change; writes nothing |
+| `update [dir]` | Update a V2 installation to this version's catalog, keeping its adapters and profile; files you changed are kept and the new version is written next to them |
 | `doctor [dir]` | Check managed files and sections against `.ai-agent-setup/manifest.json` |
 | `rollback [dir] [--force]` | Restore the state before the latest install, byte for byte |
 | `catalog validate [dir]` | Validate a catalog (schemas, references, policies, context budget) |

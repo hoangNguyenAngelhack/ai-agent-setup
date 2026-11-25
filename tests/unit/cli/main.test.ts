@@ -163,6 +163,20 @@ describe('main — setup, diff, doctor, rollback', () => {
     expect(readFileSync(join(root, 'AGENTS.md'), 'utf8')).toContain('# Mine');
   });
 
+  it('should update only a V2 installation, keeping its adapters and profile (07 §4.4)', async () => {
+    const root = backend();
+    const missing = await cli(root, ['update', '--yes']);
+    expect(missing.code).toBe(1);
+    expect(missing.err).toContain('No V2 installation');
+
+    expect((await cli(root, ['setup', '--yes', '--adapter', 'codex', '--profile', 'profile.starter'])).code).toBe(0);
+    const update = await cli(root, ['update', '--yes']);
+    expect(update.code).toBe(0);
+    expect(update.out).toMatch(/^Catalog unchanged \([0-9a-f]{12}\)\./);
+    expect(update.out).toContain('Adapters: codex · profile profile.starter');
+    expect(update.out).toContain('Already up to date.');
+  });
+
   it('should reject an unknown strategy and adapter', async () => {
     expect((await cli(backend(), ['setup', '--strategy', 'force'])).err).toContain('Invalid --strategy');
     expect((await cli(backend(), ['setup', '--adapter', 'cursor'])).err).toContain('Invalid --adapter');
