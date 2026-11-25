@@ -51,6 +51,40 @@ describe('PolicyEngine — mandatory safety policy (docs/v2/05 §9.2)', () => {
   });
 
   it.each([
+    'cargo publish',
+    'cargo publish --allow-dirty',
+    'gem push pkg-1.0.gem',
+    'twine upload dist/*',
+    'python -m twine upload dist/*',
+    'poetry publish --build',
+    'uv publish',
+    'dotnet nuget push pkg.nupkg --source nuget.org',
+    'nuget push pkg.nupkg',
+    'pod trunk push App.podspec',
+    'flutter pub publish',
+    'dart pub publish --force',
+    'mvn deploy',
+    './mvnw -B deploy',
+    './gradlew publish',
+    './gradlew publishToMavenCentral',
+    'gradle publishPlugins',
+    'swift package-registry publish example.pkg 1.0.0',
+    'bun publish',
+    'deno publish',
+    'docker push registry.example.com/app:1.0',
+    'podman push app:1.0',
+  ])('should require approval to publish with "%s" (every ecosystem)', (text) => {
+    expect(engine.evaluate(command(text)).matches.map((match) => match.ruleId)).toContain('safety.publish-approval');
+  });
+
+  it.each(['cargo build --release', 'gem install rails', 'pip install twine', 'poetry install', './gradlew publishToMavenLocal', './gradlew build', 'mvn verify', 'docker build -t app .', 'dart pub get'])(
+    'should not ask for "%s" (not a publish)',
+    (text) => {
+      expect(engine.evaluate(command(text)).matches.map((match) => match.ruleId)).not.toContain('safety.publish-approval');
+    },
+  );
+
+  it.each([
     'psql -c "DROP TABLE users"',
     'psql -c "drop database app"',
     'mysql -e "TRUNCATE TABLE logs"',

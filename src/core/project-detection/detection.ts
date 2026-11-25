@@ -10,6 +10,8 @@ export interface Detection {
   ci?: string[];
   /** Linters and type checkers the project declares (they decide the lint and typecheck gates). */
   linters?: string[];
+  /** Coverage tools the project declares (pytest-cov, jacoco, coverlet, simplecov). */
+  coverageTools?: string[];
   signals?: string[];
 }
 

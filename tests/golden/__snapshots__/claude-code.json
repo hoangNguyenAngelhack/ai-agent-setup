@@ -45,7 +45,7 @@
   },
   {
     "path": ".claude/CLAUDE.md",
-    "sha256": "88dc0c0f8fda5bf321326d3b80b98b1587ae6e53f3ed898f653f997368d91500"
+    "sha256": "a8f8b2b440b1ff8f6c38a5906231ebc5beb577fa99f09bdf17b2f3382ccdf3a7"
   },
   {
     "path": ".claude/commands/build.md",
@@ -85,7 +85,7 @@
   },
   {
     "path": ".claude/hooks/ai-agent-setup/policies.json",
-    "sha256": "6aeca94af9a650aec2cd4fc52164057b5aab69fc52fbf977a4a5de067e0067dd"
+    "sha256": "e0d4898478b5223f4e0350638c41eec0a24812bd8646fdf1c31759f6cb39f66d"
   },
   {
     "path": ".claude/hooks/ai-agent-setup/policy-check.cjs",
@@ -209,7 +209,7 @@
   },
   {
     "path": ".claude/settings.json",
-    "sha256": "5993b979f308368820712231f6505ce2a62280907747ffd2782e7624b252e76c"
+    "sha256": "b496f6d067307c840f66ff7e82c7a921d16924bf2b8de1f0f82e3e03da912fed"
   },
   {
     "path": ".claude/skills/build-resolve-android/SKILL.md",

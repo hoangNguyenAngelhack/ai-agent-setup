@@ -20,6 +20,8 @@ export type Ecosystem =
   | 'python'
   | 'dotnet'
   | 'rust'
+  | 'bundler'
+  | 'composer'
   | 'swiftpm'
   | 'flutter'
   | 'dart'
@@ -36,9 +38,50 @@ export type Ecosystem =
   | 'mypy'
   | 'swiftlint'
   | 'ktlint'
-  | 'detekt';
+  | 'detekt'
+  | 'pytest-cov'
+  | 'jacoco-gradle'
+  | 'jacoco-maven'
+  | 'coverlet'
+  | 'simplecov-rspec'
+  | 'simplecov-minitest';
 
 const CMAKE_BUILD = 'cmake -S . -B build && cmake --build build';
+
+/** Coverage command per stack; the report each writes is in COVERAGE_ARTIFACTS. */
+const COVERAGE_DEFAULTS: Partial<Record<Ecosystem, string>> = {
+  go: 'go test ./... -coverprofile=coverage.out',
+  'pytest-cov': 'pytest -q --cov --cov-report=xml:coverage.xml',
+  rust: 'cargo llvm-cov --lcov --output-path lcov.info',
+  flutter: 'flutter test --coverage',
+  swiftpm: 'swift test --enable-code-coverage',
+  'jacoco-gradle': './gradlew test jacocoTestReport',
+  'jacoco-maven': 'mvn -q test jacoco:report',
+  coverlet: 'dotnet test --collect:"XPlat Code Coverage" --results-directory coverage',
+  phpunit: 'vendor/bin/phpunit --coverage-cobertura coverage.xml',
+  pest: 'vendor/bin/pest --coverage-cobertura coverage.xml',
+  'simplecov-rspec': 'bundle exec rspec',
+  'simplecov-minitest': 'bundle exec rake test',
+};
+
+/** Where each stack's coverage command writes its report (`*` matches one path segment). */
+export const COVERAGE_ARTIFACTS: Partial<Record<Ecosystem, string>> = {
+  go: 'coverage.out',
+  'pytest-cov': 'coverage.xml',
+  rust: 'lcov.info',
+  flutter: 'coverage/lcov.info',
+  swiftpm: '.build/debug/codecov/*.json',
+  'jacoco-gradle': 'build/reports/jacoco/test/jacocoTestReport.xml',
+  'jacoco-maven': 'target/site/jacoco/jacoco.xml',
+  coverlet: 'coverage/*/coverage.cobertura.xml',
+  phpunit: 'coverage.xml',
+  pest: 'coverage.xml',
+  'simplecov-rspec': 'coverage/.last_run.json',
+  'simplecov-minitest': 'coverage/.last_run.json',
+};
+
+/** The Istanbul json-summary that Node coverage scripts write. */
+export const NODE_COVERAGE_ARTIFACT = 'coverage/coverage-summary.json';
 
 export interface GateDefinition {
   id: string;
@@ -52,7 +95,7 @@ export interface GateDefinition {
   defaults: Partial<Record<Ecosystem, string>>;
   timeoutMs: number;
   /** Built-in check applied after (or instead of) the command. */
-  check?: 'secret-scan' | 'coverage' | 'npm-audit';
+  check?: 'secret-scan' | 'coverage' | 'dependency-audit';
   threshold?: number;
   /** Composite gates: the gates that must PASS. */
   requires?: string[];
@@ -107,10 +150,18 @@ export const GATES: readonly GateDefinition[] = [
   }),
   gate({ id: 'gate.typecheck', category: 'static-analysis', title: 'Type check', support: 'project-command', scripts: ['typecheck', 'type-check', 'tsc'], defaults: { mypy: 'mypy .', rust: 'cargo check' } }),
   gate({ id: 'gate.security-scan', category: 'security', title: 'Secret scan of uncommitted and untracked changes', support: 'built-in', defaults: {}, check: 'secret-scan', timeoutMs: MINUTE }),
-  gate({ id: 'gate.dependency-audit', category: 'dependency-audit', title: 'Dependency audit (high and critical)', support: 'built-in', check: 'npm-audit', timeoutMs: 2 * MINUTE }),
+  gate({
+    id: 'gate.dependency-audit',
+    version: '1.1.0',
+    category: 'dependency-audit',
+    title: 'Dependency audit (npm: high and critical; other stacks: any known vulnerability)',
+    support: 'built-in',
+    check: 'dependency-audit',
+    timeoutMs: 2 * MINUTE,
+  }),
   // 1.1.0: every metric (statements, branches, functions, lines) must meet the threshold; 1.0.0 checked lines only.
-  gate({ id: 'gate.coverage-80', version: '1.1.0', category: 'unit', title: 'Coverage >= 80% (statements, branches, functions, lines)', support: 'built-in', scripts: ['test:coverage', 'coverage'], check: 'coverage', threshold: 80 }),
-  gate({ id: 'gate.coverage-95', version: '1.1.0', category: 'unit', title: 'Coverage >= 95% (statements, branches, functions, lines)', support: 'built-in', scripts: ['test:coverage', 'coverage'], check: 'coverage', threshold: 95 }),
+  gate({ id: 'gate.coverage-80', version: '1.1.0', category: 'unit', title: 'Coverage >= 80% (statements, branches, functions, lines)', support: 'built-in', scripts: ['test:coverage', 'coverage'], defaults: COVERAGE_DEFAULTS, check: 'coverage', threshold: 80 }),
+  gate({ id: 'gate.coverage-95', version: '1.1.0', category: 'unit', title: 'Coverage >= 95% (statements, branches, functions, lines)', support: 'built-in', scripts: ['test:coverage', 'coverage'], defaults: COVERAGE_DEFAULTS, check: 'coverage', threshold: 95 }),
   gate({ id: 'gate.performance', category: 'performance', title: 'Performance budget', support: 'project-command', scripts: ['test:perf', 'perf', 'bench'] }),
   gate({ id: 'gate.accessibility', category: 'accessibility', title: 'Accessibility check', support: 'project-command', scripts: ['test:a11y', 'a11y'] }),
   gate({ id: 'gate.documentation', category: 'documentation', title: 'Documentation check', support: 'project-command', scripts: ['docs:check', 'lint:docs'] }),

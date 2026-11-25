@@ -1,4 +1,5 @@
-import type { Ecosystem, GateDefinition } from './gates';
+import { AUDIT_TOOLS } from './audits';
+import { COVERAGE_ARTIFACTS, NODE_COVERAGE_ARTIFACT, type Ecosystem, type GateDefinition } from './gates';
 
 /** What the engine needs to know about the project to find gate commands. */
 export interface ProjectFacts {
@@ -22,6 +23,13 @@ export interface ResolvedCommand {
   timeoutMs: number;
   /** For `script`: the script's own text in package.json, which is what actually runs. */
   scriptBody?: string;
+  /** For `default`: the stack whose default command it is. */
+  ecosystem?: Ecosystem;
+}
+
+/** The coverage report a resolved coverage command writes (configuration may name another). */
+export function coverageArtifact(resolved: ResolvedCommand): string {
+  return (resolved.ecosystem && COVERAGE_ARTIFACTS[resolved.ecosystem]) ?? NODE_COVERAGE_ARTIFACT;
 }
 
 function scriptCommand(packageManager: string, script: string): string {
@@ -36,16 +44,20 @@ export function resolveCommand(definition: GateDefinition, facts: ProjectFacts, 
   const script = facts.nodePackageManager ? definition.scripts.find((name) => facts.scripts[name] !== undefined) : undefined;
   if (script && facts.nodePackageManager) return { command: scriptCommand(facts.nodePackageManager, script), source: 'script', timeoutMs, scriptBody: facts.scripts[script]! };
   if (definition.check === 'secret-scan') return { command: 'git diff HEAD --no-color --unified=0', source: 'built-in', timeoutMs };
-  if (definition.check === 'npm-audit' && facts.lockfiles.includes('package-lock.json')) return { command: 'npm audit --json', source: 'built-in', timeoutMs };
+  if (definition.check === 'dependency-audit') {
+    if (facts.lockfiles.includes('package-lock.json')) return { command: 'npm audit --json', source: 'built-in', timeoutMs };
+    const tool = AUDIT_TOOLS.find((item) => facts.ecosystems.includes(item.ecosystem));
+    if (tool) return { command: tool.command, source: 'built-in', timeoutMs };
+  }
   const ecosystem = facts.ecosystems.find((name) => definition.defaults[name]);
-  if (ecosystem) return { command: definition.defaults[ecosystem]!, source: 'default', timeoutMs };
+  if (ecosystem) return { command: definition.defaults[ecosystem]!, source: 'default', timeoutMs, ecosystem };
   return { command: null, source: 'none', timeoutMs };
 }
 
 /** Why a gate has no command, with the fix. */
 export function missingCommandReason(definition: GateDefinition): string {
   const scripts = definition.scripts.length ? `add a "${definition.scripts[0]}" script or ` : '';
-  if (definition.check === 'npm-audit') return `no built-in dependency audit for this project (needs package-lock.json); ${scripts}set gates["${definition.id}"].command in .ai-agent-setup/gates.json`;
+  if (definition.check === 'dependency-audit') return `no dependency audit for this stack (npm needs package-lock.json; Go: govulncheck, Python: pip-audit, Rust: cargo-audit, Ruby: bundler-audit, PHP: composer audit, .NET: dotnet list package); ${scripts}set gates["${definition.id}"].command in .ai-agent-setup/gates.json`;
   return `no command found; ${scripts}set gates["${definition.id}"].command in .ai-agent-setup/gates.json`;
 }
 

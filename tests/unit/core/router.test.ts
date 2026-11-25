@@ -12,7 +12,7 @@ const registry = new Registry(report.entries);
 const classifier = new TaskClassifier(registry);
 
 function project(frameworks: string[], languages = ['typescript']): ProjectProfile {
-  return { root: '/p', languages, frameworks, packageManagers: [], buildTools: [], testRunners: [], ci: [], linters: [], signals: [], workspaces: [] };
+  return { root: '/p', languages, frameworks, packageManagers: [], buildTools: [], testRunners: [], ci: [], linters: [], coverageTools: [], signals: [], workspaces: [] };
 }
 
 function plan(task: string, options: { overrides?: PlanOverrides; mode?: PlanMode; project?: ProjectProfile | null } = {}) {

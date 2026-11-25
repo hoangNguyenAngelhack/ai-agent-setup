@@ -317,7 +317,7 @@
   },
   {
     "path": ".codex/hooks/ai-agent-setup/policies.json",
-    "sha256": "6aeca94af9a650aec2cd4fc52164057b5aab69fc52fbf977a4a5de067e0067dd"
+    "sha256": "e0d4898478b5223f4e0350638c41eec0a24812bd8646fdf1c31759f6cb39f66d"
   },
   {
     "path": ".codex/hooks/ai-agent-setup/policy-check.cjs",
@@ -345,6 +345,6 @@
   },
   {
     "path": "AGENTS.md",
-    "sha256": "237d641dc7dcfd01d08a6318c9a79f040a3e4bc31e0ffc7f30e8ac9384d00771"
+    "sha256": "e4d6240ae41d3544cce2cd818c5a653db39248c95886ab503ba698cee57fb5c6"
   }
 ]

@@ -58,7 +58,7 @@ const FRAMEWORK_SIGNALS: Record<string, string> = {
   sqlalchemy: 'orm',
 };
 
-const LIST_FIELDS = ['languages', 'frameworks', 'packageManagers', 'buildTools', 'testRunners', 'ci', 'linters', 'signals'] as const;
+const LIST_FIELDS = ['languages', 'frameworks', 'packageManagers', 'buildTools', 'testRunners', 'ci', 'linters', 'coverageTools', 'signals'] as const;
 
 function detectDirectory(dir: ProjectDir): Detection[] {
   return DETECTORS.map((detector) => detector(dir));

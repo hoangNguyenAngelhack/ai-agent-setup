@@ -1,6 +1,6 @@
 # 16. Language packs
 
-**Status:** waves 1 and 2 implemented on `feature/language-packs-wave-1` (2026-11-25); wave 3 open. Requested by the maintainer:
+**Status:** waves 1 and 2 merged (#26); polyglot gates and publish policy on `feature/polyglot-gates` (2026-11-25); wave 3 open. Requested by the maintainer:
 the toolkit should help agents write code in every common language, and do it efficiently.
 
 ## 1. Problem
@@ -52,7 +52,25 @@ Languages: **Go, Java, Kotlin, C#, Rust, PHP, Ruby**, and the missing Python pie
 
 Out of scope: benchmark tasks per language and the measured comparison (wave 3, needs model quota).
 
-## 4. Acceptance criteria
+## 4. Polyglot gates and publish policy
+
+Language packs only help if the project's gates can run. Before this change the dependency audit and
+coverage gates worked for Node only, so every other stack stopped at them.
+
+| Gate | Per stack |
+|---|---|
+| `gate.dependency-audit` (version 1.1.0) | npm: `npm audit --json`, high and critical fail. Go `govulncheck ./...`, Python `pip-audit`, Rust `cargo audit`, Ruby `bundle exec bundle-audit check --update`, PHP `composer audit`, .NET `dotnet list package --vulnerable --include-transitive`: any known vulnerability fails |
+| `gate.coverage-80`/`-95` | Go `go test -coverprofile`, Python with pytest-cov, Rust `cargo llvm-cov`, Flutter `flutter test --coverage`, SwiftPM `swift test --enable-code-coverage`, JVM with JaCoCo (Gradle or Maven), .NET with coverlet, PHPUnit and Pest (Cobertura), Ruby with SimpleCov; Node unchanged |
+| `safety.publish-approval` | Asks before publishing in every ecosystem: cargo, gem, twine, Poetry, uv, NuGet, CocoaPods, pub, Maven deploy, Gradle publish tasks (not `publishToMavenLocal`), Swift registry, Bun, Deno, `docker push`/`podman push`, as well as npm, pnpm and yarn |
+
+Audit tools print their own results. They are read fail-closed: PASS needs exit code 0 and the tool's
+"no vulnerabilities" sentence, the vulnerability sentence is FAIL, anything else NOT_VERIFIED. These
+sentences follow the tools' documentation and were **not verified against installed tools** (none was
+installed here): a mismatch shows as NOT_VERIFIED, never as a false PASS. Coverage reports are read
+from their documented formats; a metric a format does not measure (for example functions in
+Cobertura) is reported as not measured, never as passed.
+
+## 5. Acceptance criteria
 
 - A Go, JVM, .NET, Rust, PHP, Ruby or Python project gets its own rule and build skill, and not those
   of other languages; a Node project is unchanged; an empty directory gets everything.
