@@ -26,7 +26,7 @@ import type { IsolationProfile, NetworkPolicy, PreparedLaunch } from '../core/is
 import { UsageMeter, type HostUsage } from '../core/evaluation';
 import { ProcessTree, RUN_MARK_ENV } from '../isolation';
 import { killTree } from '../quality';
-import { redactText, redactValue } from '../shared/redact';
+import { redactJsonLine, redactText, redactValue } from '../shared/redact';
 import {
   approvalPayload,
   eventPayload,
@@ -536,7 +536,7 @@ async function runHost(
   createInterface({ input: child.stdout }).on('line', (line) => {
     const usage = delivery.parseUsage(line);
     if (usage) meter.add(usage);
-    appendFileSync(join(root, transcriptPath), `${redactText(line).text}\n`);
+    appendFileSync(join(root, transcriptPath), `${redactJsonLine(line)}\n`);
     const signal = delivery.parseLine(line);
     if (!signal) return;
     signals += 1;

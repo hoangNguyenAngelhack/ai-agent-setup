@@ -140,6 +140,10 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   reserved as first arguments.
 
 ### Fixed
+- Stored host transcripts are valid JSON again: redaction ran on the raw text of each stream line and
+  left unbalanced quotes and braces. JSON lines are now redacted field by field with the same rules
+  (every key and string, plus any value under a sensitive key name such as `token` or `api_key`);
+  other lines are redacted as text, as before.
 - `run deliver` cancelled with Ctrl-C could exit 1 after a 10-second wait instead of recording
   RUN_CANCELLED: stopping the host's process tree also killed the agent's in-flight `run event`,
   which left the run lock behind (taken over only after 30 seconds). The lock now records its owner

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { redactText, redactValue } from '../../../src/shared/redact';
+import { redactJsonLine, redactText, redactValue } from '../../../src/shared/redact';
 
 // Synthetic values only; none of them is a real credential.
 const GITHUB = `ghp_${'a1B2'.repeat(9)}`;
@@ -41,3 +41,45 @@ describe('redactText', () => {
     });
   });
 });
+
+describe('redactJsonLine', () => {
+  // Every secret below must be gone from the stored line, and the line must stay valid JSON.
+  const SECRETS = [GITHUB, 'hunter2hunter2', 'abcdefghijklmnop', 's3cret', 'jane.doe@example.com', '4242'];
+  const lines = [
+    // Usage line of a host stream: the regex on raw text broke the JSON here.
+    { type: 'assistant', message: { id: 'm1', usage: { input_tokens: 12, output_tokens: 7 } } },
+    // Secrets inside string values, nested arrays and command text.
+    { type: 'item.completed', item: { text: `export GITHUB_TOKEN=${GITHUB}`, args: ['--url', 'postgres://admin:s3cret@db:5432/app'] } }, // secret-scan:allow synthetic fixture
+    { headers: { authorization: 'Bearer abcdefghijklmnop' }, owner: 'jane.doe@example.com' }, // secret-scan:allow synthetic fixture
+    // Values under sensitive key names, whatever their type.
+    { db_password: 'hunter2hunter2', api_key: 4242, nested: [{ access_key: true }] },
+  ];
+
+  it.each(lines.map((line) => [JSON.stringify(line).slice(0, 40), JSON.stringify(line)]))('should keep %s… valid JSON and remove its secrets', (_name, line) => {
+    const stored = redactJsonLine(line);
+    expect(() => JSON.parse(stored) as unknown).not.toThrow();
+    for (const secret of SECRETS) expect(stored).not.toContain(secret);
+  });
+
+  it('should be at least as strict as redactText on the same line', () => {
+    for (const line of lines.map((item) => JSON.stringify(item))) {
+      for (const secret of SECRETS.filter((item) => !redactText(line).text.includes(item))) expect(redactJsonLine(line)).not.toContain(secret);
+    }
+    // Escaped characters are decoded before the rules run, so an escaped secret is caught too.
+    const escaped = `{"note":"\\u0067${GITHUB.slice(1)}"}`;
+    expect(redactJsonLine(escaped)).not.toContain(GITHUB.slice(4));
+  });
+
+  it('should keep ordinary fields and shape, and redact as text a line that is not a JSON object', () => {
+    expect(JSON.parse(redactJsonLine('{"type":"result","subtype":"success","usage":{"output_tokens":7},"total_cost_usd":0.5}'))).toEqual({
+      type: 'result',
+      subtype: 'success',
+      usage: { output_tokens: '[REDACTED:assignment]' },
+      total_cost_usd: 0.5,
+    });
+    expect(redactJsonLine(`plain text DB_PASSWORD=hunter2hunter2`)).toBe(redactText('plain text DB_PASSWORD=hunter2hunter2').text);
+    expect(redactJsonLine('{not json')).toBe('{not json');
+    expect(redactJsonLine('"jane.doe@example.com"')).toBe(redactText('"jane.doe@example.com"').text);
+  });
+});
+
