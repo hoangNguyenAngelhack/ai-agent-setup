@@ -176,7 +176,7 @@ npm run catalog:validate  # in thêm kích thước ngữ cảnh luôn nạp the
 npm run docs:summary      # cập nhật bảng catalog trong cả hai README
 ```
 
-CI chạy trên Linux, macOS và Windows với Node 20, 22 và 24. Muốn đóng góp: làm trên nhánh `feature/*`
+CI chạy trên Linux và Windows với Node 20, 22 và 24, và trên macOS với Node 20 và 24. Muốn đóng góp: làm trên nhánh `feature/*`
 hoặc `fix/*` với conventional commit, thêm test, và giữ `npm test` cùng `npm run catalog:validate`
 xanh.
 

@@ -176,7 +176,7 @@ npm run catalog:validate  # also prints the always-loaded context per profile
 npm run docs:summary      # refresh the catalog table in both READMEs
 ```
 
-CI runs on Linux, macOS and Windows with Node 20, 22 and 24. To contribute: work on a `feature/*`
+CI runs on Linux and Windows with Node 20, 22 and 24, and on macOS with Node 20 and 24. To contribute: work on a `feature/*`
 or `fix/*` branch with conventional commits, add tests, and keep `npm test` and
 `npm run catalog:validate` green.
 
