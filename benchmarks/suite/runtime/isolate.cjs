@@ -33,9 +33,9 @@ function runTests(cwd, file) {
 /**
  * Runs `body`, the body of an async function, in the subject from the workspace, and returns the JSON
  * value it returns. In the body, `load(file)` requires a workspace file and `args` holds `args`.
- * Throws when the subject throws, ends without answering, or times out.
+ * Throws when the subject throws, ends without answering, or runs past `timeoutMs`.
  */
-function observe(body, args = {}) {
+function observe(body, args = {}, { timeoutMs = SUBJECT_TIMEOUT_MS } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'subject-'));
   const script = path.join(dir, 'subject.cjs');
   const answer = path.join(dir, 'answer.json');
@@ -54,7 +54,7 @@ function observe(body, args = {}) {
     ].join('\n'),
   );
   try {
-    const result = spawnSubject(process.execPath, [script, answer, JSON.stringify(args)], { cwd: process.cwd() });
+    const result = spawnSubject(process.execPath, [script, answer, JSON.stringify(args)], { cwd: process.cwd(), timeout: timeoutMs });
     if (!fs.existsSync(answer)) throw new Error(`the code under test ended without an answer (exit ${result.status}): ${String(result.stderr || '').trim().slice(0, 300)}`);
     const reply = JSON.parse(fs.readFileSync(answer, 'utf8'));
     if (!reply.ok) throw new Error(`the code under test threw: ${reply.error}`);
