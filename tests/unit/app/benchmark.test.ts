@@ -6,6 +6,7 @@ import { codexDelivery } from '../../../src/adapters/codex';
 import { listFiles, prepareArms } from '../../../src/app/benchmark/arms';
 import { judge, snapshotTree, treeDigest } from '../../../src/app/benchmark/oracle';
 import { bootstrapMeanInterval, buildBenchmarkReport, seededRandom, shuffle, type Controls, type Trial } from '../../../src/app/benchmark/report';
+import { describePlan, planTrials, selectTasks } from '../../../src/app/benchmark/run';
 import { loadSuite, type BenchmarkTask } from '../../../src/app/benchmark/tasks';
 import { UsageMeter } from '../../../src/core/evaluation';
 import { writeTree } from '../../helpers/fs-tree';
@@ -157,5 +158,25 @@ describe('benchmark statistics (W2.2-02)', () => {
     expect(buildBenchmarkReport(run(0), controls, ['B', 'C'], new Date()).hypothesis.status).toBe('NOT_SUPPORTED');
     expect(buildBenchmarkReport(run(3), controls, ['B', 'C'], new Date()).hypothesis.status).toBe('INCONCLUSIVE');
     expect(buildBenchmarkReport(run(30), controls, ['C'], new Date())).toMatchObject({ validity: { valid: false, problems: ['arms B and C are both needed for the V1-vs-V2 comparison'] }, comparisons: [] });
+  });
+});
+
+describe('benchmark plan (W2.2-02)', () => {
+  const suite = loadSuite(join(REPO_ROOT, 'benchmarks', 'suite'));
+
+  it('should plan 36 tasks × 3 arms × 3 repetitions = 324 trials, in the same order for the same seed', () => {
+    const plan = planTrials(suite, ['A', 'B', 'C'], 3, 1);
+
+    expect(plan).toHaveLength(324);
+    expect(describePlan(plan)).toBe(describePlan(planTrials(suite, ['A', 'B', 'C'], 3, 1)));
+    expect(describePlan(plan)).not.toBe(describePlan(planTrials(suite, ['A', 'B', 'C'], 3, 2)));
+    expect(describePlan(plan)).toMatch(/^Trials: 324 \(36 tasks; per arm: [ABC] 108, [ABC] 108, [ABC] 108\)/);
+  });
+
+  it('should select calibration tasks and refuse an unknown task id', () => {
+    const [first] = suite;
+
+    expect(selectTasks(suite, [first!.id]).map((task) => task.id)).toEqual([first!.id]);
+    expect(() => selectTasks(suite, [first!.id, 'no-such-task'])).toThrow(/Unknown benchmark task\(s\): no-such-task/);
   });
 });
