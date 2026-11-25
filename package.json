@@ -1,6 +1,6 @@
 {
   "name": "create-ai-agent-setup",
-  "version": "1.6.1",
+  "version": "2.0.0-alpha.0",
   "description": "Universal AI engineering configuration for Claude Code and Codex: create or set up projects from a versioned catalog with a safety policy and a safe installer",
   "author": "Hoang Nguyen <hoang.nguyen@angelhack.com>",
   "license": "MIT",
@@ -84,5 +84,8 @@
     "ajv": "^8.20.0",
     "smol-toml": "^1.9.1",
     "yaml": "^2.9.1"
+  },
+  "publishConfig": {
+    "tag": "next"
   }
 }
