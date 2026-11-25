@@ -130,6 +130,10 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   reserved as first arguments.
 
 ### Fixed
+- `run deliver` cancelled with Ctrl-C could exit 1 after a 10-second wait instead of recording
+  RUN_CANCELLED: stopping the host's process tree also killed the agent's in-flight `run event`,
+  which left the run lock behind (taken over only after 30 seconds). The lock now records its owner
+  process and is taken over at once when that process no longer exists.
 - `-f/--framework`, `--db` and `-T/--tier` were ignored.
 - `--version` printed 1.5.1; help used the wrong command name.
 - Generated `settings.json` contained the maintainer's machine paths.

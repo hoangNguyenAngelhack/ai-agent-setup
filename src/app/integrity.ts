@@ -1,5 +1,5 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
-import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, rmdirSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { canonicalPath, isWithin, keyDirectory } from '../shared/key-location';
 
@@ -129,6 +129,37 @@ export function writeRunHead(key: ProjectKey, runId: string, head: RunHead): voi
  * Serialises appends to one run across processes (the orchestrator and the agent's `run event`
  * can write at the same time): an exclusive directory under the key directory.
  */
+/** The lock records the process holding it, so a lock left by a killed process is not waited on. */
+const LOCK_OWNER = 'owner';
+
+/** True only when the recorded owner process is known to be gone; unknown owners count as alive. */
+function lockOwnerIsGone(lock: string): boolean {
+  let pid: number;
+  try {
+    pid = Number(readFileSync(join(lock, LOCK_OWNER), 'utf8'));
+  } catch {
+    return false;
+  }
+  if (!Number.isSafeInteger(pid) || pid <= 0 || pid === process.pid) return false;
+  try {
+    process.kill(pid, 0);
+    return false;
+  } catch (error) {
+    // EPERM: the process exists but belongs to someone else.
+    return (error as NodeJS.ErrnoException).code === 'ESRCH';
+  }
+}
+
+/** A lock left by a process that is gone, or one older than STALE_LOCK_MS whatever its owner. */
+function lockIsAbandoned(lock: string): boolean {
+  return existsSync(lock) && (lockOwnerIsGone(lock) || Date.now() - statSync(lock).mtimeMs > STALE_LOCK_MS);
+}
+
+/**
+ * Cross-process lock for one run. A lock whose owner was killed (for example an agent's `run event`
+ * stopped with the host's process tree on cancel) is taken over at once: that process can no longer
+ * write. A lock without a readable owner is taken over only after STALE_LOCK_MS.
+ */
 export function withRunLock<T>(key: ProjectKey, runId: string, action: () => T): T {
   const lock = join(keyDirectory(), key.keyId, 'runs', `${runId}.lock`);
   ensurePrivateDir(join(keyDirectory(), key.keyId, 'runs'));
@@ -138,8 +169,8 @@ export function withRunLock<T>(key: ProjectKey, runId: string, action: () => T):
       mkdirSync(lock);
       break;
     } catch {
-      if (existsSync(lock) && Date.now() - statSync(lock).mtimeMs > STALE_LOCK_MS) {
-        rmdirSync(lock);
+      if (lockIsAbandoned(lock)) {
+        rmSync(lock, { recursive: true, force: true });
         continue;
       }
       if (Date.now() > deadline) throw new Error(`Run ${runId} is locked by another process`);
@@ -150,9 +181,10 @@ export function withRunLock<T>(key: ProjectKey, runId: string, action: () => T):
     }
   }
   try {
+    writeFileSync(join(lock, LOCK_OWNER), String(process.pid));
     return action();
   } finally {
-    rmdirSync(lock);
+    rmSync(lock, { recursive: true, force: true });
   }
 }
 

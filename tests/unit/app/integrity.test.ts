@@ -1,4 +1,5 @@
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync, utimesSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { actionsFromHookInput, strictestDecision } from '../../../src/adapters/hook-runtime/policy-check';
@@ -179,6 +180,27 @@ describe('ADR-016: signed runs', () => {
     expect(existsSync(lock)).toBe(false);
     expect(loadRun(root, plan.runId).state.anomalies).toEqual([]);
   });
+
+  it('should take over at once a fresh lock whose owner process was killed, and wait for a live owner', () => {
+    const root = projectWithPlan();
+    const plan = approveRun(root, createRun(root, PLAN_ID).runId, 'user');
+    const lock = join(keyDirectory(), projectKeyId(root), 'runs', `${plan.runId}.lock`);
+    // A process that has exited: its pid no longer exists (an agent's `run event` killed on cancel).
+    const dead = spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf8' }).stdout;
+    mkdirSync(lock);
+    writeFileSync(join(lock, 'owner'), dead);
+
+    const started = Date.now();
+    recordEvent(root, plan.runId, { type: 'STEP_STARTED', source: 'host', stepId: plan.steps[0]!.id });
+    expect(Date.now() - started).toBeLessThan(2000);
+    expect(existsSync(lock)).toBe(false);
+
+    // A live owner (this test's parent process) is waited on, not taken over.
+    mkdirSync(lock);
+    writeFileSync(join(lock, 'owner'), String(process.ppid));
+    expect(() => recordEvent(root, plan.runId, { type: 'STEP_STARTED', source: 'host', stepId: plan.steps[1]!.id })).toThrow(/is locked by another process/);
+    expect(existsSync(lock)).toBe(true);
+  }, 20000);
 });
 
 describe('ADR-016: findings of the security review (2026-11-24)', () => {
