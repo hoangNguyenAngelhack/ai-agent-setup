@@ -168,8 +168,10 @@ manifest.
 2. **Characterization snapshot:** capture V1 output golden files before refactoring
    ([09 §3.2](09-testing-and-benchmark-strategy.md#32-v1-characterization-tests)).
 3. **V2.0 pre-releases** (`2.0.0-alpha`/`beta`, npm dist-tag `next`) with Path A tested on fixtures.
+   Done: 2.0.0-alpha.0 on `next`, 2026-11-25; no beta (the maintainer released 2.0.0 the same day).
 4. **V2.0 GA:** `latest` dist-tag moves to 2.0; 1.x is maintained for security fixes for a period to
    be decided (OQ-08).
+   Done: 2.0.0 on `latest`, 2026-11-25; 1.x security fixes until 2027-05-25 (OQ-08).
 
 ## 7. Acceptance criteria
 
