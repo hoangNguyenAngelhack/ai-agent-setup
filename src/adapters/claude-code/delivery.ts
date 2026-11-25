@@ -1,16 +1,31 @@
+import { addTokens, zeroTokens, type TokenCounts } from '../../core/evaluation';
 import { deliveryPrompt, jsonLine, usageCounts, type HostDelivery } from '../common/delivery';
 
 /** Claude Code usage fields (Anthropic message `usage`); input excludes cache reads and writes. */
 const USAGE_FIELDS = { input: 'input_tokens', output: 'output_tokens', cacheRead: 'cache_read_input_tokens', cacheWrite: 'cache_creation_input_tokens' };
+/** Fields of each model in the `result` message's `modelUsage`. */
+const MODEL_USAGE_FIELDS = { input: 'inputTokens', output: 'outputTokens', cacheRead: 'cacheReadInputTokens', cacheWrite: 'cacheCreationInputTokens' };
+
+/** Tokens per model from `modelUsage`; null when it is absent or carries no counts. */
+function modelUsage(value: unknown): Record<string, Partial<TokenCounts>> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const models = Object.entries(value).flatMap(([name, usage]) => {
+    const counts = usageCounts(usage, MODEL_USAGE_FIELDS);
+    return counts ? [[name, counts] as const] : [];
+  });
+  return models.length ? Object.fromEntries(models) : null;
+}
 
 /**
  * Claude Code headless mode: `claude -p <prompt> --output-format stream-json --verbose` prints one
  * JSON message per line; `system/init` opens the session and a `result` message closes it.
  * Message shapes follow the published docs and are NOT yet verified against an installed CLI (W2.0-15).
- * Usage: every `assistant` message carries `message.usage` and `message.model`, and one message is
- * repeated over several lines with the same `message.id` (verified 2026-11-25 on local Claude Code
- * 2.1.33x session transcripts: 411 lines, 181 ids, same usage on each repeat). The `result` message
- * adds `total_cost_usd` and a session `usage` (published docs; not verified on an installed CLI).
+ * Usage (verified 2026-11-25 against Claude Code 2.1.332 `-p --output-format stream-json`): every
+ * `assistant` line carries `message.usage`, repeated unchanged on each line of the same `message.id`,
+ * but its output count is the one at the start of the message. The `result` message carries the true
+ * session totals: `usage` (main loop), `modelUsage` (every model call, per model) and
+ * `total_cost_usd`. Totals come from `modelUsage`; per-message usage is the fallback when the host
+ * stops before `result`.
  */
 /**
  * Tool calls: `tool_use` content blocks, each with a unique id (verified 2026-11-25 on a local
@@ -64,10 +79,12 @@ export const claudeCodeDelivery: HostDelivery = {
       };
     }
     if (message?.type !== 'result') return null;
-    const tokens = usageCounts(message.usage, USAGE_FIELDS);
+    // modelUsage covers every model call of the session (auxiliary ones included); usage only the main loop.
+    const models = modelUsage(message.modelUsage);
+    const tokens = models ? Object.values(models).reduce<TokenCounts>((sum, counts) => addTokens(sum, counts), zeroTokens()) : usageCounts(message.usage, USAGE_FIELDS);
     const cost = message.total_cost_usd;
     const costUsd = typeof cost === 'number' && Number.isFinite(cost) && cost >= 0 ? cost : undefined;
     if (!tokens && costUsd === undefined) return null;
-    return { total: true, ...(tokens ? { tokens } : {}), ...(costUsd !== undefined ? { costUsd } : {}) };
+    return { total: true, ...(tokens ? { tokens } : {}), ...(models ? { models } : {}), ...(costUsd !== undefined ? { costUsd } : {}) };
   },
 };

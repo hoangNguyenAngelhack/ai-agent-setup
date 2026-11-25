@@ -46,7 +46,14 @@ const usage = () => {
 };
 const done = () => {
   usage();
-  if (host === 'claude') say({ type: 'result', subtype: 'success', is_error: false, ...(withUsage ? { total_cost_usd: 0.0125, usage: { input_tokens: 999, output_tokens: 999 } } : {}) });
+  // As Claude Code 2.1.332 does: per-message output counts are start values (20 + 30 above); the
+  // result carries the true totals, with modelUsage including an auxiliary model call.
+  const modelUsage = {
+    'claude-test-1': { inputTokens: 12, outputTokens: 140, cacheReadInputTokens: 200, cacheCreationInputTokens: 20, costUSD: 0.012 },
+    'claude-test-helper': { inputTokens: 30, outputTokens: 5, cacheReadInputTokens: 0, cacheCreationInputTokens: 0, costUSD: 0.0005 },
+  };
+  const totals = { total_cost_usd: 0.0125, usage: { input_tokens: 12, output_tokens: 140, cache_read_input_tokens: 200, cache_creation_input_tokens: 20 }, modelUsage };
+  if (host === 'claude') say({ type: 'result', subtype: 'success', is_error: false, ...(withUsage ? totals : {}) });
   else say({ type: 'turn.completed', ...(withUsage ? { usage: { input_tokens: 300, cached_input_tokens: 120, output_tokens: 45 } } : {}) });
 };
 const failed = (message) => say(host === 'claude' ? { type: 'result', subtype: 'error_during_execution', is_error: true } : { type: 'turn.failed', error: { message } });

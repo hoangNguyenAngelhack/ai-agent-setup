@@ -19,8 +19,14 @@ export interface UsageSample {
   tokens?: Partial<TokenCounts>;
   /** The host's cost figure for the whole session (Claude Code `total_cost_usd`). */
   costUsd?: number;
-  /** A session total (Claude Code `result`): its tokens count only when no per-message usage was seen. */
+  /**
+   * A session total (Claude Code `result`). When present it is what counts: per-message usage in a
+   * Claude Code stream carries the output count from the start of each message, not the final one
+   * (verified 2026-11-25 on Claude Code 2.1.332: 23 output tokens per message vs 321 in the total).
+   */
   total?: boolean;
+  /** Tokens per model in a session total (Claude Code `modelUsage`, which includes auxiliary calls). */
+  models?: Record<string, Partial<TokenCounts>>;
   /** Ids of tool calls started on this line (W2.2-07); each id is counted once. */
   toolCalls?: string[];
 }
@@ -89,27 +95,30 @@ export class UsageMeter {
 
   result(): HostUsage {
     const perMessage = [...this.messages.values(), ...this.unnamed];
-    const counted = perMessage.length ? perMessage : this.totals;
+    const counted = this.totals.length ? this.totals : perMessage;
     const tokens = zeroTokens();
     const byModel: Record<string, TokenCounts> = {};
+    const addModel = (name: string | undefined, counts: Partial<TokenCounts>) => {
+      if (name && MODEL_ID.test(name)) byModel[name] = addTokens(byModel[name] ?? zeroTokens(), counts);
+    };
     for (const sample of counted) {
       addTokens(tokens, sample.tokens!);
-      const model = sample.model && MODEL_ID.test(sample.model) ? sample.model : null;
-      if (model) byModel[model] = addTokens(byModel[model] ?? zeroTokens(), sample.tokens!);
+      if (sample.models) for (const [name, counts] of Object.entries(sample.models)) addModel(name, counts);
+      else addModel(sample.model, sample.tokens!);
     }
-    const basis = perMessage.length
-      ? `${this.messages.size + this.unnamed.length} usage record(s) in the ${this.host} stream${this.messages.size ? ', each message id counted once' : ''}`
-      : this.totals.length
-        ? `session total reported by ${this.host}`
-        : `no usage in the ${this.host} stream`;
+    return { schemaVersion: 'host-usage/v1', host: this.host, samples: this.samples, tokens, byModel, label: 'measured', basis: this.basis(perMessage.length), ...this.costAndToolCalls() };
+  }
+
+  private basis(perMessage: number): string {
+    if (this.totals.length) return `session total reported by ${this.host}`;
+    if (!perMessage) return `no usage in the ${this.host} stream`;
+    // Without a session total (the host did not finish), per-message output counts can be low.
+    const incomplete = this.messages.size ? ', each message id counted once; no session total, so output tokens can be incomplete' : '';
+    return `${perMessage} usage record(s) in the ${this.host} stream${incomplete}`;
+  }
+
+  private costAndToolCalls(): Pick<HostUsage, 'cost' | 'toolCalls'> {
     return {
-      schemaVersion: 'host-usage/v1',
-      host: this.host,
-      samples: this.samples,
-      tokens,
-      byModel,
-      label: 'measured',
-      basis,
       cost: this.costSeen ? { usd: roundUsd(this.costUsd), label: 'estimated', basis: `${this.host}'s own price calculation; not an invoice` } : null,
       toolCalls: this.toolCalls.size,
     };

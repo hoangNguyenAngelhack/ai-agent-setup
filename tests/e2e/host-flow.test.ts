@@ -71,15 +71,15 @@ describe.skipIf(process.platform === 'win32')('host delivery end to end (fake ho
   }, 60000);
 
   it.each([
-    ['claude-code', { input: 12, output: 50, cacheRead: 200, cacheWrite: 20 }, 0.0125],
+    ['claude-code', { input: 42, output: 145, cacheRead: 200, cacheWrite: 20 }, 0.0125],
     ['codex', { input: 300, output: 45, cacheRead: 120, cacheWrite: 0 }, null],
   ] as const)('should measure the token usage %s reports, sign it, and give the cost per accepted outcome (W2.2-04)', async (host, tokens, costUsd) => {
     const { root, plan } = approvedRun();
     process.env.FAKE_HOST_USAGE = '1';
 
     const delivery = await deliver(root, plan, host, 'success');
-    // Claude repeats message msg_a on two lines: counted once. Its session total (999) is not used
-    // because per-message usage was seen.
+    // Claude: the session total of every model (modelUsage) counts, not the per-message start
+    // values (output 20 + 30). Codex: turn usage.
     // Two distinct tool calls; the repeated one (same id) is counted once, a non-tool item not at all.
     expect(delivery.usage).toMatchObject({ tokens, label: 'measured', toolCalls: 2, cost: costUsd === null ? null : { usd: costUsd, label: 'estimated' } });
     expect(signedEvidence(root, plan.runId)).toContain(delivery.usage!.file);
@@ -117,7 +117,7 @@ describe.skipIf(process.platform === 'win32')('host delivery end to end (fake ho
       ['accepted runs', 1],
     ]);
     expect(kpis['tokens-per-accepted-task']).toMatchObject({ status: 'MEASURED', notes: ['codex: no accepted outcome (SUCCEEDED run) in the period'] });
-    expect(kpis['tokens-per-accepted-task']!.values).toContainEqual({ scope: 'claude-code output', value: 50, unit: 'tokens', n: 1 });
+    expect(kpis['tokens-per-accepted-task']!.values).toContainEqual({ scope: 'claude-code output', value: 145, unit: 'tokens', n: 1 });
     expect(kpis['cost-per-accepted-task']).toMatchObject({ status: 'ESTIMATED', label: 'estimated', values: [{ scope: 'claude-code', value: 0.0125, unit: 'USD', n: 1 }] });
     expect(kpis['tool-calls']).toMatchObject({ status: 'MEASURED', values: [{ value: 2, n: 2 }] });
     expect(kpis['human-intervention']).toMatchObject({ status: 'MEASURED', values: [{ scope: 'mean per run', value: 0.5, n: 2 }] });
@@ -132,12 +132,12 @@ describe.skipIf(process.platform === 'win32')('host delivery end to end (fake ho
     const eventCommand = `"${process.execPath}" "${CLI}" run event ${plan.runId}`;
 
     expect(cli(['run', 'deliver', plan.runId, '--host', 'claude-code', '--event-command', eventCommand])).toContain(
-      'usage: input 12, output 50, cache read 200, cache write 20 (measured); cost: 0.0125 USD (estimated: claude-code\'s own price calculation; not an invoice)',
+      'usage: input 42, output 145, cache read 200, cache write 20 (measured); cost: 0.0125 USD (estimated: claude-code\'s own price calculation; not an invoice)',
     );
     expect(cli(['run', 'deliver', plan.runId, '--host', 'codex', '--event-command', eventCommand])).toContain('cost: not reported by the host');
     const report = cli(['report']);
     expect(report).toContain('## Token usage per host (measured)');
-    expect(report).toContain('| claude-code | 1 | 1 | 12 / 50 / 200 / 20 | 0 | n/a | 0.0125 |');
+    expect(report).toContain('| claude-code | 1 | 1 | 42 / 145 / 200 / 20 | 0 | n/a | 0.0125 |');
   }, 60000);
 
   it('should fail the run and block the dependant when the host reports a failed step', async () => {
