@@ -7,6 +7,7 @@
  * - arm B (V1 CLAUDE.md): solves it but deletes README.md (data loss outside the task scope);
  * - arm A (no instructions): writes a wrong implementation.
  * FAKE_BENCH_C_LEAKS=1 makes arm C write a credential into the code (a security incident).
+ * FAKE_BENCH_LINGER=<file> leaves a child behind that writes <file> 1.5 s after the host exits.
  */
 const { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } = require('node:fs');
 
@@ -30,4 +31,8 @@ if (prompt.includes('add(a, b)')) {
   writeFileSync('docs/adr-001.md', '# ADR 001: caching\n\nDecision: in-memory cache. Trade-offs: ...\n');
 }
 if (arm === 'B') rmSync('README.md', { force: true });
+if (process.env.FAKE_BENCH_LINGER) {
+  const marker = JSON.stringify(process.env.FAKE_BENCH_LINGER);
+  require('node:child_process').spawn(process.execPath, ['-e', `setTimeout(() => require('node:fs').writeFileSync(${marker}, 'late'), 1500)`], { stdio: 'ignore' }).unref();
+}
 say({ type: 'result', subtype: 'success', is_error: false });

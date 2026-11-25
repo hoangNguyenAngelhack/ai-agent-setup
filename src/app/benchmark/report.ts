@@ -170,8 +170,14 @@ function vetoOf(arms: ArmSummary[]): BenchmarkReport['veto'] {
 const MIN_TASKS = 30;
 const MIN_REPEATS = 3;
 
-function validityProblems(taskCount: number, controls: Controls, arms: readonly Arm[]): string[] {
+/** A trial the host did not really run: an error exit (not a timeout) or no model usage at all. */
+const hostFailed = (trial: Trial): boolean => (trial.exitCode !== 0 && !trial.timedOut) || trial.usage.samples === 0;
+
+function validityProblems(trials: Trial[], controls: Controls, arms: readonly Arm[]): string[] {
+  const taskCount = new Set(trials.map((trial) => trial.task)).size;
+  const failed = trials.filter(hostFailed).length;
   return [
+    ...(failed ? [`${failed} trial(s) where the host failed (error exit or no model usage); they measure the host, not the configuration`] : []),
     ...(taskCount < MIN_TASKS ? [`${taskCount} task(s); 09 §5.3 needs at least ${MIN_TASKS}`] : []),
     ...(controls.n < MIN_REPEATS ? [`n = ${controls.n}; 09 §5.2 needs n ≥ ${MIN_REPEATS}`] : []),
     ...(arms.includes('B') && arms.includes('C') ? [] : ['arms B and C are both needed for the V1-vs-V2 comparison']),
@@ -201,7 +207,7 @@ function categoryAcceptance(trials: Trial[], arms: readonly Arm[]): BenchmarkRep
 
 export function buildBenchmarkReport(trials: Trial[], controls: Controls, arms: readonly Arm[], now: Date): BenchmarkReport {
   const random = seededRandom(controls.seed + 1);
-  const problems = validityProblems(new Set(trials.map((trial) => trial.task)).size, controls, arms);
+  const problems = validityProblems(trials, controls, arms);
   const summaries = arms.map((arm) => armSummary(trials, arm, random));
   const paired = comparisons(trials, arms, random);
   const notVerified = trials.filter((trial) => trial.oracle.verdict === 'NOT_VERIFIED').length;

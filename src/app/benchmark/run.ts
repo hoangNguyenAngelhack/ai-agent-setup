@@ -82,7 +82,7 @@ interface HostRun {
   durationMs: number;
 }
 
-/** Runs the host in `cwd` and stops its whole process tree at the time limit. */
+/** Runs the host in `cwd` and stops its whole process group at the time limit and when it exits. */
 async function runHostProcess(executable: string, args: string[], cwd: string, timeoutMs: number, onLine: (line: string) => void): Promise<HostRun> {
   const started = Date.now();
   const child = spawn(executable, args, { cwd, stdio: ['ignore', 'pipe', 'ignore'], detached: process.platform !== 'win32' });
@@ -97,6 +97,8 @@ async function runHostProcess(executable: string, args: string[], cwd: string, t
     child.on('close', (code) => resolve(code));
   });
   clearTimeout(timer);
+  // Whatever the agent left running must not change the workspace while it is judged.
+  if (child.pid !== undefined) killTree(child.pid, 'SIGKILL');
   return { exitCode, timedOut, durationMs: Date.now() - started };
 }
 

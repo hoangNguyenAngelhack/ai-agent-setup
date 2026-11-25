@@ -48,7 +48,9 @@ export const codexDelivery: HostDelivery = {
     return null;
   },
   promptInvocation(prompt, model) {
-    return { executable: 'codex', args: ['exec', '--json', '-m', model, prompt] };
+    // As for Claude Code: no user configuration or rules, the same sandbox in every arm. The flags exist
+    // in 0.172.0 (`exec --help`); their effect on a scored run is NOT verified.
+    return { executable: 'codex', args: ['exec', '--json', '-m', model, '--ignore-user-config', '--ignore-rules', '--sandbox', 'workspace-write', prompt] };
   },
   parseUsage(line) {
     const event = jsonLine(line);

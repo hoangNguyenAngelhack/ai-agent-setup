@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { claudeCodeDelivery } from '../../../src/adapters/claude-code';
 import { codexDelivery } from '../../../src/adapters/codex';
-import { listFiles, prepareArms } from '../../../src/app/benchmark/arms';
+import { listFiles, prepareArms, prepareWorkspace } from '../../../src/app/benchmark/arms';
 import { judge, snapshotTree, treeDigest } from '../../../src/app/benchmark/oracle';
 import { bootstrapMeanInterval, buildBenchmarkReport, seededRandom, shuffle, type Controls, type Trial } from '../../../src/app/benchmark/report';
 import { describePlan, planTrials, selectTasks } from '../../../src/app/benchmark/run';
@@ -25,9 +25,12 @@ describe('benchmark tasks (W2.2-02)', () => {
     expect(() => loadSuite(writeTree({ 'tasks/readme.txt': '' }))).toThrow(/No task in/);
   });
 
-  it('should invoke each host with the prompt and the model', () => {
-    expect(claudeCodeDelivery.promptInvocation('do x', 'm1')).toEqual({ executable: 'claude', args: ['-p', 'do x', '--output-format', 'stream-json', '--verbose', '--model', 'm1'] });
-    expect(codexDelivery.promptInvocation('do x', 'm1')).toEqual({ executable: 'codex', args: ['exec', '--json', '-m', 'm1', 'do x'] });
+  it('should invoke each host with the prompt, the model, the same permissions in every arm and none of the user\'s own configuration', () => {
+    expect(claudeCodeDelivery.promptInvocation('do x', 'm1')).toEqual({
+      executable: 'claude',
+      args: ['-p', 'do x', '--output-format', 'stream-json', '--verbose', '--model', 'm1', '--setting-sources', 'project,local', '--strict-mcp-config', '--permission-mode', 'acceptEdits'],
+    });
+    expect(codexDelivery.promptInvocation('do x', 'm1')).toEqual({ executable: 'codex', args: ['exec', '--json', '-m', 'm1', '--ignore-user-config', '--ignore-rules', '--sandbox', 'workspace-write', 'do x'] });
   });
 });
 
@@ -99,6 +102,27 @@ describe('benchmark oracle (W2.2-02)', () => {
     expect(judge(task, failing, workspace, snapshotTree(workspace))).toMatchObject({ verdict: 'REJECTED', hiddenTests: { status: 'FAIL', detail: 'node .benchmark-hidden/ok.cjs: exit 1' } });
   });
 
+  it('should reject a change that breaks the fixture\'s own tests, or deletes one, even inside the scope', () => {
+    // Reported by the independent review (2026-11-25) and reproduced on se-01: breaking /health and
+    // deleting test/ was ACCEPTED.
+    const fixtureSuite = writeTree({ 'hidden/ok.cjs': 'process.exit(0)', 'f/package.json': JSON.stringify({ scripts: { test: 'node test/a.test.cjs' } }) });
+    const scoped = { ...task, scope: ['src/**', 'test/**'] };
+    const project = { 'src/a.js': '1', 'test/a.test.cjs': "process.exit(require('node:fs').readFileSync('src/a.js', 'utf8') === '1' ? 0 : 1)" };
+
+    const broken = writeTree(project);
+    const brokenBefore = snapshotTree(broken);
+    writeFileSync(join(broken, 'src/a.js'), '2');
+    expect(judge(scoped, fixtureSuite, broken, brokenBefore)).toMatchObject({ verdict: 'REJECTED', hiddenTests: { status: 'FAIL', detail: 'existing tests fail: node test/a.test.cjs: exit 1' } });
+
+    const deleted = writeTree(project);
+    const deletedBefore = snapshotTree(deleted);
+    rmSync(join(deleted, 'test'), { recursive: true });
+    expect(judge(scoped, fixtureSuite, deleted, deletedBefore)).toMatchObject({ verdict: 'REJECTED', dataLoss: { status: 'FAIL', files: ['test/a.test.cjs'] } });
+
+    const kept = writeTree(project);
+    expect(judge(scoped, fixtureSuite, kept, snapshotTree(kept))).toMatchObject({ verdict: 'ACCEPTED' });
+  });
+
   it('should give the same digest to the same tree and a different one after a change', () => {
     const dir = writeTree({ 'a.txt': '1', 'b/c.txt': '2' });
     const first = treeDigest(dir);
@@ -158,6 +182,27 @@ describe('benchmark statistics (W2.2-02)', () => {
     expect(buildBenchmarkReport(run(0), controls, ['B', 'C'], new Date()).hypothesis.status).toBe('NOT_SUPPORTED');
     expect(buildBenchmarkReport(run(3), controls, ['B', 'C'], new Date()).hypothesis.status).toBe('INCONCLUSIVE');
     expect(buildBenchmarkReport(run(30), controls, ['C'], new Date())).toMatchObject({ validity: { valid: false, problems: ['arms B and C are both needed for the V1-vs-V2 comparison'] }, comparisons: [] });
+  });
+
+  it('should not let trials where the host itself failed count as the configuration\'s result', () => {
+    const trials = Array.from({ length: 30 }, (_, index) => `t${index}`).flatMap((task) => Array.from({ length: 3 }, () => [trial(task, 'B', 'REJECTED'), trial(task, 'C', 'ACCEPTED')]).flat());
+    trials[0] = { ...trials[0]!, exitCode: 1 };
+    trials[1] = { ...trials[1]!, usage: { ...trials[1]!.usage, samples: 0 } };
+    const report = buildBenchmarkReport(trials, controls, ['B', 'C'], new Date());
+
+    expect(report.validity).toEqual({ valid: false, problems: ['2 trial(s) where the host failed (error exit or no model usage); they measure the host, not the configuration'] });
+    expect(report.hypothesis.status).toBe('INCONCLUSIVE');
+  });
+});
+
+describe('benchmark trial workspace (W2.2-02)', () => {
+  it('should be a Git repository whose metadata is not part of the judged tree', () => {
+    const fixture = writeTree({ 'src/a.js': 'a' });
+    const workspace = prepareWorkspace(fixture, writeTree({ '.claude/settings.json': '{}' }));
+
+    expect(existsSync(join(workspace, '.git', 'HEAD'))).toBe(true);
+    expect([...snapshotTree(workspace).keys()].sort()).toEqual(['.claude/settings.json', 'src/a.js']);
+    rmSync(workspace, { recursive: true, force: true });
   });
 });
 

@@ -68,5 +68,11 @@ export function prepareWorkspace(fixtureDir: string, armDir: string): string {
   const workspace = mkdtempSync(join(tmpdir(), 'bench-trial-'));
   cpSync(fixtureDir, workspace, { recursive: true });
   cpSync(armDir, workspace, { recursive: true });
+  // Codex runs only in a Git repository or trusted directory (verified on 0.172.0); a committed tree
+  // also gives every host the same starting point.
+  const git = (...args: string[]) => execFileSync('git', ['-c', 'user.name=benchmark', '-c', 'user.email=benchmark@localhost', '-c', 'commit.gpgsign=false', ...args], { cwd: workspace, stdio: 'pipe' });
+  git('init', '-q');
+  git('add', '-A');
+  git('commit', '-q', '--no-verify', '-m', 'fixture');
   return workspace;
 }

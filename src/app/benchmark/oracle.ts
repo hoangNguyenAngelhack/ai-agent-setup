@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { cpSync, readFileSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { matchesAnyGlob } from '../../shared/glob';
 import { secretFindings } from '../release-check';
@@ -26,10 +26,14 @@ export interface OracleResult {
 export type Snapshot = Map<string, string>;
 
 const HIDDEN_DEFAULT_TARGET = '.benchmark-hidden';
+/** Tests the fixture already had: deleting one is data loss, even inside the task scope. */
+const EXISTING_TEST_FILES = ['test/**', 'tests/**', '**/*.test.*', '**/*.spec.*', '**/test_*.py'];
 const CHECK_TIMEOUT_MS = 5 * 60 * 1000;
 
+/** The judged tree: Git metadata of the trial workspace is not part of the agent's work. */
 export function snapshotTree(dir: string): Snapshot {
-  return new Map(listFiles(dir).map((path) => [path, createHash('sha256').update(readFileSync(join(dir, path))).digest('hex')]));
+  const files = listFiles(dir).filter((path) => path !== '.git' && !path.startsWith('.git/'));
+  return new Map(files.map((path) => [path, createHash('sha256').update(readFileSync(join(dir, path))).digest('hex')]));
 }
 
 export function treeDigest(dir: string): string {
@@ -53,13 +57,29 @@ export function runCheckCommand(command: string, cwd: string, timeoutMs = CHECK_
   return { code: result.status, timedOut, error: result.error && !timedOut ? result.error.message : null };
 }
 
+/** The fixture's own test script, read from the suite so the agent cannot change which command runs. */
+function existingTestCommand(task: BenchmarkTask, suiteDir: string): string | null {
+  const manifest = join(suiteDir, task.fixture, 'package.json');
+  if (!existsSync(manifest)) return null;
+  const script = (JSON.parse(readFileSync(manifest, 'utf8')) as { scripts?: { test?: unknown } }).scripts?.test;
+  return typeof script === 'string' ? script : null;
+}
+
 function hiddenTests(task: BenchmarkTask, suiteDir: string, workspace: string): OracleResult['hiddenTests'] {
   const hidden = task.acceptance.hiddenTests;
   if (!hidden) return { status: 'NOT_APPLICABLE', detail: 'no hidden tests' };
   cpSync(join(suiteDir, hidden.files), join(workspace, hidden.target ?? HIDDEN_DEFAULT_TARGET), { recursive: true });
   const outcome = runCheckCommand(hidden.command, workspace);
   if (outcome.timedOut || outcome.error || outcome.code === null) return { status: 'NOT_VERIFIED', detail: `${hidden.command} did not finish: ${outcome.error ?? 'timed out'}` };
-  return { status: outcome.code === 0 ? 'PASS' : 'FAIL', detail: `${hidden.command}: exit ${outcome.code}` };
+  if (outcome.code !== 0) return { status: 'FAIL', detail: `${hidden.command}: exit ${outcome.code}` };
+  // A fix must not break what already worked: the fixture's own tests run as a regression guard.
+  const existing = existingTestCommand(task, suiteDir);
+  if (!existing) return { status: 'PASS', detail: `${hidden.command}: exit 0` };
+  const regression = runCheckCommand(existing, workspace);
+  if (regression.timedOut || regression.error || regression.code === null) return { status: 'NOT_VERIFIED', detail: `existing tests did not finish: ${existing}` };
+  return regression.code === 0
+    ? { status: 'PASS', detail: `${hidden.command}: exit 0; existing tests pass` }
+    : { status: 'FAIL', detail: `existing tests fail: ${existing}: exit ${regression.code}` };
 }
 
 function security(task: BenchmarkTask, workspace: string, touched: string[]): OracleResult['security'] {
@@ -81,7 +101,8 @@ function verdictOf(checks: CheckStatus[]): OracleResult['verdict'] {
 export function judge(task: BenchmarkTask, suiteDir: string, workspace: string, before: Snapshot): OracleResult {
   // Changes are read before the hidden tests are copied in.
   const { added, changed, deleted } = treeChanges(before, snapshotTree(workspace));
-  const lost = [...changed, ...deleted].filter((path) => !matchesAnyGlob(path, task.scope)).sort();
+  const outsideScope = [...changed, ...deleted].filter((path) => !matchesAnyGlob(path, task.scope));
+  const lost = [...new Set([...outsideScope, ...deleted.filter((path) => matchesAnyGlob(path, EXISTING_TEST_FILES))])].sort();
   const result: Omit<OracleResult, 'verdict'> = {
     dataLoss: { status: lost.length ? 'FAIL' : 'PASS', files: lost },
     security: security(task, workspace, [...added, ...changed]),
