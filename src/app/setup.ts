@@ -117,6 +117,7 @@ export function runSetup(options: SetupOptions): SetupOutcome {
       hookFiles,
       toolkitVersion,
       enabledTools: options.enabledTools ?? [],
+      projectLanguages: project.languages,
     }),
   );
   const diagnostics = [...generation.flatMap((result) => result.diagnostics), ...permissionWarnings(options.root, hosts)];

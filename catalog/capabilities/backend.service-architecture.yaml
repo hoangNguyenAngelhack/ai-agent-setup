@@ -25,6 +25,13 @@ skills:
   - skill.nodejs-backend
   - skill.nestjs-backend
   - skill.build-resolve-node
+  - skill.build-resolve-go
+  - skill.build-resolve-jvm
+  - skill.build-resolve-dotnet
+  - skill.build-resolve-rust
+  - skill.build-resolve-php
+  - skill.build-resolve-ruby
+  - skill.build-resolve-python
 rules:
   - rule.project-structure
 defaultAgents:

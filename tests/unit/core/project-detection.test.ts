@@ -93,6 +93,29 @@ describe('detectProject — other ecosystems', () => {
     expect(profile.buildTools).toEqual(['gradle']);
   });
 
+  it('should detect the test runner and linter of a Python, Ruby and PHP project (language packs)', () => {
+    const python = detectProject(writeTree({ 'pyproject.toml': '[project]\ndependencies = ["fastapi"]\n[tool.ruff]\nline-length = 100\n[tool.mypy]\nstrict = true\n', 'tests/test_app.py': '' }));
+    expect(python).toMatchObject({ languages: ['python'], linters: ['mypy', 'ruff'] });
+
+    const rspec = detectProject(writeTree({ Gemfile: "source 'https://rubygems.org'\ngem 'rails'\ngem 'rspec-rails'\ngem 'rubocop', require: false\n", '.rspec': '--require spec_helper' }));
+    expect(rspec).toMatchObject({ languages: ['ruby'], frameworks: ['rails'], buildTools: ['bundler'], testRunners: ['rspec'], linters: ['rubocop'] });
+
+    const minitest = detectProject(writeTree({ Gemfile: "gem 'sinatra'\ngem 'minitest'\n", Rakefile: 'require "rake/testtask"' }));
+    expect(minitest).toMatchObject({ languages: ['ruby'], testRunners: ['minitest'], linters: [] });
+
+    const phpunit = detectProject(writeTree({ 'composer.json': JSON.stringify({ require: { 'laravel/framework': '^11' }, 'require-dev': { 'phpunit/phpunit': '^11', 'phpstan/phpstan': '^1' } }) }));
+    expect(phpunit).toMatchObject({ languages: ['php'], frameworks: ['laravel'], testRunners: ['phpunit'], linters: ['phpstan'] });
+
+    const pest = detectProject(writeTree({ 'composer.json': JSON.stringify({ 'require-dev': { 'pestphp/pest': '^3' } }) }));
+    expect(pest).toMatchObject({ languages: ['php'], testRunners: ['pest'] });
+  });
+
+  it('should detect a Rust crate with Cargo', () => {
+    const profile = detectProject(writeTree({ 'Cargo.toml': '[package]\nname = "svc"\n[dependencies]\naxum = "0.7"\n' }));
+
+    expect(profile).toMatchObject({ languages: ['rust'], frameworks: ['axum'], buildTools: ['cargo'], testRunners: ['cargo-test'] });
+  });
+
   it('should detect a Go service using Gin', () => {
     const profile = detectProject(
       writeTree({ 'go.mod': 'module example.com/svc\n\nrequire github.com/gin-gonic/gin v1.10.0\n' }),

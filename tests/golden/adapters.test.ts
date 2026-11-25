@@ -110,6 +110,22 @@ describe.each([
     );
   });
 
+  it('should install the language packs a project uses, and only those (docs/v2/16)', () => {
+    const entries = (projectLanguages?: string[]) => new Set(adapter.generate(input(projectLanguages ? { projectLanguages } : {})).items.map((item) => item.entryId));
+    const go = entries(['go']);
+    const typescript = entries(['typescript']);
+    const unknown = entries();
+
+    expect([...go].filter((id) => /^(rule|skill)\..*(go|golang)/.test(id)).sort()).toEqual(['rule.go-patterns', 'skill.build-resolve-go']);
+    expect(go.has('skill.build-resolve-node')).toBe(false);
+    expect(go.has('rule.rust-patterns')).toBe(false);
+    expect(typescript.has('skill.build-resolve-node')).toBe(true);
+    expect(typescript.has('rule.go-patterns')).toBe(false);
+    expect(typescript.has('rule.typescript-patterns')).toBe(true);
+    // Nothing detected (an empty directory): everything, as before.
+    for (const id of ['rule.go-patterns', 'rule.rust-patterns', 'skill.build-resolve-node', 'skill.build-resolve-go']) expect(unknown.has(id), id).toBe(true);
+  });
+
   it('should not install MCP servers unless they are enabled', () => {
     expect(files.has('.mcp.json')).toBe(false);
     expect(files.get('.codex/config.toml') ?? '').not.toContain('mcp_servers');

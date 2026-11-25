@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { readGateHistory, runQualityGates } from '../../../src/app/gates';
+import { projectFacts, readGateHistory, runQualityGates } from '../../../src/app/gates';
 import type { GateCategory } from '../../../src/core/contracts';
 import { firstProgram, GATES, isNoOpCommand, type GateRecord, parseCoverageSummary, programExists, parseNpmAudit, resolveCommand, runGates, scanDiffForSecrets, scanFilesForSecrets, validateGateConfig, type GateRunContext } from '../../../src/quality';
 import { SchemaValidator } from '../../../src/registry';
@@ -71,6 +71,28 @@ describe('gate registry', () => {
     expect(resolveCommand(build, { ...facts, ecosystems: [...facts.ecosystems] }, {})).toMatchObject({ command: 'pnpm run build', source: 'script' });
     expect(resolveCommand(build, { ...facts, ecosystems: ['go'], scripts: {} }, {})).toMatchObject({ command: 'go build ./...', source: 'default' });
     expect(resolveCommand(build, { ...facts, ecosystems: [], scripts: {} }, {})).toMatchObject({ command: null, source: 'none' });
+  });
+
+  it('should run the tools each stack actually uses, and nothing it does not use (language packs)', () => {
+    const commands = (tree: Record<string, string>) => {
+      const facts = projectFacts(writeTree(tree));
+      return Object.fromEntries(['gate.build', 'gate.unit-tests', 'gate.lint', 'gate.typecheck'].map((id) => [id, resolveCommand(GATES.find((gate) => gate.id === id)!, facts, {}).command]));
+    };
+
+    expect(commands({ Gemfile: "gem 'rails'\ngem 'rspec-rails'\ngem 'rubocop'\n" })).toEqual({ 'gate.build': null, 'gate.unit-tests': 'bundle exec rspec', 'gate.lint': 'bundle exec rubocop', 'gate.typecheck': null });
+    expect(commands({ Gemfile: "gem 'minitest'\n" })).toMatchObject({ 'gate.unit-tests': 'bundle exec rake test', 'gate.lint': null });
+    expect(commands({ 'composer.json': JSON.stringify({ 'require-dev': { 'phpunit/phpunit': '^11', 'phpstan/phpstan': '^1' } }) })).toEqual({
+      'gate.build': null,
+      'gate.unit-tests': 'vendor/bin/phpunit',
+      'gate.lint': 'vendor/bin/phpstan analyse --no-progress',
+      'gate.typecheck': null,
+    });
+    expect(commands({ 'composer.json': JSON.stringify({ 'require-dev': { 'pestphp/pest': '^3' } }) })).toMatchObject({ 'gate.unit-tests': 'vendor/bin/pest', 'gate.lint': null });
+    expect(commands({ 'pyproject.toml': '[project]\n[tool.ruff]\n[tool.mypy]\n[tool.pytest.ini_options]\n' })).toEqual({ 'gate.build': null, 'gate.unit-tests': 'pytest -q', 'gate.lint': 'ruff check .', 'gate.typecheck': 'mypy .' });
+    expect(commands({ 'requirements.txt': 'flask\n' })).toMatchObject({ 'gate.lint': null, 'gate.typecheck': null });
+    expect(commands({ 'svc.csproj': '<Project Sdk="Microsoft.NET.Sdk" />' })).toMatchObject({ 'gate.build': 'dotnet build', 'gate.lint': 'dotnet format --verify-no-changes' });
+    expect(commands({ 'Cargo.toml': '[package]\nname = "svc"\n' })).toEqual({ 'gate.build': 'cargo build', 'gate.unit-tests': 'cargo test', 'gate.lint': 'cargo clippy -- -D warnings', 'gate.typecheck': 'cargo check' });
+    expect(commands({ 'go.mod': 'module x\n' })).toMatchObject({ 'gate.build': 'go build ./...', 'gate.unit-tests': 'go test ./...', 'gate.lint': 'go vet ./...' });
   });
 
   it('should reject malformed gate configuration', () => {

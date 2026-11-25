@@ -1,0 +1,27 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.kotlin-patterns
+name: Kotlin patterns
+description: "Idiomatic Kotlin: null safety, data and sealed classes, coroutines with structured concurrency, and tests."
+version: 2.0.0
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - kotlin
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.kotlin-patterns.md
+scope:
+  paths:
+    - "**/*.kt"
+    - "**/*.kts"
+enforcement: advisory

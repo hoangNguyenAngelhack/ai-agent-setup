@@ -124,6 +124,10 @@
     "sha256": "fb7fad04a6e1f095b9fec588d53208ee5595a499085863718c302e59b08d0579"
   },
   {
+    "path": ".claude/rules/csharp-patterns.md",
+    "sha256": "2a9e04a81b74fc255d1fdd2856478cf18a698be14fbba43af24446f07f9e0ba5"
+  },
+  {
     "path": ".claude/rules/database.md",
     "sha256": "ce4a55402ea7eae877cecf6b9868fc3c6bfebc3ebdb2f20a767db8d1cb7aa7c6"
   },
@@ -136,12 +140,36 @@
     "sha256": "598cd812c75004e33b4d0a3f4e13a4ebc38323a228ce089c80eca7ae8117339c"
   },
   {
+    "path": ".claude/rules/go-patterns.md",
+    "sha256": "d3438eab0ce9cc1aa7a384d50e3e5f5ff7e01ae06736a54a228442998367e574"
+  },
+  {
+    "path": ".claude/rules/java-patterns.md",
+    "sha256": "adcc7c1a1ae4a1593cb112704b4b673dfc09b1688f3823df27395cb7046822e1"
+  },
+  {
+    "path": ".claude/rules/kotlin-patterns.md",
+    "sha256": "95b99152a6ff63aea43dcb59b914e1991bf49c9027aea07dfa777b407843f712"
+  },
+  {
     "path": ".claude/rules/monitoring.md",
     "sha256": "6b3b7d7f5b075d67db0bfb778293de381f050fb948b08447010eaaa9b34da9b3"
   },
   {
+    "path": ".claude/rules/php-patterns.md",
+    "sha256": "fc7ba3483fe8dc5c2f35f8891fdb646a96f66da152f16f195a952c4573733e92"
+  },
+  {
     "path": ".claude/rules/python-patterns.md",
     "sha256": "ce01a8e184e7f569015765ca2476ecc9b505d1d10c96e3d063380a77eb954be3"
+  },
+  {
+    "path": ".claude/rules/ruby-patterns.md",
+    "sha256": "d85687737c09b82b30ef5c07c59aeed02bdf3753049a26de51f6895cc25f1d8d"
+  },
+  {
+    "path": ".claude/rules/rust-patterns.md",
+    "sha256": "1d13b834a726a3074a549ec8a235c7bfc0d0d2304c2fcfb86586227f221366e9"
   },
   {
     "path": ".claude/rules/security.md",
@@ -164,12 +192,32 @@
     "sha256": "5993b979f308368820712231f6505ce2a62280907747ffd2782e7624b252e76c"
   },
   {
+    "path": ".claude/skills/build-resolve-dotnet/SKILL.md",
+    "sha256": "9365dd7e3192c9d96b1aef2b1f16738a72d6db0814cfa2aaeea560aa2fe3d6c9"
+  },
+  {
+    "path": ".claude/skills/build-resolve-go/SKILL.md",
+    "sha256": "725bf8063a4c02ec7c2801f39181e539233e38cdcc7ba0f025675929864e8d04"
+  },
+  {
+    "path": ".claude/skills/build-resolve-jvm/SKILL.md",
+    "sha256": "6463b22c3bf270df3656b1b14cdbcc8891999cabe4450058f27a4f8f0b5881ca"
+  },
+  {
     "path": ".claude/skills/build-resolve-node/SKILL.md",
     "sha256": "c6827c12532940b80ea0a554e55bfb347a321849f1b908a98f91e9b223b72667"
   },
   {
+    "path": ".claude/skills/build-resolve-php/SKILL.md",
+    "sha256": "9f1fbc29ba62fa93ee461199ef88efb7525787c634d70240b0367f64a5776830"
+  },
+  {
     "path": ".claude/skills/build-resolve-prisma/SKILL.md",
     "sha256": "4c900197597505a18720c2521e1792afd0d0356b7e0eb4058535e0151c679174"
+  },
+  {
+    "path": ".claude/skills/build-resolve-python/SKILL.md",
+    "sha256": "5b4ca190306c3b7cea048316ceefac6651ea7c922cd23efacbbe31e046afe8da"
   },
   {
     "path": ".claude/skills/build-resolve-react-native/SKILL.md",
@@ -178,6 +226,14 @@
   {
     "path": ".claude/skills/build-resolve-react/SKILL.md",
     "sha256": "cb26fc073d94da95a3127444f85dbaafa42c8a0665d7e73cc0c7d478a8735a36"
+  },
+  {
+    "path": ".claude/skills/build-resolve-ruby/SKILL.md",
+    "sha256": "104e13b64fbb912d08536ec8fc6c35dd6a309b6ee4d1b28801fb9fe51b5f3347"
+  },
+  {
+    "path": ".claude/skills/build-resolve-rust/SKILL.md",
+    "sha256": "901d96b17ba499dba1f464c0ea85ddb484339340d3bcbea4bea0d8382ce660f3"
   },
   {
     "path": ".claude/skills/code-review/references/agent-skills-variant.md",

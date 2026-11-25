@@ -18,16 +18,20 @@ const LOCKFILES: Array<[file: string, manager: string]> = [
   ['package-lock.json', 'npm'],
 ];
 
+/** Test runners and linters with default commands: used only when the project declares them. */
+const DECLARED_TOOLS: Ecosystem[] = ['rspec', 'minitest', 'rubocop', 'phpunit', 'pest', 'phpstan', 'ruff', 'mypy'];
+
 /** Reads what the gate engine needs from the project (scripts, package manager, stacks). */
 export function projectFacts(root: string): ProjectFacts {
   const profile = detectProject(root);
   const ecosystems = new Set<Ecosystem>();
   if (profile.languages.includes('go')) ecosystems.add('go');
   if (profile.languages.includes('python')) ecosystems.add('python');
-  if (profile.languages.includes('csharp')) ecosystems.add('dotnet');
+  if (profile.buildTools.includes('dotnet')) ecosystems.add('dotnet');
   if (profile.languages.includes('rust')) ecosystems.add('rust');
   if (profile.buildTools.includes('maven')) ecosystems.add('maven');
   if (profile.buildTools.includes('gradle')) ecosystems.add('gradle');
+  for (const tool of DECLARED_TOOLS) if (profile.testRunners.includes(tool) || profile.linters.includes(tool)) ecosystems.add(tool);
   let scripts: Record<string, string> = {};
   const hasPackageJson = existsSync(join(root, 'package.json'));
   if (hasPackageJson) {
