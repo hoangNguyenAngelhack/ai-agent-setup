@@ -66,7 +66,8 @@
     "eval:routing": "npm run build && node dist/app/routing-eval-run.js",
     "eval:regressions": "npm run build && node dist/app/eval-regression.js",
     "eval:baseline": "npm run build && node dist/app/eval-regression.js --record",
-    "release:check": "npm run build && node dist/app/release-check.js"
+    "release:check": "npm run build && node dist/app/release-check.js",
+    "bench": "npm run build && node dist/app/benchmark/run.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

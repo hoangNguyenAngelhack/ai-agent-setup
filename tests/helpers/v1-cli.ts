@@ -9,7 +9,8 @@ export const REPO_ROOT = join(__dirname, '..', '..');
 // Characterization runs the V1 CLI exactly as released at the audited baseline commit (bin/,
 // templates/ and the .claude/ it downloads from GitHub HEAD, F-07), extracted with git archive.
 // This keeps V1 behaviour frozen after bin/cli.js becomes the V2 launcher, offline and reproducible.
-export const V1_BASELINE_COMMIT = '51bfc3a';
+export { V1_BASELINE_COMMIT } from '../../src/app/benchmark/arms';
+import { V1_BASELINE_COMMIT } from '../../src/app/benchmark/arms';
 
 export interface V1Sandbox {
   root: string;

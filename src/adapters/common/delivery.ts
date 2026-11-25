@@ -35,6 +35,11 @@ export interface HostDelivery {
    * line is redacted for the transcript: the redaction rules erase every `*_tokens` value.
    */
   parseUsage(line: string): UsageSample | null;
+  /**
+   * A plain prompt run for the benchmark (W2.2-02): the same structured stream, the given model, no
+   * plan. Flags follow the published docs and are NOT verified on an installed CLI.
+   */
+  promptInvocation(prompt: string, model: string): { executable: string; args: string[] };
 }
 
 /** Same instructions for every host; the plan file is the source of truth, not this text. */

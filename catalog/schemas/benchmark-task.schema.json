@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:contracts:v1:benchmark-task",
+  "title": "Benchmark task",
+  "description": "One benchmark task (docs/v2/09 §5.3, W2.2-02). The fixture is copied for every trial; the agent sees only the prompt and the fixture. Hidden tests are copied in after the agent stops. Files outside `scope` must be unchanged (no data loss). A rubric needs a blinded human reviewer, so it is NOT_VERIFIED in automated runs.",
+  "type": "object",
+  "required": ["schema", "id", "category", "domains", "fixture", "prompt", "scope", "acceptance", "timeLimit"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": "benchmark-task/v1" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "category": {
+      "enum": ["product-requirements", "architecture", "frontend", "backend", "mobile", "data", "devops", "testing", "security", "documentation", "refactoring", "bug-fixing", "cross-domain"]
+    },
+    "domains": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "fixture": { "description": "Directory relative to the suite, copied for each trial.", "type": "string", "minLength": 1 },
+    "prompt": { "type": "string", "minLength": 1 },
+    "scope": { "description": "Globs of the files the task may add, change or delete.", "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "acceptance": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "hiddenTests": {
+          "type": "object",
+          "required": ["files", "command"],
+          "additionalProperties": false,
+          "properties": {
+            "files": { "description": "Directory relative to the suite; copied to `target` after the agent stops.", "type": "string", "minLength": 1 },
+            "target": { "type": "string", "minLength": 1 },
+            "command": { "type": "string", "minLength": 1 }
+          }
+        },
+        "rubric": {
+          "type": "object",
+          "required": ["threshold", "criteria"],
+          "additionalProperties": false,
+          "properties": {
+            "threshold": { "type": "number", "minimum": 0 },
+            "criteria": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          }
+        }
+      }
+    },
+    "timeLimit": { "description": "Seconds the host may run.", "type": "integer", "minimum": 1 },
+    "securityChecks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "command"],
+        "additionalProperties": false,
+        "properties": { "name": { "type": "string", "minLength": 1 }, "command": { "type": "string", "minLength": 1 } }
+      }
+    }
+  }
+}

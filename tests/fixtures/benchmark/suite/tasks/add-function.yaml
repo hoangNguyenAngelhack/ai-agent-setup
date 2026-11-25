@@ -1,0 +1,10 @@
+schema: benchmark-task/v1
+id: add-function
+category: backend
+domains: [backend]
+fixture: fixtures/calc
+prompt: Implement add(a, b) in src/math.cjs so that it returns the sum of its arguments.
+scope: ["src/**"]
+acceptance:
+  hiddenTests: { files: hidden/add, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 60
