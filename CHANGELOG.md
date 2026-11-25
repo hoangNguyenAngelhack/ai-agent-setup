@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Language packs, wave 1 ([docs/v2/16](docs/v2/16-language-packs.md)): rules for Go, Java, Kotlin,
+  C#, Rust, PHP and Ruby, and build-resolution skills for Go, JVM (Maven and Gradle), .NET, Rust, PHP,
+  Ruby and Python. They are path-scoped, so they add nothing to the always-loaded context.
+- `setup` installs only the language packs of the languages it detects (a Go service no longer gets
+  the Node build skill); a directory with no detected language still gets everything.
+- Gates run the tools a project declares: RSpec or Minitest and RuboCop (Ruby), PHPUnit or Pest and
+  PHPStan (PHP), Ruff and mypy (Python), `dotnet format` (.NET), `cargo check` (Rust). Detection now
+  reports linters, and the test runners of Ruby, PHP and Rust.
+
 ## [2.0.0] - 2026-11-25
 
 First stable V2 release, on the npm dist-tag `latest`; the content is that of 2.0.0-alpha.0. 1.x gets
