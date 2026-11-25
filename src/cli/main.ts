@@ -26,7 +26,7 @@ export interface CliIO {
   ask: Ask | null;
 }
 
-const HELP = `${BIN} — Universal AI Engineering OS toolkit (V2 preview)
+const HELP = `${BIN} — AI engineering configuration for Claude Code and Codex
 
 Usage:
   ${BIN} [project-name] [options]        Create a new project (V1 compatible)

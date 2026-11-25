@@ -2,7 +2,7 @@
 
 # AI Agent Setup
 
-### Cấu hình kỹ thuật AI dùng chung cho Claude Code và Codex
+### Một catalog rule, skill và agent kỹ thuật, cài dạng gốc cho Claude Code và Codex
 
 [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=for-the-badge&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/create-ai-agent-setup)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
@@ -10,93 +10,108 @@
 
 **[English](README.md)** | **Tiếng Việt**
 
+```bash
+npx create-ai-agent-setup setup
+```
+
 </div>
 
-> **Trạng thái: 2.1.0.** `npx create-ai-agent-setup` cài V2, kèm gói ngôn ngữ cho TypeScript/JavaScript, Python, Go, Java, Kotlin, C#, Rust, PHP, Ruby, Swift, Android, Dart/Flutter, C và C++. Các giới hạn đã biết nằm trong
-> [release notes](docs/v2/14-release-notes-2.0.0.md). Người dùng V1: đọc
-> [Chuyển từ V1](docs/guides/migrating-from-v1.md) trước khi chạy V2 trong dự án V1; bản 1.x được vá
-> bảo mật đến 2027-05-25 (`npx create-ai-agent-setup@1`).
+AI Agent Setup trang bị cho agent viết code của bạn bộ rule, skill, agent và workflow của một đội
+kỹ thuật giàu kinh nghiệm, đúng với các ngôn ngữ dự án đang dùng, đồng thời đặt rào chắn cho những gì
+agent được phép làm. Công cụ ghi cấu hình gốc của từng host (`.claude/` cho Claude Code; `AGENTS.md`,
+`.agents/` và `.codex/` cho Codex) và quản lý nó như một dependency: xem trước được, cập nhật được và
+hoàn tác được.
 
-## Công cụ làm gì
+## Vì sao nên dùng
 
-- **Tạo dự án** từ bảy template (Express, NestJS, Next.js, Vite, Next.js fullstack, Expo, React
-  Native CLI), kèm cấu hình kỹ thuật AI.
-- **Thêm vào dự án sẵn có** một cách an toàn: dry-run, diff, backup, xử lý xung đột, rollback và
-  kiểm tra toàn vẹn. File bạn đã sửa không bao giờ bị ghi đè im lặng.
-- **Sinh cấu hình gốc cho từng host** từ một catalog có phiên bản: Claude Code (`.claude/`) và Codex
-  (`AGENTS.md`, `.agents/skills`, `.codex/`).
-- **Áp chính sách an toàn** bằng một hook chạy trước mỗi lệnh shell và mỗi lần ghi file. Lệnh phá
-  huỷ (`rm -rf`, `git push --force`, `DROP TABLE`, `npm publish`, …) cần được duyệt; ghi khoá bí mật
-  ở định dạng token đã biết thì bị chặn.
+- **Gốc cho cả hai host.** Một catalog có phiên bản được sinh thành rule, skill, agent và lệnh slash
+  của Claude Code, và `AGENTS.md`, skill, agent, cấu hình của Codex.
+- **Chỉ cài thứ dự án cần.** Công cụ nhận diện stack và cài đúng gói ngôn ngữ bạn dùng: service Go
+  nhận hướng dẫn Go, không nhận của React. Rule ngôn ngữ chỉ được nạp khi agent đụng tới file của
+  ngôn ngữ đó, nên phần ngữ cảnh luôn nạp vẫn nhỏ.
+- **Cài an toàn.** Mọi thay đổi được hiện thành diff trước, được backup, và hoàn tác bằng `rollback`.
+  File bạn đã sửa không bao giờ bị ghi đè: bản mới được ghi cạnh file của bạn.
+- **Rào chắn.** Một policy hook kiểm mọi lệnh shell và mọi lần ghi file. Lệnh phá huỷ (`rm -rf`,
+  `git push --force`, `DROP TABLE`) và lệnh publish ở mọi hệ (`npm publish`, `cargo publish`,
+  `docker push`, …) cần bạn duyệt; ghi credential ở định dạng đã biết thì bị chặn.
+- **Kiểm chứng, không hứa suông.** Quality gate chạy chính lệnh build, test, linter, coverage và audit
+  thư viện của dự án, rồi lưu bằng chứng. Thứ gì không kiểm được thì báo NOT_VERIFIED, không bao giờ
+  báo đạt.
 
 ## Bắt đầu nhanh
 
-```bash
-# Tạo dự án mới (cờ V1 vẫn dùng được)
-npx create-ai-agent-setup my-api -t backend -f nestjs -y
+Cần Node.js 20 trở lên.
 
-# Thêm cấu hình vào dự án sẵn có: xem trước, rồi áp dụng
-npx create-ai-agent-setup diff ../my-project
-npx create-ai-agent-setup setup ../my-project --yes
-npx create-ai-agent-setup doctor ../my-project
-npx create-ai-agent-setup rollback ../my-project      # hoàn tác lần cài gần nhất
+```bash
+# Trong dự án sẵn có: xem trước, rồi áp dụng
+npx create-ai-agent-setup diff
+npx create-ai-agent-setup setup --yes
+
+# Thêm cả Codex (hoặc chỉ Codex)
+npx create-ai-agent-setup setup --adapter claude-code,codex --yes
+
+# Tạo dự án mới từ template
+npx create-ai-agent-setup my-api -t backend -f nestjs -y
 ```
 
-Từ mã nguồn: `git clone https://github.com/nguyenduyhoang35/ai-agent-setup.git`, rồi
-`npm ci && npm run build` và chạy `node bin/cli.js …` với cùng tham số.
+Sau đó mở dự án bằng Claude Code hoặc Codex. Với Codex, hãy tin cậy (trust) dự án và duyệt hook bằng
+`/hooks`: Codex chỉ nạp cấu hình dự án khi dự án được tin cậy.
 
-## Lệnh
+## Ngôn ngữ được hỗ trợ
+
+| Stack | Hướng dẫn được cài | Gate chạy được |
+|---|---|---|
+| TypeScript / JavaScript | Rule TypeScript; skill Node, React, React Native, Prisma | script trong `package.json`, coverage (Istanbul), `npm audit` |
+| Python | Rule Python, skill build | pytest, Ruff, mypy, coverage (pytest-cov), pip-audit |
+| Go | Rule Go, skill build | `go build`, `go test`, `go vet`, coverage, govulncheck |
+| Java, Kotlin | Rule Java và Kotlin, skill build JVM | build và test bằng Maven hoặc Gradle, ktlint hoặc detekt, JaCoCo |
+| Android | Rule Android, skill build | Gradle, Android Lint |
+| C# / .NET | Rule C#, skill build .NET | `dotnet build`/`test`/`format`, coverlet, gói có lỗ hổng |
+| Rust | Rule Rust, skill build | `cargo build`/`test`/`clippy`/`check`, cargo-llvm-cov, cargo-audit |
+| PHP | Rule PHP, skill build | PHPUnit hoặc Pest, PHPStan, coverage, `composer audit` |
+| Ruby | Rule Ruby, skill build | RSpec hoặc Minitest, RuboCop, SimpleCov, bundler-audit |
+| Swift | Rule Swift, skill build | `swift build`/`test`, SwiftLint, coverage |
+| Dart / Flutter | Rule Dart và Flutter, skill build | `flutter test`/`analyze` (hoặc `dart`), coverage |
+| C / C++ | Rule C và C++, skill build | CMake và CTest |
+
+Gate chỉ chạy công cụ dự án có khai báo: dự án không dùng RuboCop thì không có gate RuboCop. Mọi dự
+án cũng nhận phần hướng dẫn chung: kiến trúc, thiết kế API, test, bảo mật, Git workflow, review code,
+cùng các agent lập kế hoạch, triển khai, review và bảo mật.
+
+## Lệnh dùng hằng ngày
 
 | Lệnh | Tác dụng |
 |---|---|
-| `[tên] [tuỳ chọn]` hoặc `create <tên>` | Tạo dự án từ template và cài cấu hình AI |
-| `setup [thư mục]` | Thêm cấu hình vào dự án sẵn có; hỏi trước khi ghi (`--yes` để bỏ hỏi, `--dry-run` chỉ lập kế hoạch) |
-| `diff [thư mục]` | Hiện kế hoạch và diff của mọi thay đổi; không ghi gì |
-| `update [thư mục]` | Cập nhật bản cài V2 theo catalog của phiên bản này, giữ adapter và profile; tệp bạn đã sửa được giữ, bản mới ghi cạnh nó |
-| `doctor [thư mục]` | Đối chiếu file và section được quản lý với `.ai-agent-setup/manifest.json` |
-| `rollback [thư mục] [--force]` | Trả lại đúng từng byte trạng thái trước lần cài gần nhất |
-| `catalog validate [thư mục]` | Kiểm tra catalog (schema, tham chiếu, policy, ngân sách context) |
-| `plan "<task>"` *(bản xem trước V2.1)* | Đề xuất kế hoạch: domain, agent, skill, gate và chi phí ước lượng, kèm giải thích; `--mode`, `--domain`, `--agent`, `--exclude-agent`, `--allow-tools`, `--budget`, `--approve-at`, `--json` |
-| `explain <plan-id>` | Xem lại kế hoạch đã lưu và phần giải thích |
-| `impact [file...]` *(bản xem trước V2.1)* | File thay đổi chạm vào đâu: module, vùng code, rủi ro, test liên quan, chủ sở hữu theo CODEOWNERS; không truyền file thì đọc thay đổi chưa commit trong git, `--since <ref>` để so với một ref. `plan --files`, `--changed`, `--since` dùng cùng phân tích này |
-| `gates list\|run\|history [thư mục]` *(bản xem trước V2.2)* | Quality gate có bằng chứng: `list` liệt kê mọi gate, mức hỗ trợ và lệnh sẽ chạy; `run` chạy các gate bắt buộc (profile + `.ai-agent-setup/gates.json`), ghi bằng chứng đã che dữ liệu nhạy cảm và có checksum; mã thoát 0 PASS, 1 FAIL, 2 NOT_VERIFIED. `--gate`, `--skip`, `--run`, `--profile`, `--json` |
-| `run <hành động>` *(bản xem trước V2.1)* | Lượt thực thi (ADR-009): `create <plan-id>`, `approve` và `approve-step` (cần terminal tương tác, gõ lại id), `deliver --host claude-code\|codex [--dry-run] [--timeout giây]`, `event`, `verify <run-id> <bước>`, `cancel`, `status`. Lượt chỉ SUCCEEDED khi mọi bước được báo đã thực thi và qua gate; qua gate mà không có báo cáo thực thi thì là OUTCOME_VERIFIED (mã thoát 2). Lượt chạy được ký bằng khoá cục bộ (ADR-016). `deliver --isolation restricted [--network deny] [--pass-env a,b]` chạy host trong sandbox nhân hệ điều hành macOS ([hướng dẫn](docs/guides/runtime-isolation.md)) |
-| `isolation check` *(bản xem trước V2.2)* | Cô lập lúc chạy (ADR-017, đề xuất): bảng nền tảng và, theo từng biện pháp, hồ sơ (`none`, `restricted`, `isolated`) thực thi được gì trên máy này; mã thoát 2 khi không thực thi được |
-| `report [thư mục]` *(bản xem trước V2.2)* | Báo cáo thực thi qua các lượt chạy: lượt theo trạng thái và tính toàn vẹn, tỉ lệ gate đạt (chỉ tính lượt đã kiểm), thời lượng, kết quả lẫn lộn trên cùng commit, token theo host và theo mỗi kết quả được chấp nhận (chỉ từ tệp usage đã ký); `--since <ngày>`, `--json`; `--kpi` báo cáo mọi KPI của docs/v2/09 §6, đo được hoặc NOT_VERIFIED kèm lý do. Chỉ đọc; token là số đo, tiền chỉ là ước tính của chính host |
+| `setup [thư mục]` | Cài cấu hình (hỏi trước; `--yes` để áp dụng, `--dry-run` chỉ lập kế hoạch) |
+| `diff [thư mục]` | Hiện mọi thay đổi dưới dạng diff; không ghi gì |
+| `update [thư mục]` | Chuyển sang catalog của phiên bản đang cài; giữ các chỗ bạn đã sửa |
+| `doctor [thư mục]` | Kiểm bản cài so với manifest |
+| `rollback [thư mục]` | Trả lại đúng từng byte trạng thái trước lần cài gần nhất |
+| `gates run [thư mục]` | Chạy các quality gate bắt buộc và lưu bằng chứng |
+| `create <tên>` | Tạo dự án từ template (Express, NestJS, Next.js, Vite, fullstack, Expo, React Native) |
 
-Tuỳ chọn của `create` giữ nguyên V1: `-t` (`backend`, `frontend`, `fullstack`, `mobile`), `-f`
-(backend: `express`, `nestjs` · frontend: `nextjs`, `vite` · mobile: `expo`, `cli`), `-u` (chỉ
-frontend: `shadcn`, `antd`, `chakra`, `semantic`), `-T` (`starter`, `standard`, `strict`, chọn
-profile), `-d` (`postgresql`, `mysql`, `sqlite`, `none`), `-H` (rule honesty), `-c` (CodeGraph, cần
-mạng), `-y` (dùng mặc định, không hỏi).
+Lập kế hoạch, phân tích ảnh hưởng, chạy run, báo cáo và cô lập khi chạy agent có trong
+[tham chiếu CLI](docs/guides/cli-reference.md) (tiếng Anh), kèm mọi tuỳ chọn.
 
-Tuỳ chọn của `setup`: `-a claude-code,codex` (mặc định: các host đã cấu hình sẵn, nếu không có thì
-Claude Code), `--profile <id>`, `--strategy write-new|skip|backup-overwrite` (mặc định `write-new`:
-ghi `<file>.ai-agent-setup.new` cạnh file của bạn), `--enable-tool <id>` (bật một MCP server, ví dụ
-`tool.mcp-github`).
-
-## Cài những gì
+## Những gì được cài
 
 | | Claude Code | Codex |
 |---|---|---|
-| Chỉ dẫn | section được quản lý trong `.claude/CLAUDE.md` | section được quản lý trong `AGENTS.md` (giữ dưới 24 KiB) |
-| Rule | `.claude/rules/` (rule theo đường dẫn dùng `paths:`) | trong `AGENTS.md`; rule có phạm vi thành skill |
+| Hướng dẫn | section được quản lý trong `.claude/CLAUDE.md` | section được quản lý trong `AGENTS.md` (giữ dưới 24 KiB) |
+| Rule | `.claude/rules/` (rule ngôn ngữ giới hạn theo đường dẫn) | trong `AGENTS.md`; rule có phạm vi thành skill |
 | Skill | `.claude/skills/` | `.agents/skills/` |
-| Agent | `.claude/agents/` (giữ tên agent V1) | `.codex/agents/*.toml` |
-| Workflow | `/spec`, `/plan`, `/build`, `/test`, `/review`, … trong `.claude/commands/` | skill gọi bằng `$spec`, `$plan`, … |
-| An toàn | quyền `ask`/`deny` + hook chính sách trong `.claude/settings.json` | hook chính sách trong `.codex/hooks.json`; sandbox `workspace-write`, duyệt `on-request` |
-| MCP | `.mcp.json`, chỉ server bạn bật | `[mcp_servers]` trong `.codex/config.toml`, chỉ server bạn bật |
+| Agent | `.claude/agents/` | `.codex/agents/*.toml` |
+| Workflow | `/spec`, `/plan`, `/build`, `/test`, `/review`, … | skill gọi bằng `$spec`, `$plan`, … |
+| An toàn | quyền `ask`/`deny` và policy hook trong `.claude/settings.json` | policy hook trong `.codex/hooks.json`; sandbox `workspace-write`, duyệt `on-request` |
+| MCP server | `.mcp.json`, chỉ những server bạn bật | `[mcp_servers]` trong `.codex/config.toml`, chỉ những server bạn bật |
 
-Mọi thứ bộ cài ghi ra được lưu trong `.ai-agent-setup/manifest.json` (nên commit). Bản backup và
-nhật ký giao dịch chỉ nằm trên máy, trong `.ai-agent-setup/backups/` và `.ai-agent-setup/transactions/`.
+Mọi thứ được ghi đều nằm trong `.ai-agent-setup/manifest.json` (hãy commit file này). Backup và nhật
+ký giao dịch nằm cục bộ trong `.ai-agent-setup/`.
 
 ## Catalog
 
-Toàn bộ cấu hình đến từ `catalog/`: các mục YAML được kiểm bằng JSON Schema, chia thành 12 domain
-(sản phẩm, thiết kế, frontend, backend, mobile, dữ liệu và AI, DevOps, chất lượng, bảo mật, kiến
-trúc, tài liệu và trải nghiệm lập trình viên, tích hợp). Mọi domain và capability đều đã được định
-nghĩa; phần lớn nội dung hướng dẫn vẫn lấy từ rule, skill, agent của V1, nội dung chuyên sâu hơn
-nằm trong lộ trình.
+Toàn bộ cấu hình đến từ `catalog/`: các entry YAML được kiểm bằng JSON Schema, chia thành 12 domain
+năng lực, từ sản phẩm, thiết kế tới bảo mật, DevOps và dữ liệu.
 
 <!-- catalog-summary:begin (generated by `npm run docs:summary`; do not edit) -->
 | Catalog | Count |
@@ -113,34 +128,40 @@ nằm trong lộ trình.
 | Adapters | claude-code, codex |
 <!-- catalog-summary:end -->
 
-## Giới hạn đã biết
+## Trạng thái và giới hạn đã biết
 
-- **Chưa kiểm trong host thật:** file sinh ra theo tài liệu của Claude Code và Codex (đối chiếu
-  24/11/2026) và có golden test, nhưng chưa được nạp vào `claude` hay `codex` đang chạy.
-- **Codex** chỉ nạp `.codex/` (config, agent, hook) trong dự án đã được tin cậy, và chỉ chạy hook
-  sau khi bạn duyệt bằng `/hooks`.
-- **Dự án V1** giữ nguyên các rule `allow` cũ trong `.claude/settings.json`, kể cả `Bash(rm *)`;
-  `setup` cảnh báo nhưng không xoá cấu hình của bạn.
-- **Node.js:** 20 trở lên (`engines.node >=20`), đúng các bản CI kiểm (20, 22, 24).
-- `--db mysql` / `sqlite` đổi provider Prisma; chưa kiểm chứng schema của từng template migrate được
-  trên các CSDL đó.
-- **Bảo vệ trạng thái runtime** chặn agent ghi vào `.ai-agent-setup/` qua công cụ của host, và mỗi lượt
-  chạy được ký bằng khoá nằm trong thư mục cấu hình của bạn (`ai-agent-setup/keys`). Cả hai đều không
-  phải ranh giới an ninh trước chương trình agent chạy bằng tài khoản của bạn; xem
-  [docs/v2/11](docs/v2/11-runtime-threat-model.md).
-- **Giao kế hoạch và quality gate** mới được kiểm bằng lệnh giả lập và tiến trình host giả. Giao
-  kế hoạch cho `claude` hay `codex` thật là NOT_VERIFIED; định dạng thông điệp của host lấy từ tài
-  liệu công bố. Quét secret dựa trên mẫu, không chứng minh thay đổi sạch secret.
-- **Không có tuyên bố về hiệu năng:** tác động lên token, chi phí, tốc độ chưa được đo. Kế hoạch
-  benchmark ở [docs/v2/09](docs/v2/09-testing-and-benchmark-strategy.md). Số liệu công bố của
-  CodeGraph là của nhà cung cấp, không được đo ở đây.
+Phiên bản hiện tại có trên [npm](https://www.npmjs.com/package/create-ai-agent-setup) và trong
+[changelog](CHANGELOG.md). Những gì đã kiểm chứng và chưa:
+
+- **Claude Code:** giao kế hoạch, luồng sự kiện, lượng token và quyền đã được kiểm trên CLI thật
+  (2.1.332). **Codex** (0.172.0) mới kiểm một phần: khởi động, thất bại, timeout và huỷ, chưa có
+  lượt chạy với tài khoản đã đăng nhập. Codex chỉ chạy trong repo Git hoặc thư mục được tin cậy.
+- **Chưa khẳng định về hiệu quả.** Benchmark so sánh agent có và không có cấu hình này đã được xây và
+  review, nhưng chưa chạy trên host thật.
+- **Lệnh mặc định của gate** theo tài liệu của từng công cụ và được test bằng fixture, chưa chạy với
+  mọi toolchain thật. Câu báo kết quả của các công cụ audit thư viện chưa được kiểm; nếu lệch, gate
+  báo NOT_VERIFIED, không bao giờ báo đạt sai.
+- **Cô lập khi chạy agent** (`run deliver --isolation restricted`) là bản xem trước, chỉ có trên
+  macOS; Linux và Windows chưa hỗ trợ ([hướng dẫn](docs/guides/runtime-isolation.md)).
+- **Rào chắn không phải sandbox.** Policy hook và run được ký giúp chặn nhầm lẫn, không chặn được
+  chương trình agent chạy dưới tài khoản của bạn ([mô hình đe doạ](docs/v2/11-runtime-threat-model.md)).
+- **Dự án V1** giữ nguyên các rule allow trong `.claude/settings.json` (kể cả rule rộng như
+  `Bash(rm *)`); `setup` cảnh báo nhưng không xoá cấu hình của bạn.
+- `--db mysql` hoặc `sqlite` đổi provider của Prisma; schema của từng template trên các database đó
+  chưa được kiểm.
+
+## Nâng cấp từ 1.x
+
+Đọc [Chuyển từ V1](docs/guides/migrating-from-v1.md), rồi chạy `diff` trước `setup`. Bản 1.x vẫn dùng
+được bằng `npx create-ai-agent-setup@1` và được vá bảo mật đến 2027-05-25.
 
 ## Tài liệu
 
+- [Tham chiếu CLI](docs/guides/cli-reference.md)
 - [Chuyển từ V1](docs/guides/migrating-from-v1.md)
-- [Tài liệu thiết kế V2](docs/v2/README.md): audit, đặc tả sản phẩm và kiến trúc, lộ trình kèm trạng
-  thái hiện tại ([08 §9](docs/v2/08-implementation-roadmap.md#9-implementation-status)), chiến lược
-  kiểm thử, quyết định kiến trúc.
+- [Cô lập khi chạy agent](docs/guides/runtime-isolation.md)
+- [Gói ngôn ngữ và gate](docs/v2/16-language-packs.md)
+- [Tài liệu thiết kế](docs/v2/README.md): kiến trúc, quyết định, lộ trình và trạng thái
 - [Changelog](CHANGELOG.md)
 
 ## Phát triển
@@ -148,14 +169,16 @@ nằm trong lộ trình.
 ```bash
 npm ci
 npm run typecheck
-npm run lint              # ESLint với luật có kiểm kiểu, không cho phép cảnh báo
-npm test                  # unit, contract, golden, installer và end-to-end
-npm run test:coverage     # như trên kèm coverage V8; lỗi nếu chỉ số nào dưới 80%
-npm run catalog:validate  # in kèm số byte context luôn nạp đo được theo profile
+npm run lint              # ESLint có kiểm kiểu, không cho phép cảnh báo
+npm test                  # test unit, contract, golden, installer, bảo mật và end-to-end
+npm run test:coverage     # fail khi chỉ số nào dưới 80%
+npm run catalog:validate  # in thêm kích thước ngữ cảnh luôn nạp theo từng profile
 npm run docs:summary      # cập nhật bảng catalog trong cả hai README
 ```
 
-CI chạy trên Linux, macOS và Windows với Node 20, 22 và 24.
+CI chạy trên Linux, macOS và Windows với Node 20, 22 và 24. Muốn đóng góp: làm trên nhánh `feature/*`
+hoặc `fix/*` với conventional commit, thêm test, và giữ `npm test` cùng `npm run catalog:validate`
+xanh.
 
 ## Giấy phép
 
