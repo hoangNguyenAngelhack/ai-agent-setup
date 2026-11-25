@@ -274,4 +274,15 @@ describe('plan delivery (W2.1-10)', () => {
     expect(codexDelivery.parseLine('{"type":"turn.failed","error":{"message":"quota"}}')).toEqual({ kind: 'failed', reason: 'codex turn.failed: quota' });
     expect(codexDelivery.parseLine('Done')).toBeNull();
   });
+
+  it('should not count Codex retry notices as run-level signals', () => {
+    // Shapes recorded from codex-cli 0.172.0 `exec --json` without credentials (2026-11-25).
+    const retry = '{"type":"error","message":"Reconnecting... 2/5 (unexpected status 401 Unauthorized: Missing bearer or basic authentication in header)"}';
+    const final = '{"type":"error","message":"unexpected status 401 Unauthorized: Missing bearer or basic authentication in header"}';
+
+    expect(codexDelivery.parseLine(retry)).toBeNull();
+    expect(codexDelivery.parseLine('{"type":"turn.started"}')).toBeNull();
+    expect(codexDelivery.parseLine('{"type":"item.completed","item":{"id":"item_0","type":"error","message":"Falling back from WebSockets to HTTPS transport."}}')).toBeNull();
+    expect(codexDelivery.parseLine(final)).toMatchObject({ kind: 'failed' });
+  });
 });

@@ -34,6 +34,15 @@ describe('redactText', () => {
     expect(redactText(log)).toEqual({ text: log, redactions: {} });
   });
 
+  it('should not take the words after "bearer or basic" in an error message for a credential', () => {
+    // From codex-cli 0.172.0 without credentials (2026-11-25).
+    const message = 'unexpected status 401 Unauthorized: Missing bearer or basic authentication in header';
+
+    expect(redactText(message)).toEqual({ text: message, redactions: {} });
+    expect(redactText('Basic credentials required; Bearer realm="api"').redactions).toEqual({});
+    expect(redactText('Authorization: Basic dXNlcjpwYXNzd29yZA==').text).toBe('Authorization: Basic [REDACTED:bearer]'); // secret-scan:allow synthetic fixture
+  });
+
   it('should redact every string inside a JSON value', () => {
     expect(redactValue({ list: ['jane.doe@example.com'], nested: { n: 1, note: `token=${GITHUB}` } })).toEqual({
       list: ['[REDACTED:email]'],

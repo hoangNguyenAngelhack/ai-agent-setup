@@ -67,7 +67,8 @@
     "eval:regressions": "npm run build && node dist/app/eval-regression.js",
     "eval:baseline": "npm run build && node dist/app/eval-regression.js --record",
     "release:check": "npm run build && node dist/app/release-check.js",
-    "bench": "npm run build && node dist/app/benchmark/run.js"
+    "bench": "npm run build && node dist/app/benchmark/run.js",
+    "smoke:host": "npm run build && node dist/app/host-smoke.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
