@@ -38,3 +38,6 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Benchmark run output (W2.2-02)
+benchmarks/results/

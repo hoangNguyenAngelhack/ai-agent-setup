@@ -1,0 +1,10 @@
+schema: benchmark-task/v1
+id: write-adr
+category: architecture
+domains: [architecture]
+fixture: fixtures/calc
+prompt: Write docs/adr-001.md choosing between in-memory and Redis caching for the calculator, with trade-offs.
+scope: ["docs/**"]
+acceptance:
+  rubric: { threshold: 3, criteria: ["states the decision", "compares at least two options", "names the trade-offs"] }
+timeLimit: 60

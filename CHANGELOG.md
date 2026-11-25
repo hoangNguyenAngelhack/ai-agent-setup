@@ -11,6 +11,12 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
 
 ### Added
+- Evaluation framework (W2.2-02): `npm run bench -- --model <id>` runs a benchmark suite
+  (`benchmark-task` YAML) across arms A (V2 permissions only), B (pinned V1) and C (V2) for n
+  repetitions in seeded order, judges each trial (data loss outside the task scope, secrets and
+  security checks, hidden tests; rubric tasks NOT_VERIFIED), and writes a `benchmark-report` with
+  95% bootstrap intervals, paired comparisons, the veto rule and validity (≥ 30 tasks, n ≥ 3).
+  Tested against a host test double only; the task suite is W2.2-03.
 - Release readiness (W2.2-08): `npm run release:check` runs 13 measured gates (build, typecheck, lint,
   tests with coverage, catalog, evaluation regressions, `npm audit`, CLI version, published file
   list, secrets in published files, documentation links, tested Node range, CHANGELOG entry) and

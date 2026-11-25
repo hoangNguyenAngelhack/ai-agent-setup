@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-agent-setup:contracts:v1:benchmark-report",
+  "title": "Benchmark report",
+  "description": "One benchmark run (docs/v2/09 §5, W2.2-02): controls, validity, per-arm results with 95% bootstrap intervals over tasks, paired comparisons, per-category acceptance, the acceptance hypothesis and the veto rule. A run with fewer than 30 tasks or n < 3 is not valid for claims.",
+  "type": "object",
+  "required": ["schemaVersion", "generatedAt", "controls", "validity", "arms", "comparisons", "categories", "hypothesis", "veto", "notes"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "benchmark-report/v1" },
+    "generatedAt": { "$ref": "urn:ai-agent-setup:contracts:v1:gate-record#/$defs/timestamp" },
+    "controls": {
+      "type": "object",
+      "required": ["host", "hostVersion", "model", "seed", "n", "packageCommit", "v1Commit", "fixtures", "timeLimits"],
+      "additionalProperties": false,
+      "properties": {
+        "host": { "enum": ["claude-code", "codex"] },
+        "hostVersion": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "seed": { "type": "integer" },
+        "n": { "type": "integer", "minimum": 1 },
+        "packageCommit": { "type": ["string", "null"] },
+        "v1Commit": { "type": "string", "minLength": 1 },
+        "fixtures": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{16}$" } },
+        "timeLimits": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 1 } }
+      }
+    },
+    "validity": {
+      "type": "object",
+      "required": ["valid", "problems"],
+      "additionalProperties": false,
+      "properties": { "valid": { "type": "boolean" }, "problems": { "type": "array", "items": { "type": "string", "minLength": 1 } } }
+    },
+    "arms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["arm", "description", "trials", "accepted", "rejected", "notVerified", "acceptanceRate", "medianDurationMs", "tokensPerAcceptedTask", "securityIncidents", "dataLossIncidents"],
+        "additionalProperties": false,
+        "properties": {
+          "arm": { "enum": ["A", "B", "C"] },
+          "description": { "type": "string", "minLength": 1 },
+          "trials": { "$ref": "#/$defs/count" },
+          "accepted": { "$ref": "#/$defs/count" },
+          "rejected": { "$ref": "#/$defs/count" },
+          "notVerified": { "$ref": "#/$defs/count" },
+          "acceptanceRate": { "$ref": "#/$defs/estimate" },
+          "medianDurationMs": { "type": "number", "minimum": 0 },
+          "tokensPerAcceptedTask": {
+            "oneOf": [
+              { "type": "object", "required": ["input", "output"], "additionalProperties": false, "properties": { "input": { "type": "number", "minimum": 0 }, "output": { "type": "number", "minimum": 0 } } },
+              { "type": "null" }
+            ]
+          },
+          "securityIncidents": { "$ref": "#/$defs/count" },
+          "dataLossIncidents": { "$ref": "#/$defs/count" }
+        }
+      }
+    },
+    "comparisons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["pair", "tasks", "acceptanceDifference"],
+        "additionalProperties": false,
+        "properties": { "pair": { "enum": ["C-B", "C-A"] }, "tasks": { "type": "integer", "minimum": 1 }, "acceptanceDifference": { "$ref": "#/$defs/estimate" } }
+      }
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "acceptance"],
+        "additionalProperties": false,
+        "properties": {
+          "category": { "type": "string", "minLength": 1 },
+          "acceptance": { "type": "object", "propertyNames": { "enum": ["A", "B", "C"] }, "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 } }
+        }
+      }
+    },
+    "hypothesis": {
+      "type": "object",
+      "required": ["target", "status", "basis"],
+      "additionalProperties": false,
+      "properties": { "target": { "type": "string" }, "status": { "enum": ["SUPPORTED", "NOT_SUPPORTED", "INCONCLUSIVE"] }, "basis": { "type": "string", "minLength": 1 } }
+    },
+    "veto": {
+      "type": "object",
+      "required": ["triggered", "reasons"],
+      "additionalProperties": false,
+      "properties": { "triggered": { "type": "boolean" }, "reasons": { "type": "array", "items": { "type": "string" } } }
+    },
+    "notes": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "validity": { "type": "object", "properties": { "valid": { "const": false } } } } },
+      "then": { "properties": { "hypothesis": { "type": "object", "properties": { "status": { "const": "INCONCLUSIVE" } } } } }
+    }
+  ],
+  "$defs": {
+    "count": { "type": "integer", "minimum": 0 },
+    "estimate": {
+      "type": "object",
+      "required": ["value", "ci95"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "number" },
+        "ci95": {
+          "oneOf": [
+            { "type": "object", "required": ["low", "high"], "additionalProperties": false, "properties": { "low": { "type": "number" }, "high": { "type": "number" } } },
+            { "type": "null" }
+          ]
+        }
+      }
+    }
+  }
+}

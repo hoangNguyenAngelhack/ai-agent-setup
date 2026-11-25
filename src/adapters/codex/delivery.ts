@@ -40,6 +40,9 @@ export const codexDelivery: HostDelivery = {
     }
     return null;
   },
+  promptInvocation(prompt, model) {
+    return { executable: 'codex', args: ['exec', '--json', '-m', model, prompt] };
+  },
   parseUsage(line) {
     const event = jsonLine(line);
     if (event?.type === 'item.started' || event?.type === 'item.completed') {

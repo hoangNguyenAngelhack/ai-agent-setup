@@ -46,6 +46,9 @@ export const claudeCodeDelivery: HostDelivery = {
     if (message.subtype === 'success' && message.is_error !== true) return { kind: 'completed' };
     return { kind: 'failed', reason: `claude result ${typeof message.subtype === 'string' ? message.subtype : 'error'}` };
   },
+  promptInvocation(prompt, model) {
+    return { executable: 'claude', args: ['-p', prompt, '--output-format', 'stream-json', '--verbose', '--model', model] };
+  },
   parseUsage(line) {
     const message = jsonLine(line);
     if (message?.type === 'assistant') {
