@@ -67,6 +67,12 @@ stated in the release notes: a signed-in Codex run, a benchmark run, ADR-017 acc
 reviewer, and the decisions D-1b, D-6 and D-9 of [15](15-eval-benchmark-review.md). The 1.x support
 window of OQ-08 starts with this release: security fixes until 2027-05-25.
 
+### 2.1.0 on `latest` (2026-11-25)
+
+The maintainer instructed the release of **2.1.0** ("phát hành 2.1.0"): language packs (#26) and gates
+for every stack (#27), no breaking change. The items stand as signed for 2.0.0, with the same
+release-notes conditions; the 2.1.0 limitations are in the CHANGELOG.
+
 ## 4. Evidence on 2026-11-25 (branch `release/v2.0.0-alpha.0`)
 
 Gates: run `npm run release:check` on the release commit; the result of this branch is in its pull
