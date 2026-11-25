@@ -5,7 +5,7 @@ import { createProject } from '../app/create';
 import { runImpact } from '../app/impact';
 import { readPlan, runPlan } from '../app/plan';
 import { runSetup, type SetupOutcome } from '../app/setup';
-import { doctor, rollback, type ConflictStrategy, type PlannedChange } from '../installer';
+import { doctor, MANIFEST_PATH, readManifest, rollback, type ConflictStrategy, type PlannedChange } from '../installer';
 import type { ApprovalPoint, PlanMode, PlanOverrides } from '../core/contracts';
 import { ADAPTER_IDS, type AdapterId } from '../registry';
 import { oneOf, parseArgs, single, UsageError, type ParsedArgs } from './args';
@@ -33,6 +33,7 @@ Usage:
   ${BIN} create <project-name> [options]
   ${BIN} setup [dir] [options]           Add AI engineering configuration to an existing project
   ${BIN} diff [dir] [options]            Show what setup would change (no writes)
+  ${BIN} update [dir] [options]          Update a V2 installation to this version's catalog (keeps adapters and profile)
   ${BIN} doctor [dir]                    Check an install against its manifest
   ${BIN} rollback [dir] [--force]        Undo the latest install transaction
   ${BIN} catalog validate [catalog-dir]  Validate a catalog
@@ -126,13 +127,14 @@ function printPlan(outcome: SetupOutcome, io: CliIO, withDiffs: boolean): number
   return pending.length;
 }
 
-async function commandSetup(args: ParsedArgs, io: CliIO, diffOnly: boolean): Promise<number> {
+async function commandSetup(args: ParsedArgs, io: CliIO, diffOnly: boolean, defaults: { adapters?: AdapterId[]; profileId?: string } = {}): Promise<number> {
   const root = resolve(io.cwd, args.positionals[0] ?? '.');
-  const adapters = adaptersOf(args);
+  const adapters = adaptersOf(args) ?? defaults.adapters;
+  const profileId = single(args, 'profile') ?? defaults.profileId;
   const options = {
     root,
     ...(adapters ? { adapters } : {}),
-    ...(single(args, 'profile') ? { profileId: single(args, 'profile')! } : {}),
+    ...(profileId ? { profileId } : {}),
     enabledTools: args.values.get('enable-tool') ?? [],
     conflictStrategy: oneOf('strategy', single(args, 'strategy'), STRATEGIES) ?? 'write-new',
   };
@@ -155,6 +157,24 @@ async function commandSetup(args: ParsedArgs, io: CliIO, diffOnly: boolean): Pro
   const applied = runSetup(options).applied;
   io.write(applied ? `Applied transaction ${applied.transactionId}. Undo with: ${BIN} rollback\n` : 'Already up to date.\n');
   return 0;
+}
+
+/**
+ * `update` (docs/v2/07 §4.4, Path D): setup again with the adapters and profile recorded in the
+ * manifest, after showing whether the bundled catalog changed. Only for projects installed by V2.
+ */
+async function commandUpdate(args: ParsedArgs, io: CliIO): Promise<number> {
+  const root = resolve(io.cwd, args.positionals[0] ?? '.');
+  const manifest = readManifest(root);
+  if (!manifest) {
+    io.error(`No V2 installation in ${root} (${MANIFEST_PATH} is missing); run ${BIN} setup first.\n`);
+    return 1;
+  }
+  const installed = { adapters: Object.keys(manifest.adapters) as AdapterId[], profileId: manifest.profile };
+  const next = runSetup({ root, ...installed, dryRun: true }).plan.meta.catalogDigest;
+  const short = (digest: string) => digest.replace(/^sha256:/, '').slice(0, 12);
+  io.write(next === manifest.catalogDigest ? `Catalog unchanged (${short(next)}).\n` : `Catalog ${short(manifest.catalogDigest)} → ${short(next)}.\n`);
+  return commandSetup(args, io, false, installed);
 }
 
 async function commandCreate(args: ParsedArgs, io: CliIO): Promise<number> {
@@ -254,6 +274,8 @@ export async function main(argv: readonly string[], io: CliIO): Promise<number> 
         return await commandSetup(args, io, false);
       case 'diff':
         return await commandSetup(args, io, true);
+      case 'update':
+        return await commandUpdate(args, io);
       case 'doctor':
         return commandDoctor(args, io);
       case 'rollback':

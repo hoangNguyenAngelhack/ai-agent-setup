@@ -53,6 +53,7 @@ node bin/cli.js rollback ../my-project      # hoàn tác lần cài gần nhất
 | `[tên] [tuỳ chọn]` hoặc `create <tên>` | Tạo dự án từ template và cài cấu hình AI |
 | `setup [thư mục]` | Thêm cấu hình vào dự án sẵn có; hỏi trước khi ghi (`--yes` để bỏ hỏi, `--dry-run` chỉ lập kế hoạch) |
 | `diff [thư mục]` | Hiện kế hoạch và diff của mọi thay đổi; không ghi gì |
+| `update [thư mục]` | Cập nhật bản cài V2 theo catalog của phiên bản này, giữ adapter và profile; tệp bạn đã sửa được giữ, bản mới ghi cạnh nó |
 | `doctor [thư mục]` | Đối chiếu file và section được quản lý với `.ai-agent-setup/manifest.json` |
 | `rollback [thư mục] [--force]` | Trả lại đúng từng byte trạng thái trước lần cài gần nhất |
 | `catalog validate [thư mục]` | Kiểm tra catalog (schema, tham chiếu, policy, ngân sách context) |

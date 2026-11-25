@@ -44,6 +44,40 @@ export function redactText(input: string): Redacted {
 }
 
 /** Deep copy of a JSON value with every string redacted. */
+/** Key names whose values the `assignment` rule removes from text (`token=…`, `"api_key": "…"`). */
+const SENSITIVE_KEY = /password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|private[_-]?key|credential/i;
+const REDACTED_ASSIGNMENT = '[REDACTED:assignment]';
+
+function redactStructured(value: unknown): unknown {
+  if (typeof value === 'string') return redactText(value).text;
+  if (Array.isArray(value)) return value.map(redactStructured);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        redactText(key).text,
+        SENSITIVE_KEY.test(key) && item !== null && typeof item !== 'object' ? REDACTED_ASSIGNMENT : redactStructured(item),
+      ]),
+    );
+  }
+  return value;
+}
+
+/**
+ * Redacts one line of a host's JSON stream and keeps it valid JSON. Every key and string goes
+ * through the same rules as redactText, and a scalar under a sensitive key name is replaced as the
+ * `assignment` rule would; a line that is not JSON is redacted as text. redactText on a JSON line
+ * leaves unbalanced quotes and braces, which made stored transcripts unreadable.
+ */
+export function redactJsonLine(line: string): string {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(line);
+  } catch {
+    return redactText(line).text;
+  }
+  return parsed !== null && typeof parsed === 'object' ? JSON.stringify(redactStructured(parsed)) : redactText(line).text;
+}
+
 export function redactValue<T>(value: T): T {
   if (typeof value === 'string') return redactText(value).text as T;
   if (Array.isArray(value)) return (value as unknown[]).map((item) => redactValue(item)) as T;

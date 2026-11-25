@@ -84,7 +84,10 @@ describe.skipIf(process.platform === 'win32')('host delivery end to end (fake ho
     expect(delivery.usage).toMatchObject({ tokens, label: 'measured', toolCalls: 2, cost: costUsd === null ? null : { usd: costUsd, label: 'estimated' } });
     expect(signedEvidence(root, plan.runId)).toContain(delivery.usage!.file);
     // Why usage is read from the raw stream: the stored transcript has every *_tokens value redacted.
-    expect(readFileSync(join(root, delivery.transcript!), 'utf8')).toContain('[REDACTED:assignment]');
+    const stored = readFileSync(join(root, delivery.transcript!), 'utf8');
+    expect(stored).toContain('[REDACTED:assignment]');
+    // The redacted transcript stays readable: every line is still JSON.
+    for (const line of stored.trim().split('\n')) expect(() => JSON.parse(line) as unknown, line).not.toThrow();
 
     await verifyAll(root, plan);
     const [summary] = buildExecutionReport(root).usage.hosts;
@@ -222,6 +225,7 @@ describe.skipIf(process.platform === 'win32')('host delivery end to end (fake ho
 
     expect(delivery.transcript!.startsWith(`.ai-agent-setup/runs/${plan.runId}/evidence/host-codex-`)).toBe(true);
     expect(transcript).not.toContain('Zq7Zq7');
+    expect(transcript.trim().split('\n').every((line) => typeof JSON.parse(line) === 'object')).toBe(true);
     expect(transcript).toContain('[REDACTED');
   }, 60000);
 
