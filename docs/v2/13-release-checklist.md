@@ -40,7 +40,7 @@ agent. The script reads the list below as written: keep each item on one line in
 - [ ] **S8** Evaluation set labelled by a second reviewer with a held-out split (09 §4), or the release notes call the routing figures development-set figures — owner: Maintainer and reviewer
 - [ ] **S9** Support window for 1.x decided (OQ-08) — owner: Maintainer
 - [ ] **S10** Package and directory names decided (OQ-02) — owner: Maintainer
-- [ ] **S11** Release notes list the behaviour changes of 07 §3 and the known limitations (NOT_VERIFIED and PARTIAL items of 08 §7) — owner: Maintainer
+- [ ] **S11** Release notes list the behaviour changes of 07 §3 and the known limitations (NOT_VERIFIED and PARTIAL items of 08 §9); draft in [14](14-release-notes-2.0.0.md) — owner: Maintainer
 
 ## 3. State on 2026-11-25
 
