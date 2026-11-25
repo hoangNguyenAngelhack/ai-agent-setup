@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Gates for every stack ([docs/v2/16 §4](docs/v2/16-language-packs.md)): the dependency audit runs
+  govulncheck, pip-audit, cargo-audit, bundler-audit, composer audit or `dotnet list package
+  --vulnerable` (read fail-closed), and the coverage gates read LCOV, Cobertura, JaCoCo, Go
+  coverprofile, llvm-cov JSON and SimpleCov reports, with a default command per stack. Detection
+  reports the coverage tools a project declares (pytest-cov, JaCoCo, coverlet, SimpleCov).
+- The safety policy asks before publishing in every ecosystem (cargo, gem, twine, Poetry, uv, NuGet,
+  CocoaPods, pub, Maven, Gradle, Swift registry, Bun, Deno) and before `docker push`/`podman push`.
 - Language packs, wave 1 ([docs/v2/16](docs/v2/16-language-packs.md)): rules for Go, Java, Kotlin,
   C#, Rust, PHP and Ruby, and build-resolution skills for Go, JVM (Maven and Gradle), .NET, Rust, PHP,
   Ruby and Python. They are path-scoped, so they add nothing to the always-loaded context.

@@ -767,12 +767,12 @@ anything else missing or `"Unknown"` is NOT_VERIFIED.
 | Category | Gate (support) |
 |---|---|
 | build | `gate.build` (project command) |
-| unit | `gate.unit-tests` (project command); `gate.coverage-80`, `gate.coverage-95` (built-in threshold on an Istanbul json-summary written by this run) |
+| unit | `gate.unit-tests` (project command); `gate.coverage-80`, `gate.coverage-95` (built-in threshold on a coverage report written by this run: Istanbul json-summary, LCOV, Cobertura, JaCoCo, Go coverprofile, llvm-cov JSON or SimpleCov; per-stack defaults in [16](16-language-packs.md)) |
 | integration | `gate.integration-tests` (project command) |
 | e2e | `gate.e2e-tests` (project command) |
 | static-analysis | `gate.lint`, `gate.typecheck` (project command) |
 | security | `gate.security-scan` (built-in scan of uncommitted and untracked changes) |
-| dependency-audit | `gate.dependency-audit` (built-in for npm lockfiles; other ecosystems need a configured command) |
+| dependency-audit | `gate.dependency-audit` (built-in: npm audit for npm lockfiles; govulncheck, pip-audit, cargo-audit, bundler-audit, composer audit, dotnet list package for the other stacks, read fail-closed; [16](16-language-packs.md)) |
 | performance | `gate.performance` (project command) |
 | accessibility | `gate.accessibility` (project command) |
 | documentation | `gate.documentation` (project command) |
