@@ -140,7 +140,7 @@ async function main() {
     // Clone .claude configuration
     log.info('Setting up AI Agent configuration...');
     execSync(
-      'npx degit hoangNguyenAngelhack/ai-agent-setup/.claude .claude --force',
+      'npx degit nguyenduyhoang35/ai-agent-setup/.claude .claude --force',
       { stdio: 'inherit' }
     );
 

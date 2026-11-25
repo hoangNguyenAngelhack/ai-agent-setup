@@ -42,7 +42,7 @@ npx create-ai-agent-setup doctor ../my-project
 npx create-ai-agent-setup rollback ../my-project      # undo the last install
 ```
 
-From source: `git clone https://github.com/hoangNguyenAngelhack/ai-agent-setup.git`, then
+From source: `git clone https://github.com/nguyenduyhoang35/ai-agent-setup.git`, then
 `npm ci && npm run build` and `node bin/cli.js …` with the same arguments.
 
 ## Commands

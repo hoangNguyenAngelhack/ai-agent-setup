@@ -6,11 +6,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hoangNguyenAngelhack/ai-agent-setup.git"
+    "url": "git+https://github.com/nguyenduyhoang35/ai-agent-setup.git"
   },
-  "homepage": "https://github.com/hoangNguyenAngelhack/ai-agent-setup#readme",
+  "homepage": "https://github.com/nguyenduyhoang35/ai-agent-setup#readme",
   "bugs": {
-    "url": "https://github.com/hoangNguyenAngelhack/ai-agent-setup/issues"
+    "url": "https://github.com/nguyenduyhoang35/ai-agent-setup/issues"
   },
   "keywords": [
     "cli",
