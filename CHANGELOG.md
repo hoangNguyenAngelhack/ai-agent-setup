@@ -45,7 +45,7 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   and router are detected on exactly the cases they break. Benchmark-run regression rate waits for
   W2.2-02 and W2.2-03.
 - Token usage per accepted outcome (W2.2-04): `run deliver` reads the token usage each host prints
-  in its own stream (Claude Code: per message, each message id counted once; Codex: per turn) and
+  in its own stream (Claude Code: the session total of its result message; Codex: per turn) and
   keeps it as a `host-usage` file signed with the transcript; `report` adds tokens per host and per
   accepted outcome (SUCCEEDED run), only from signed usage files, and gives no per-outcome figure
   while any delivery is unproved. Money is never computed: only Claude Code's own `total_cost_usd`,
@@ -140,6 +140,16 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   reserved as first arguments.
 
 ### Fixed
+- Claude Code token usage was undercounted: per-message usage in its stream carries the output
+  count from the start of each message (found with the installed CLI 2.1.332: 23 output tokens per
+  message against 321 in the session total). Usage now comes from the result message's
+  `modelUsage`, which also counts auxiliary model calls; per-message usage is only the fallback when
+  the host stops early, and is labelled possibly incomplete.
+- Plan delivery to Claude Code reported no step progress in its default permission mode: the agent's
+  `run event` command was denied (found with the installed CLI 2.1.332). Delivery now allows that
+  one command for the run (`--allowedTools "Bash(<event command> *)"`) and nothing else; the same
+  command chained with another, another run's id, and any other command stay denied, and the user's
+  `deny` rules still win. Editing files still needs the user's own permissions.
 - Stored host transcripts are valid JSON again: redaction ran on the raw text of each stream line and
   left unbalanced quotes and braces. JSON lines are now redacted field by field with the same rules
   (every key and string, plus any value under a sensitive key name such as `token` or `api_key`);

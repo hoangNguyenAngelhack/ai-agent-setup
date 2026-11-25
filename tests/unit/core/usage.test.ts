@@ -18,15 +18,21 @@ describe('UsageMeter (W2.2-04)', () => {
     expect(usage.basis).toMatch(/2 usage record\(s\).*each message id counted once/);
   });
 
-  it('should use the session total only when no per-message usage was seen, and keep the host cost as an estimate', () => {
-    const withMessages = new UsageMeter('claude-code');
-    withMessages.add({ messageId: 'm1', tokens: { input: 2 } });
-    withMessages.add({ total: true, tokens: { input: 50 }, costUsd: 0.25 });
-    expect(withMessages.result()).toMatchObject({ tokens: { input: 2 }, cost: { usd: 0.25, label: 'estimated', basis: expect.stringContaining('not an invoice') as unknown } });
+  it('should count the session total over per-message start values, and keep the host cost as an estimate', () => {
+    const meter = new UsageMeter('claude-code');
+    meter.add({ messageId: 'm1', model: 'claude-test-1', tokens: { input: 2, output: 3 } });
+    meter.add({ total: true, tokens: { input: 50, output: 321 }, models: { 'claude-test-1': { input: 20, output: 300 }, 'claude-test-helper': { input: 30, output: 21 } }, costUsd: 0.25 });
+    expect(meter.result()).toMatchObject({
+      tokens: { input: 50, output: 321 },
+      byModel: { 'claude-test-1': { input: 20, output: 300 }, 'claude-test-helper': { input: 30, output: 21 } },
+      basis: 'session total reported by claude-code',
+      cost: { usd: 0.25, label: 'estimated', basis: expect.stringContaining('not an invoice') as unknown },
+    });
 
-    const totalOnly = new UsageMeter('claude-code');
-    totalOnly.add({ total: true, tokens: { input: 50, output: 5 } });
-    expect(totalOnly.result()).toMatchObject({ tokens: { input: 50, output: 5 }, basis: 'session total reported by claude-code' });
+    // The host stopped before its result: per-message usage, said to be possibly incomplete.
+    const stopped = new UsageMeter('claude-code');
+    stopped.add({ messageId: 'm1', tokens: { input: 2, output: 3 } });
+    expect(stopped.result()).toMatchObject({ tokens: { input: 2, output: 3 }, basis: expect.stringContaining('output tokens can be incomplete') as unknown });
   });
 
   it('should report no usage as zero samples, never as a measured zero cost', () => {
@@ -57,6 +63,13 @@ describe('host usage parsing (W2.2-04)', () => {
 
   it('should read the Claude Code result total and cost, ignoring a cost that is not a number', () => {
     expect(claudeCodeDelivery.parseUsage(line({ type: 'result', total_cost_usd: 0.5, usage: { input_tokens: 9 } }))).toEqual({ total: true, tokens: { input: 9 }, costUsd: 0.5 });
+    // modelUsage (every model call) wins over usage (main loop only).
+    const modelUsage = { a: { inputTokens: 4, outputTokens: 321, cacheReadInputTokens: 10, cacheCreationInputTokens: 2 }, b: { inputTokens: 1200, outputTokens: 15 } };
+    expect(claudeCodeDelivery.parseUsage(line({ type: 'result', usage: { input_tokens: 4, output_tokens: 321 }, modelUsage }))).toEqual({
+      total: true,
+      tokens: { input: 1204, output: 336, cacheRead: 10, cacheWrite: 2 },
+      models: { a: { input: 4, output: 321, cacheRead: 10, cacheWrite: 2 }, b: { input: 1200, output: 15 } },
+    });
     expect(claudeCodeDelivery.parseUsage(line({ type: 'result', total_cost_usd: 0.5 }))).toEqual({ total: true, costUsd: 0.5 });
     expect(claudeCodeDelivery.parseUsage(line({ type: 'result', total_cost_usd: -1 }))).toBeNull();
     expect(claudeCodeDelivery.parseUsage(line({ type: 'result', subtype: 'success' }))).toBeNull();

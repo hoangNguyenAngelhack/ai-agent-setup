@@ -20,7 +20,14 @@ if (!planPath || !eventCommand) {
 const steps = JSON.parse(readFileSync(planPath, 'utf8')).steps.map((step) => step.id);
 const mode = process.env.FAKE_HOST_MODE ?? 'success';
 const say = (value) => process.stdout.write(`${JSON.stringify(value)}\n`);
-const report = (args) => execSync(`${eventCommand} ${args}`, { stdio: 'ignore' });
+// Claude Code's default permission mode denies the agent's Bash calls unless a rule allows them
+// (seen on 2.1.332, 2026-11-25). The fake honours only the exact rule for this run's event command;
+// without it, every report is denied and nothing reaches the run.
+const allowedTools = process.argv[process.argv.indexOf('--allowedTools') + 1];
+const mayReport = host !== 'claude' || allowedTools === `Bash(${eventCommand} *)`;
+const report = (args) => {
+  if (mayReport) execSync(`${eventCommand} ${args}`, { stdio: 'ignore' });
+};
 const start = () => say(host === 'claude' ? { type: 'system', subtype: 'init', session_id: 'fake' } : { type: 'thread.started', thread_id: 'fake' });
 // FAKE_HOST_USAGE=1: the stream carries token usage in each host's shape. Claude repeats one message
 // id over two lines (as its transcripts do), so a meter that counts lines would double it.
@@ -46,7 +53,14 @@ const usage = () => {
 };
 const done = () => {
   usage();
-  if (host === 'claude') say({ type: 'result', subtype: 'success', is_error: false, ...(withUsage ? { total_cost_usd: 0.0125, usage: { input_tokens: 999, output_tokens: 999 } } : {}) });
+  // As Claude Code 2.1.332 does: per-message output counts are start values (20 + 30 above); the
+  // result carries the true totals, with modelUsage including an auxiliary model call.
+  const modelUsage = {
+    'claude-test-1': { inputTokens: 12, outputTokens: 140, cacheReadInputTokens: 200, cacheCreationInputTokens: 20, costUSD: 0.012 },
+    'claude-test-helper': { inputTokens: 30, outputTokens: 5, cacheReadInputTokens: 0, cacheCreationInputTokens: 0, costUSD: 0.0005 },
+  };
+  const totals = { total_cost_usd: 0.0125, usage: { input_tokens: 12, output_tokens: 140, cache_read_input_tokens: 200, cache_creation_input_tokens: 20 }, modelUsage };
+  if (host === 'claude') say({ type: 'result', subtype: 'success', is_error: false, ...(withUsage ? totals : {}) });
   else say({ type: 'turn.completed', ...(withUsage ? { usage: { input_tokens: 300, cached_input_tokens: 120, output_tokens: 45 } } : {}) });
 };
 const failed = (message) => say(host === 'claude' ? { type: 'result', subtype: 'error_during_execution', is_error: true } : { type: 'turn.failed', error: { message } });

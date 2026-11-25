@@ -48,9 +48,13 @@
 
 These are not verified, or only partly done, in this release:
 
-- **Host compatibility is not verified with installed CLIs.** Plan delivery, stream events, token
-  usage and tool-call counts follow the published Claude Code and Codex documentation. They are
-  tested only against a test double of each host (W2.0-15, W2.1-10).
+- **Host compatibility is partly verified.** With the installed Claude Code CLI (2.1.332), plan
+  delivery, stream events, token usage, tool calls and cost were checked on a real run. Delivery allows
+  the agent to run only that run's `run event` command, so step progress reaches the run in Claude
+  Code's default permission mode; editing files and other commands still need your own permission
+  settings, and your `deny` rules still win. Codex is
+  not verified: it follows the published documentation and is tested only against a test double
+  (W2.0-15, W2.1-10).
 - **Runtime isolation is a preview.** ADR-017 is still proposed, not accepted. `--isolation restricted`
   works on macOS only (Seatbelt). `isolated` (a separate OS user) is not available, and Linux and
   Windows are unsupported. A fast double fork can outlive the run, but it stays inside the sandbox
