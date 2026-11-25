@@ -206,6 +206,7 @@ describe('plan delivery (W2.1-10)', () => {
       expect(outcome.status).toBe('DRY_RUN');
       expect(prompt).toContain(plan.approval.digest!);
       expect(prompt).toContain(`.ai-agent-setup/runs/${plan.runId}/execution-plan.json`);
+      expect(prompt).toContain(`The project root is your working directory: ${root}. Every path below is relative to it.`);
       expect(prompt).toContain(`run event ${plan.runId}`);
       expect(outcome.invocation.unsupported.length).toBeGreaterThan(0);
     }
