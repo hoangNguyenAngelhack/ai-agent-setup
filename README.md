@@ -12,7 +12,7 @@
 
 </div>
 
-> **Status: 2.0.0.** `npx create-ai-agent-setup` installs V2. Known limitations are listed in the
+> **Status: 2.1.0.** `npx create-ai-agent-setup` installs V2, with language packs for TypeScript/JavaScript, Python, Go, Java, Kotlin, C#, Rust, PHP, Ruby, Swift, Android, Dart/Flutter, C and C++. Known limitations are listed in the
 > [release notes](docs/v2/14-release-notes-2.0.0.md). V1 users: read
 > [Migrating from V1](docs/guides/migrating-from-v1.md) before running V2 in a V1 project; 1.x gets
 > security fixes until 2027-05-25 (`npx create-ai-agent-setup@1`).

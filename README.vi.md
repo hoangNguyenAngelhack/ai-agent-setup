@@ -12,7 +12,7 @@
 
 </div>
 
-> **Trạng thái: 2.0.0.** `npx create-ai-agent-setup` cài V2. Các giới hạn đã biết nằm trong
+> **Trạng thái: 2.1.0.** `npx create-ai-agent-setup` cài V2, kèm gói ngôn ngữ cho TypeScript/JavaScript, Python, Go, Java, Kotlin, C#, Rust, PHP, Ruby, Swift, Android, Dart/Flutter, C và C++. Các giới hạn đã biết nằm trong
 > [release notes](docs/v2/14-release-notes-2.0.0.md). Người dùng V1: đọc
 > [Chuyển từ V1](docs/guides/migrating-from-v1.md) trước khi chạy V2 trong dự án V1; bản 1.x được vá
 > bảo mật đến 2027-05-25 (`npx create-ai-agent-setup@1`).

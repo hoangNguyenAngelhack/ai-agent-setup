@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.1.0] - 2026-11-25
+
+Language packs and gates for every common stack ([docs/v2/16](docs/v2/16-language-packs.md)). No
+breaking change: Node projects get the same configuration as with 2.0.0.
+
+Known limitations: the audit tools' result sentences (Go, Python, Rust, Ruby, PHP, .NET) follow
+their documentation and were not verified against installed tools; a mismatch gives NOT_VERIFIED,
+never a false PASS. No benchmark per language has run yet, so no effectiveness claim is made. The
+2.0.0 limitations still apply ([release notes](docs/v2/14-release-notes-2.0.0.md)).
 
 ### Added
 - Gates for every stack ([docs/v2/16 §4](docs/v2/16-language-packs.md)): the dependency audit runs
