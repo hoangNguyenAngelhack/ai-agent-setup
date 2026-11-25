@@ -150,6 +150,9 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
   one command for the run (`--allowedTools "Bash(<event command> *)"`) and nothing else; the same
   command chained with another, another run's id, and any other command stay denied, and the user's
   `deny` rules still win. Editing files still needs the user's own permissions.
+- The delivery prompt gave the plan path relative to the project without naming the project: on a
+  real Claude Code run the model resolved it against the CLI directory in the event command and read
+  the wrong file. The prompt now states the project root, which is the host's working directory.
 - Stored host transcripts are valid JSON again: redaction ran on the raw text of each stream line and
   left unbalanced quotes and braces. JSON lines are now redacted field by field with the same rules
   (every key and string, plus any value under a sensitive key name such as `token` or `api_key`);

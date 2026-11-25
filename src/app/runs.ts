@@ -1,7 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { claudeCodeDelivery } from '../adapters/claude-code';
 import { codexDelivery } from '../adapters/codex';
@@ -443,6 +443,7 @@ export async function deliverRun(root: string, runId: string, host: string, opti
   const { plan, state } = loadRun(root, runId);
   if (state.run === 'CANCELLED' || state.run === 'FAILED') throw new Error(`Run ${runId} is ${state.run}; create a new run to deliver again`);
   const invocation = delivery.invocation(plan, {
+    projectRoot: resolve(root),
     planPath: `${RUNS_DIR}/${runId}/execution-plan.json`,
     eventCommand: options.eventCommand ?? `npx create-ai-agent-setup run event ${runId}`,
   });

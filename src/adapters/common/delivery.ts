@@ -8,6 +8,8 @@ import type { ExecutionPlan } from '../../core/execution';
  * the step's gates. No proprietary runtime: the host runs its own agent loop.
  */
 export interface DeliveryFiles {
+  /** Absolute path of the project root, the host's working directory. */
+  projectRoot: string;
   /** Project-relative path of execution-plan.json. */
   planPath: string;
   /** Command prefix the agent uses to report step events, e.g. `npx create-ai-agent-setup run event <run-id>`. */
@@ -47,6 +49,9 @@ export function deliveryPrompt(plan: ExecutionPlan, files: DeliveryFiles): strin
   const steps = plan.steps.map((step) => `- ${step.id} (agent ${step.agent}; after: ${step.dependsOn.join(', ') || 'nothing'}; approval: ${step.approval})`);
   return [
     `Execute run ${plan.runId}, revision ${plan.revision}, approved plan digest ${plan.approval.digest}.`,
+    // Seen on Claude Code 2.1.332: with relative paths alone, the model resolved the plan path
+    // against the directory of the CLI named in the event command and read the wrong file.
+    `The project root is your working directory: ${files.projectRoot}. Every path below is relative to it.`,
     `Read ${files.planPath}. It is the only scope: do not add, remove or reorder steps. If the scope must change, stop and say so.`,
     'Steps:',
     ...steps,
