@@ -22,6 +22,19 @@ const LOCKFILES: Array<[file: string, manager: string]> = [
 /** Test runners and linters with default commands: used only when the project declares them. */
 const DECLARED_TOOLS: Ecosystem[] = ['rspec', 'minitest', 'rubocop', 'phpunit', 'pest', 'phpstan', 'ruff', 'mypy', 'swiftlint', 'ktlint', 'detekt', 'ctest'];
 
+/** Coverage tools the project declares, keyed by how they run (Gradle or Maven, RSpec or Minitest). */
+function coverageEcosystems(profile: ProjectProfile): Ecosystem[] {
+  const tools = new Set(profile.coverageTools);
+  return [
+    ...(tools.has('pytest-cov') ? (['pytest-cov'] as const) : []),
+    ...(tools.has('jacoco') && profile.buildTools.includes('gradle') ? (['jacoco-gradle'] as const) : []),
+    ...(tools.has('jacoco') && profile.buildTools.includes('maven') ? (['jacoco-maven'] as const) : []),
+    ...(tools.has('coverlet') ? (['coverlet'] as const) : []),
+    ...(tools.has('simplecov') && profile.testRunners.includes('rspec') ? (['simplecov-rspec'] as const) : []),
+    ...(tools.has('simplecov') && profile.testRunners.includes('minitest') ? (['simplecov-minitest'] as const) : []),
+  ];
+}
+
 /** The stacks a project's gates can use, in priority order (the first with a default command wins). */
 function stackEcosystems(profile: ProjectProfile): Set<Ecosystem> {
   const ecosystems = new Set<Ecosystem>();
@@ -33,6 +46,9 @@ function stackEcosystems(profile: ProjectProfile): Set<Ecosystem> {
   if (profile.buildTools.includes('gradle')) ecosystems.add('gradle');
   if (profile.buildTools.includes('swiftpm')) ecosystems.add('swiftpm');
   if (profile.buildTools.includes('cmake')) ecosystems.add('cmake');
+  if (profile.buildTools.includes('bundler')) ecosystems.add('bundler');
+  if (profile.buildTools.includes('composer')) ecosystems.add('composer');
+  for (const ecosystem of coverageEcosystems(profile)) ecosystems.add(ecosystem);
   // Flutter before plain Dart: a Flutter app is tested and analysed with the flutter tool.
   if (profile.frameworks.includes('flutter')) ecosystems.add('flutter');
   else if (profile.languages.includes('dart')) ecosystems.add('dart');

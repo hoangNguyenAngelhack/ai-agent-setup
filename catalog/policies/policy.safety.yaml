@@ -29,7 +29,7 @@ rules:
         - "\\btruncate\\s+(table\\s+)?[\\w.\"`]+"
         - "\\bdelete\\s+from\\s+[\\w.\"`]+\\s*(;|\"|'|$)"
   - id: safety.publish-approval
-    description: Publishing packages and pushing to protected branches need explicit approval.
+    description: Publishing packages or images, in any ecosystem, and pushing to protected branches need explicit approval.
     effect: ask
     match:
       commands:
@@ -37,8 +37,30 @@ rules:
         - "pnpm publish *"
         - "yarn publish *"
         - "yarn npm publish *"
+        - "bun publish *"
+        - "deno publish *"
+        - "cargo publish *"
+        - "gem push *"
+        - "twine upload *"
+        - "python -m twine upload *"
+        - "python3 -m twine upload *"
+        - "poetry publish *"
+        - "uv publish *"
+        - "dotnet nuget push *"
+        - "nuget push *"
+        - "pod trunk push *"
+        - "flutter pub publish *"
+        - "dart pub publish *"
+        - "mvn * deploy *"
+        - "./mvnw * deploy *"
+        - "swift package-registry publish *"
+        - "docker push *"
+        - "podman push *"
         - "git push * main *"
         - "git push * master *"
+      commandRegex:
+        # Gradle publishing tasks (publish, publishToMavenCentral, publishPlugins, ...), not the local one.
+        - "(^|[\\s/])(gradlew|gradle)\\b.*\\bpublish(?!ToMavenLocal\\b)\\w*"
       intents:
         - pkg.publish
   - id: safety.no-secret-write

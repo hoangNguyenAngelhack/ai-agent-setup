@@ -1,11 +1,13 @@
-import { readFileSync, statSync } from 'node:fs';
-import { isAbsolute, join } from 'node:path';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { basename, isAbsolute, join } from 'node:path';
 import type { GateCategory, GateStatus } from '../core/contracts';
 import { redactText } from '../shared/redact';
-import { COVERAGE_METRICS, parseCoverageSummary, parseNpmAudit, scanDiff, scanFilesForSecrets } from './checks';
+import { AUDIT_TOOLS, interpretAudit } from './audits';
+import { COVERAGE_METRICS, parseNpmAudit, scanDiff, scanFilesForSecrets } from './checks';
+import { parseCoverageReport } from './coverage';
 import { isNoOpCommand, programExists, runCommand, type CommandOutcome } from './execute';
-import { gateById, type GateDefinition } from './gates';
-import { missingCommandReason, resolveCommand, type GateConfig, type ProjectFacts } from './resolve';
+import { gateById, NODE_COVERAGE_ARTIFACT, type GateDefinition } from './gates';
+import { coverageArtifact, missingCommandReason, resolveCommand, type GateConfig, type ProjectFacts, type ResolvedCommand } from './resolve';
 
 export interface GateEvidenceItem {
   type: 'command' | 'artifact' | 'review-note';
@@ -169,8 +171,8 @@ class GateRunner {
     }
 
     if (resolved.source === 'built-in' && definition.check === 'secret-scan') return this.secretScan(base, outcome.output);
-    if (resolved.source === 'built-in' && definition.check === 'npm-audit') return npmAudit(base, outcome.output);
-    if (definition.check === 'coverage') return this.coverage(definition, base, startedMs);
+    if (resolved.source === 'built-in' && definition.check === 'dependency-audit') return dependencyAudit(base, resolved.command, outcome.exitCode, outcome.output);
+    if (definition.check === 'coverage') return this.coverage(definition, base, startedMs, resolved);
     if (outcome.exitCode === 0 && isNoOpCommand(resolved.scriptBody ?? resolved.command)) {
       const what = resolved.scriptBody === undefined ? 'the command' : `the script (${redactText(resolved.scriptBody).text})`;
       return { ...base, status: 'NOT_VERIFIED', reason: `${what} performs no check; configure a command that verifies the project` };
@@ -203,29 +205,68 @@ class GateRunner {
     return { ...base, status: 'PASS', reason: null };
   }
 
-  /** Coverage needs a summary written by this run; a stale or missing file is NOT_VERIFIED. */
-  private coverage(definition: GateDefinition, base: BaseOutcome, startedMs: number): Outcome {
+  /** Coverage needs a report written by this run; a stale, missing or unreadable report is NOT_VERIFIED. */
+  private coverage(definition: GateDefinition, base: BaseOutcome, startedMs: number, resolved: ResolvedCommand): Outcome {
     if (base.exitCode !== 0) return { ...base, status: 'FAIL', reason: `coverage command failed with exit code ${base.exitCode}` };
-    const relative = this.ctx.config.gates?.[definition.id]?.artifact ?? 'coverage/coverage-summary.json';
-    const file = isAbsolute(relative) ? relative : join(this.ctx.root, relative);
-    let text: string;
-    try {
-      if (statSync(file).mtimeMs < startedMs - 2000) return { ...base, status: 'NOT_VERIFIED', reason: `${relative} was not updated by this run (stale)` };
-      text = readFileSync(file, 'utf8');
-    } catch {
-      return { ...base, status: 'NOT_VERIFIED', reason: `${relative} not found; enable the json-summary coverage reporter` };
+    const relative = this.ctx.config.gates?.[definition.id]?.artifact ?? coverageArtifact(resolved);
+    const file = findReport(this.ctx.root, relative);
+    if (!file) {
+      const hint = relative === NODE_COVERAGE_ARTIFACT ? 'enable the json-summary coverage reporter' : `make the coverage command write it, or set gates["${definition.id}"].artifact`;
+      return { ...base, status: 'NOT_VERIFIED', reason: `${relative} not found; ${hint}` };
     }
-    const totals = parseCoverageSummary(text);
-    if (totals === null) return { ...base, status: 'NOT_VERIFIED', reason: `${relative} is not an Istanbul json-summary file with statements, branches, functions and measured lines` };
+    if (statSync(file).mtimeMs < startedMs - 2000) return { ...base, status: 'NOT_VERIFIED', reason: `${relative} was not updated by this run (stale)` };
+    const text = readFileSync(file, 'utf8');
+    const report = parseCoverageReport(text);
+    if (report === null) return { ...base, status: 'NOT_VERIFIED', reason: `${relative} is not a coverage report this gate reads (${COVERAGE_FORMATS}), or it measures nothing` };
+    const { totals } = report;
     const threshold = definition.threshold ?? 0;
-    const copy = this.ctx.evidence.write(definition.id, 'coverage-summary.json', text);
-    const evidence = [...base.evidence, { type: 'artifact' as const, artifact: copy.path, checksum: copy.checksum, summary: { ...totals, threshold } }];
+    const copy = this.ctx.evidence.write(definition.id, basename(file), text);
+    const evidence = [...base.evidence, { type: 'artifact' as const, artifact: copy.path, checksum: copy.checksum, summary: { ...totals, threshold, format: report.format } }];
     const below = COVERAGE_METRICS.filter((metric) => totals[metric] !== null && totals[metric] < threshold);
-    const notApplicable = COVERAGE_METRICS.filter((metric) => totals[metric] === null);
-    return below.length === 0
-      ? { ...base, evidence, status: 'PASS', reason: notApplicable.length ? `nothing to cover for ${notApplicable.join(', ')} (not applicable)` : null }
-      : { ...base, evidence, status: 'FAIL', reason: `coverage below ${threshold}%: ${below.map((metric) => `${metric} ${totals[metric]}%`).join(', ')}` };
+    if (below.length) return { ...base, evidence, status: 'FAIL', reason: `coverage below ${threshold}%: ${below.map((metric) => `${metric} ${totals[metric]}%`).join(', ')}` };
+    const unmeasured = COVERAGE_METRICS.filter((metric) => totals[metric] === null);
+    if (!unmeasured.length) return { ...base, evidence, status: 'PASS', reason: null };
+    const note = report.format === 'Istanbul json-summary' ? `nothing to cover for ${unmeasured.join(', ')} (not applicable)` : `${report.format}: not measured for ${unmeasured.join(', ')}`;
+    return { ...base, evidence, status: 'PASS', reason: note };
   }
+}
+
+const COVERAGE_FORMATS = 'Istanbul json-summary, LCOV, Cobertura, JaCoCo, Go coverprofile, llvm-cov JSON, SimpleCov';
+
+/** The report at `relative`; with `*` segments, the newest file that matches. Null when none exists. */
+function findReport(root: string, relative: string): string | null {
+  const absolute = isAbsolute(relative) ? relative : join(root, relative);
+  if (!relative.includes('*')) {
+    try {
+      return statSync(absolute).isFile() ? absolute : null;
+    } catch {
+      return null;
+    }
+  }
+  const segments = relative.split('/');
+  let candidates = [isAbsolute(relative) ? '/' : root];
+  for (const segment of segments.filter(Boolean)) {
+    const pattern = new RegExp(`^${segment.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[^/]*')}$`);
+    candidates = candidates.flatMap((dir) => {
+      try {
+        return readdirSync(dir).filter((name) => pattern.test(name)).map((name) => join(dir, name));
+      } catch {
+        return [];
+      }
+    });
+  }
+  const files = candidates.filter((path) => statSync(path).isFile()).sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs);
+  return files[0] ?? null;
+}
+
+/** npm audit is read from its JSON report; the other stacks' tools fail-closed from their output. */
+function dependencyAudit(base: BaseOutcome, command: string, exitCode: number, output: string): Outcome {
+  if (command.startsWith('npm audit')) return npmAudit(base, output);
+  const tool = AUDIT_TOOLS.find((item) => item.command === command);
+  if (!tool) return { ...base, status: 'NOT_VERIFIED', reason: `no reader for the audit command ${command}` };
+  const verdict = interpretAudit(tool, exitCode, output);
+  base.evidence.push({ type: 'review-note', summary: { tool: tool.command, status: verdict.status } });
+  return { ...base, status: verdict.status, reason: verdict.reason };
 }
 
 /** npm audit: high or critical vulnerabilities fail; output that is not a report is NOT_VERIFIED. */

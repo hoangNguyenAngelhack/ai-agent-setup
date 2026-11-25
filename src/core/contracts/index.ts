@@ -54,6 +54,8 @@ export interface ProjectProfile {
   ci: string[];
   /** Linters and type checkers the project declares, for example ruff, rubocop or phpstan. */
   linters: string[];
+  /** Coverage tools the project declares, for example pytest-cov, jacoco, coverlet or simplecov. */
+  coverageTools: string[];
   /** Coarse traits matched against capability `requiredContext.projectSignals`. */
   signals: string[];
   /** Relative paths of detected sub-projects (apps/*, packages/*, services/*, libs/*). */

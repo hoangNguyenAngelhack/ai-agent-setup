@@ -13,6 +13,7 @@ export const detectPython: Detector = (dir) => {
     frameworks: matchKeywords(text, { django: 'django', fastapi: 'fastapi', flask: 'flask', sqlalchemy: 'sqlalchemy' }),
     testRunners: matchKeywords(text, { pytest: 'pytest' }),
     linters: matchKeywords(`${text}\n${PYTHON_LINT_FILES.filter((file) => dir.has(file)).join('\n')}`, { ruff: 'ruff', mypy: 'mypy' }),
+    coverageTools: matchKeywords(text, { 'pytest-cov': 'pytest-cov' }),
     packageManagers: Object.keys(managers).filter((file) => dir.has(file)).map((file) => managers[file]!),
   };
 };
@@ -29,6 +30,7 @@ export const detectJvm: Detector = (dir) => {
     frameworks: matchKeywords(text, { 'spring-boot': 'spring-boot', quarkus: 'quarkus', micronaut: 'micronaut' }),
     testRunners: matchKeywords(text, { junit: 'junit' }),
     linters: matchKeywords(text, { ktlint: 'ktlint', detekt: 'detekt' }),
+    coverageTools: matchKeywords(text, { jacoco: 'jacoco' }),
   };
 };
 
@@ -51,6 +53,7 @@ export const detectDotnet: Detector = (dir) => {
     buildTools: ['dotnet'],
     frameworks: matchKeywords(text, { 'microsoft.net.sdk.web': 'aspnetcore' }),
     testRunners: matchKeywords(text, { xunit: 'xunit', nunit: 'nunit', mstest: 'mstest' }),
+    coverageTools: matchKeywords(text, { coverlet: 'coverlet' }),
   };
 };
 
@@ -82,6 +85,7 @@ export const detectRuby: Detector = (dir) => {
     frameworks: matchKeywords(gems, { rails: 'rails', sinatra: 'sinatra' }),
     testRunners: rubyTestRunners(gems, dir),
     linters: gems.includes('rubocop') || dir.has('.rubocop.yml') ? ['rubocop'] : [],
+    coverageTools: gems.includes('simplecov') ? ['simplecov'] : [],
   };
 };
 
