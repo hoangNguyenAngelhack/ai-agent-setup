@@ -1,0 +1,14 @@
+schema: benchmark-task/v1
+id: fe-02-form-validation
+category: frontend
+domains: [frontend]
+fixture: fixtures/shop
+prompt: |
+  Implement validateSignup({ email, password, confirm }) in src/validate-form.js. It returns
+  { valid, errors } where errors maps a field name to a message: email is required and must look like an email
+  address; password needs at least 12 characters including a digit; confirm must equal password.
+  When every field is valid, errors is {} and valid is true.
+scope: ["src/validate-form.js", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/fe-02-form-validation, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

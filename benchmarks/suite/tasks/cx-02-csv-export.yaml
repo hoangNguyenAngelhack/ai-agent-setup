@@ -1,0 +1,16 @@
+schema: benchmark-task/v1
+id: cx-02-csv-export
+category: cross-domain
+domains: [backend, frontend, quality, docs-devex]
+fixture: fixtures/shop
+prompt: |
+  Let customers download their orders as CSV, end to end:
+  - API: GET /orders.csv (token required, 401 without) returns text/csv with the header line id,total,status and
+    one line per order of the signed-in user.
+  - UI: public/orders.html gets a link to /orders.csv.
+  - Tests: add test/orders-csv.test.js (node:test) covering the export.
+  - Docs: describe the export in README.md.
+scope: ["src/**", "test/**", "public/**", "README.md"]
+acceptance:
+  hiddenTests: { files: hidden/cx-02-csv-export, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

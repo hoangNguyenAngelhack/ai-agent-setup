@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: bu-01-discount
+category: bug-fixing
+domains: [backend]
+fixture: fixtures/shop
+prompt: |
+  Customers are charged too little when they use a discount code: computeTotal in src/price.js returns 20.25 for
+  two items of 10 and one of 5 with a 10% discount, instead of 22.5. Find the root cause and fix it; totals stay
+  rounded to cents.
+scope: ["src/price.js", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/bu-01-discount, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

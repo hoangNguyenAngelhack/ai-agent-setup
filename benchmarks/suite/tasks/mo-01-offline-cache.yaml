@@ -1,0 +1,14 @@
+schema: benchmark-task/v1
+id: mo-01-offline-cache
+category: mobile
+domains: [mobile]
+fixture: fixtures/mobile
+prompt: |
+  Make the item list work offline in src/itemListController.js. load() resolves to { items, stale }: after a
+  successful fetch it stores the items in storage under the key "items-cache" (as JSON) and returns stale: false;
+  when the fetch fails it returns the cached items with stale: true; when it fails and nothing is cached it
+  rejects with the fetch error.
+scope: ["src/**", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/mo-01-offline-cache, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

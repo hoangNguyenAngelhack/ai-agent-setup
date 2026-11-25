@@ -1,0 +1,19 @@
+schema: benchmark-task/v1
+id: pr-03-rice
+category: product-requirements
+domains: [product-business]
+fixture: fixtures/product
+prompt: |
+  Prioritise every item of docs/backlog.md with RICE in docs/prioritised-backlog.md.
+  Write one Markdown table with the columns Item, Reach, Impact, Confidence, Effort, Score, sorted by Score
+  from highest to lowest, and add a short note under the table on your assumptions.
+scope: ["docs/prioritised-backlog.md"]
+acceptance:
+  hiddenTests: { files: hidden/pr-03-rice, command: "node .benchmark-hidden/check.cjs" }
+  rubric:
+    threshold: 3
+    criteria:
+      - estimates are plausible and explained
+      - score follows the RICE formula
+      - assumptions are stated
+timeLimit: 600

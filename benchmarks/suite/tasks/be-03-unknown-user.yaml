@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: be-03-unknown-user
+category: backend
+domains: [backend]
+fixture: fixtures/shop
+prompt: |
+  GET /users/99 crashes the server with a 500 because user 99 does not exist. Make GET /users/:id return 404
+  with the JSON body { error: { code: 'NOT_FOUND' } } for an unknown user, and keep the current response for
+  known users.
+scope: ["src/**", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/be-03-unknown-user, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

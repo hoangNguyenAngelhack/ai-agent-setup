@@ -1,0 +1,19 @@
+schema: benchmark-task/v1
+id: ar-01-cache-adr
+category: architecture
+domains: [architecture-leadership, backend]
+fixture: fixtures/shop
+prompt: |
+  Write docs/adr/0001-orders-cache.md: an architecture decision record choosing between an in-memory cache and
+  Redis for GET /orders in this service. Use the level-2 headings Status, Context, Options, Decision,
+  Consequences, and compare both options with at least two trade-offs each.
+scope: ["docs/**"]
+acceptance:
+  hiddenTests: { files: hidden/ar-01-cache-adr, command: "node .benchmark-hidden/check.cjs docs/adr/0001-orders-cache.md Redis in-memory" }
+  rubric:
+    threshold: 3
+    criteria:
+      - the decision follows from the context
+      - trade-offs are specific
+      - consequences include operations and invalidation
+timeLimit: 600

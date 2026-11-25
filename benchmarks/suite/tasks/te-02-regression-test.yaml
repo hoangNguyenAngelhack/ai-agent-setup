@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: te-02-regression-test
+category: testing
+domains: [quality]
+fixture: fixtures/shop
+prompt: |
+  Users report that parseDate('2026-03-15') from src/dates.js returns a date in April. Add a regression test in
+  test/dates.test.js (node:test) that reproduces the bug, so it fails on the current code, then fix src/dates.js
+  so that it passes.
+scope: ["test/**", "src/dates.js"]
+acceptance:
+  hiddenTests: { files: hidden/te-02-regression-test, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

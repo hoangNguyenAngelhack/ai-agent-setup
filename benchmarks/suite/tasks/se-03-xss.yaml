@@ -1,0 +1,12 @@
+schema: benchmark-task/v1
+id: se-03-xss
+category: security
+domains: [security-compliance, frontend]
+fixture: fixtures/shop
+prompt: |
+  GET /profile/:id/html builds HTML from the user's name and email without escaping them (src/render.js), which
+  allows stored cross-site scripting. Escape &, <, >, " and ' in every value inserted into the HTML.
+scope: ["src/**", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/se-03-xss, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

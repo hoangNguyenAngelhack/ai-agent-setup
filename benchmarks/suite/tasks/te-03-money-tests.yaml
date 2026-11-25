@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: te-03-money-tests
+category: testing
+domains: [quality]
+fixture: fixtures/shop
+prompt: |
+  Write tests for formatMoney in test/money.test.js using node:test. Pin its documented behaviour: integer cents
+  are formatted with the currency symbol and two decimals, thousands are separated by commas, a negative amount
+  puts the minus sign before the symbol, and EUR and GBP use € and £. Do not change src/money.js.
+scope: ["test/**"]
+acceptance:
+  hiddenTests: { files: hidden/te-03-money-tests, command: "node .benchmark-hidden/check.cjs src/money.js test/money.test.js" }
+timeLimit: 900

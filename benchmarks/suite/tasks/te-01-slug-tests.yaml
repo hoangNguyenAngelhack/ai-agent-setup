@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: te-01-slug-tests
+category: testing
+domains: [quality]
+fixture: fixtures/shop
+prompt: |
+  Write tests for slugify in test/slug.test.js using node:test. They must pin its documented behaviour: lower
+  case, words joined by single dashes, no leading or trailing dashes, and at most 60 characters. Do not change
+  src/slug.js.
+scope: ["test/**"]
+acceptance:
+  hiddenTests: { files: hidden/te-01-slug-tests, command: "node .benchmark-hidden/check.cjs src/slug.js test/slug.test.js" }
+timeLimit: 900

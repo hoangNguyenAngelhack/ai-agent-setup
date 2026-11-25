@@ -1,0 +1,14 @@
+schema: benchmark-task/v1
+id: da-03-monthly-revenue
+category: data
+domains: [data-ai]
+fixture: fixtures/etl
+prompt: |
+  Create etl/aggregate.py with aggregate_monthly(rows): revenue per month (YYYY-MM) and status, as
+  {"2026-01": {"pending": 10.5, "shipped": 20.0}, ...}, amounts rounded to two decimals. Skip rows with a missing
+  id, a date that is not a real YYYY-MM-DD date, an amount that is not a number or is negative, and any later row
+  that reuses an id.
+scope: ["etl/**", "tests/**"]
+acceptance:
+  hiddenTests: { files: hidden/da-03-monthly-revenue, command: "python3 .benchmark-hidden/check.py" }
+timeLimit: 900

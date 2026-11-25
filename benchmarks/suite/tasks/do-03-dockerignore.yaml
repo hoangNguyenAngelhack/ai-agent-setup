@@ -1,0 +1,12 @@
+schema: benchmark-task/v1
+id: do-03-dockerignore
+category: devops
+domains: [devops-sre]
+fixture: fixtures/shop
+prompt: |
+  Add a .dockerignore so that docker build does not send node_modules, environment files (.env and its variants),
+  the .git directory or the tests to the build context.
+scope: [".dockerignore"]
+acceptance:
+  hiddenTests: { files: hidden/do-03-dockerignore, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 600

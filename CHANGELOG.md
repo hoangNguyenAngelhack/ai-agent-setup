@@ -11,6 +11,12 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
 
 ### Added
+- Benchmark task suite (W2.2-03): 36 tasks in `benchmarks/suite/` in the distribution of docs/v2/09 §5.3,
+  over four dependency-free fixtures (Node API and web UI, mobile data layer, Python ETL, product
+  documents), with hidden checks (mutants for testing tasks; structural checks plus a rubric for
+  documents) and a reference solution per task. A test runs the real oracle on every task: the
+  fixture is rejected and the solution accepted. Development set: second review and held-out tasks
+  pending.
 - Evaluation framework (W2.2-02): `npm run bench -- --model <id>` runs a benchmark suite
   (`benchmark-task` YAML) across arms A (V2 permissions only), B (pinned V1) and C (V2) for n
   repetitions in seeded order, judges each trial (data loss outside the task scope, secrets and

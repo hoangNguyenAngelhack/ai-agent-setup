@@ -1,0 +1,22 @@
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const assert = require('node:assert');
+const { spawnSync } = require('node:child_process');
+const root = path.join(__dirname, '..');
+const app = () => require(path.join(root, 'src', 'app.js'));
+const get = (url, headers = {}) => app().handle({ method: 'GET', url, headers });
+const bob = { authorization: 'Bearer token-bob' };
+const ada = { authorization: 'Bearer token-ada' };
+const runTests = (cwd, file) => spawnSync(process.execPath, ['--test', file], { cwd, encoding: 'utf8' }).status;
+
+const first = get('/users/2');
+const etag = first.headers.etag;
+assert.strictEqual(first.status, 200);
+assert.ok(typeof etag === 'string' && etag.length > 2, 'no ETag header');
+assert.strictEqual(get('/users/2').headers.etag, etag, 'ETag is not stable');
+const cached = get('/users/2', { 'if-none-match': etag });
+assert.strictEqual(cached.status, 304);
+assert.ok(cached.body === undefined || cached.body === '' || cached.body === null, '304 with a body');
+assert.strictEqual(get('/users/2', { 'if-none-match': '"stale"' }).status, 200);
+assert.notStrictEqual(get('/users/1').headers.etag, etag, 'different users share an ETag');

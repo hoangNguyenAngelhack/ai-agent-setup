@@ -1,0 +1,12 @@
+schema: benchmark-task/v1
+id: re-01-extract-validation
+category: refactoring
+domains: [backend, quality]
+fixture: fixtures/shop
+prompt: |
+  Extract the validation helpers isPositiveInt and isEmail from src/app.js into a new module src/validate.js
+  that exports both, and make src/app.js use it. Behaviour must not change.
+scope: ["src/**", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/re-01-extract-validation, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

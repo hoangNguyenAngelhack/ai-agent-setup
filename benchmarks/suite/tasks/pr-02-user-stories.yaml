@@ -1,0 +1,19 @@
+schema: benchmark-task/v1
+id: pr-02-user-stories
+category: product-requirements
+domains: [product-business]
+fixture: fixtures/product
+prompt: |
+  Turn each of the six items in docs/feedback.md into a user story in docs/user-stories.md.
+  Give each story a level-2 heading, a line "As a <user>, I want <goal>, so that <benefit>", and an
+  "Acceptance criteria" list written as Given / When / Then.
+scope: ["docs/user-stories.md"]
+acceptance:
+  hiddenTests: { files: hidden/pr-02-user-stories, command: "node .benchmark-hidden/check.cjs" }
+  rubric:
+    threshold: 3
+    criteria:
+      - each story maps to one feedback item
+      - benefits are user outcomes, not features
+      - acceptance criteria are testable
+timeLimit: 600

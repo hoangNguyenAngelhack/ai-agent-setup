@@ -1,0 +1,19 @@
+schema: benchmark-task/v1
+id: ar-02-queue-adr
+category: architecture
+domains: [architecture-leadership, backend]
+fixture: fixtures/shop
+prompt: |
+  Write docs/adr/0002-order-emails.md: an architecture decision record on how this service should send order
+  confirmation emails without slowing down requests. Compare a Redis-backed job queue (BullMQ) with RabbitMQ.
+  Use the level-2 headings Status, Context, Options, Decision, Consequences.
+scope: ["docs/**"]
+acceptance:
+  hiddenTests: { files: hidden/ar-02-queue-adr, command: "node .benchmark-hidden/check.cjs docs/adr/0002-order-emails.md BullMQ RabbitMQ" }
+  rubric:
+    threshold: 3
+    criteria:
+      - the decision fits the size of the service
+      - retries and failures are addressed
+      - trade-offs are specific
+timeLimit: 600

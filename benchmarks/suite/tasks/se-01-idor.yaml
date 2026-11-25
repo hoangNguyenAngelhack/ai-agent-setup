@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: se-01-idor
+category: security
+domains: [security-compliance, backend]
+fixture: fixtures/shop
+prompt: |
+  GET /orders/:id returns any order to any signed-in user. Fix this insecure direct object reference in
+  src/app.js: a user may read only their own orders (others get 403 with error code FORBIDDEN), an admin may read
+  every order, an unknown order is 404 and a request without a token is 401.
+scope: ["src/**", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/se-01-idor, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

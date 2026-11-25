@@ -1,0 +1,12 @@
+schema: benchmark-task/v1
+id: bu-03-chunk
+category: bug-fixing
+domains: [backend]
+fixture: fixtures/shop
+prompt: |
+  The last page of results is missing: chunk([1, 2, 3, 4, 5], 2) from src/chunk.js returns [[1, 2], [3, 4]]
+  instead of [[1, 2], [3, 4], [5]]. Fix it, and make a size below 1 throw a RangeError instead of looping.
+scope: ["src/chunk.js", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/bu-03-chunk, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

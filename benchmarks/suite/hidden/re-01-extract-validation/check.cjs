@@ -1,0 +1,23 @@
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const assert = require('node:assert');
+const { spawnSync } = require('node:child_process');
+const root = path.join(__dirname, '..');
+const app = () => require(path.join(root, 'src', 'app.js'));
+const get = (url, headers = {}) => app().handle({ method: 'GET', url, headers });
+const bob = { authorization: 'Bearer token-bob' };
+const ada = { authorization: 'Bearer token-ada' };
+const runTests = (cwd, file) => spawnSync(process.execPath, ['--test', file], { cwd, encoding: 'utf8' }).status;
+
+const { isEmail, isPositiveInt } = require(path.join(root, 'src', 'validate.js'));
+assert.deepStrictEqual(['1', '42', '0', '-1', '1.5', 'x'].map(isPositiveInt), [true, true, false, false, false, false]);
+assert.deepStrictEqual(['a@b.co', 'no-at', 'a@b', '', undefined].map(isEmail), [true, false, false, false, false]);
+const source = fs.readFileSync(path.join(root, 'src', 'app.js'), 'utf8');
+assert.doesNotMatch(source, /function (isEmail|isPositiveInt)\b/, 'helpers still defined in app.js');
+assert.match(source, /require\(['"]\.\/validate(\.js)?['"]\)/);
+assert.strictEqual(get('/users/abc').status, 400);
+assert.strictEqual(get('/users/2').status, 200);
+assert.strictEqual(get('/users?email=bad').status, 400);
+assert.strictEqual(get('/users?email=bob@example.com').status, 200);
+assert.strictEqual(runTests(root, 'test/app.test.js'), 0, 'existing tests fail');

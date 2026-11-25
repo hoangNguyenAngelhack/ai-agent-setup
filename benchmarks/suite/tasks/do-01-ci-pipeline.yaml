@@ -1,0 +1,12 @@
+schema: benchmark-task/v1
+id: do-01-ci-pipeline
+category: devops
+domains: [devops-sre]
+fixture: fixtures/shop
+prompt: |
+  Add a GitHub Actions workflow in .github/workflows/ that runs on push and on pull requests, sets up Node 20 with
+  actions/setup-node, installs dependencies and runs the tests with npm test.
+scope: [".github/**"]
+acceptance:
+  hiddenTests: { files: hidden/do-01-ci-pipeline, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 600

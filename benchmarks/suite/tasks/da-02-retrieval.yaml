@@ -1,0 +1,14 @@
+schema: benchmark-task/v1
+id: da-02-retrieval
+category: data
+domains: [data-ai]
+fixture: fixtures/etl
+prompt: |
+  Add the retrieval step of a support assistant: create etl/retrieval.py with retrieve(query, documents, k=3).
+  documents is a list of {"id", "text"}. Score each document by the cosine similarity of lower-cased word counts
+  (words are runs of letters and digits) with the query, and return the ids of the k best documents with a score
+  above zero, best first, ties broken by id. An empty query returns [].
+scope: ["etl/**", "tests/**"]
+acceptance:
+  hiddenTests: { files: hidden/da-02-retrieval, command: "python3 .benchmark-hidden/check.py" }
+timeLimit: 900

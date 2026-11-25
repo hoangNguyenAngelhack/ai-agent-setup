@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: be-02-create-user
+category: backend
+domains: [backend]
+fixture: fixtures/shop
+prompt: |
+  Add POST /users to src/app.js. The JSON body is { name, email }. Return 201 with the created user (with a new
+  numeric id) so that GET /users?email=... finds it afterwards; 422 with error code VALIDATION_ERROR when the
+  name is missing or the email is invalid; 409 with error code CONFLICT when the email is already used.
+scope: ["src/**", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/be-02-create-user, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

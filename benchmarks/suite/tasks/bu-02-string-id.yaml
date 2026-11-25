@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: bu-02-string-id
+category: bug-fixing
+domains: [backend]
+fixture: fixtures/shop
+prompt: |
+  Bug report: findUser('2') in src/store.js returns undefined while findUser(2) returns Bob. Callers pass ids read
+  from URLs and query strings. Fix the root cause so that both forms work; findUser('abc') and findUser('0') must
+  still return undefined.
+scope: ["src/store.js", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/bu-02-string-id, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

@@ -13,7 +13,9 @@ import tseslint from 'typescript-eslint';
  */
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'templates/**', 'examples/**', 'catalog/**', '.claude/**', '.agents/**', '.codex/**', '.ai-agent-setup/**'],
+    // benchmarks/suite holds the benchmark's fixture projects, with deliberate bugs for agents to fix;
+    // tests/benchmark/suite.test.ts checks every task against the oracle instead.
+    ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'templates/**', 'examples/**', 'catalog/**', 'benchmarks/suite/**', '.claude/**', '.agents/**', '.codex/**', '.ai-agent-setup/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
