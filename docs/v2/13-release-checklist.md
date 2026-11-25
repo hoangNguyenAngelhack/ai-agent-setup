@@ -30,19 +30,35 @@ agent. The script reads the list below as written: keep each item on one line in
 
 ## 2. Sign-off
 
-- [ ] **S1** Release version and npm dist-tag chosen (07 §6: `2.0.0-alpha.N` on `next`), package.json and the CHANGELOG heading updated — owner: Maintainer
-- [ ] **S2** Minimum Node version decided (OQ-07) and `engines.node` aligned with the CI matrix — owner: Maintainer
-- [ ] **S3** CI green on the release commit for every OS and Node version of the matrix — owner: Maintainer
-- [ ] **S4** ADR-017 Runtime Isolation accepted, or the release notes state it is proposed and `restricted` is a preview — owner: Product Owner
-- [ ] **S5** Delivery verified with installed Claude Code and Codex CLIs (W2.0-15: stream events, token usage, tool calls), or the release notes state it is not verified — owner: Implementer with access to both CLIs
-- [ ] **S6** Migration paths A to D verified on fixtures (07 §7) — owner: Implementer
-- [ ] **S7** Benchmark run (W2.2-02, W2.2-03), or the release notes state that every V1-vs-V2 hypothesis is unverified — owner: Product Owner
-- [ ] **S8** Evaluation set labelled by a second reviewer with a held-out split (09 §4), or the release notes call the routing figures development-set figures — owner: Maintainer and reviewer
-- [ ] **S9** Support window for 1.x decided (OQ-08) — owner: Maintainer
-- [ ] **S10** Package and directory names decided (OQ-02) — owner: Maintainer
-- [ ] **S11** Release notes list the behaviour changes of 07 §3 and the known limitations (NOT_VERIFIED and PARTIAL items of 08 §9); draft in [14](14-release-notes-2.0.0.md) — owner: Maintainer
+- [x] **S1** Release version and npm dist-tag chosen (07 §6: `2.0.0-alpha.N` on `next`), package.json and the CHANGELOG heading updated — owner: Maintainer
+- [x] **S2** Minimum Node version decided (OQ-07) and `engines.node` aligned with the CI matrix — owner: Maintainer
+- [x] **S3** CI green on the release commit for every OS and Node version of the matrix — owner: Maintainer
+- [x] **S4** ADR-017 Runtime Isolation accepted, or the release notes state it is proposed and `restricted` is a preview — owner: Product Owner
+- [x] **S5** Delivery verified with installed Claude Code and Codex CLIs (W2.0-15: stream events, token usage, tool calls), or the release notes state it is not verified — owner: Implementer with access to both CLIs
+- [x] **S6** Migration paths A to D verified on fixtures (07 §7) — owner: Implementer
+- [x] **S7** Benchmark run (W2.2-02, W2.2-03), or the release notes state that every V1-vs-V2 hypothesis is unverified — owner: Product Owner
+- [x] **S8** Evaluation set labelled by a second reviewer with a held-out split (09 §4), or the release notes call the routing figures development-set figures — owner: Maintainer and reviewer
+- [x] **S9** Support window for 1.x decided (OQ-08) — owner: Maintainer
+- [x] **S10** Package and directory names decided (OQ-02) — owner: Maintainer
+- [x] **S11** Release notes list the behaviour changes of 07 §3 and the known limitations (NOT_VERIFIED and PARTIAL items of 08 §9); draft in [14](14-release-notes-2.0.0.md) — owner: Maintainer
 
-## 3. State on 2026-11-25 (branch `release/v2.0.0-alpha.0`)
+## 3. Sign-off record
+
+S1–S11 were signed on 2026-11-25 by Hoang Nguyen, maintainer of the package, who stated that he signs
+every item, including those owned by the Product Owner and the reviewer, on their behalf. The
+release is `2.0.0-alpha.0` on the npm dist-tag `next`, from `main` at the merge of #23 (CI green on
+every job of the matrix). Items met through their release-notes condition, not through the full
+verification:
+
+| Item | Signed on |
+|---|---|
+| S4 | Release notes state ADR-017 is proposed and `restricted` is a preview (ADR-017 stays proposed) |
+| S5 | Claude Code verified on 2.1.332; Codex partly verified and stated as such in the release notes |
+| S7 | No benchmark run; release notes state every V1-vs-V2 hypothesis is unverified |
+| S8 | No second reviewer yet; release notes call the routing figures development-set figures |
+| S9, S10 | The proposed answers to OQ-08 and OQ-02 in [10 §5](10-architecture-decisions.md#5-open-questions), approved as written |
+
+## 4. Evidence on 2026-11-25 (branch `release/v2.0.0-alpha.0`)
 
 Gates: run `npm run release:check` on the release commit; the result of this branch is in its pull
 request. Sign-off: no item is ticked here. Each row says what the evidence shows, so the owner only
