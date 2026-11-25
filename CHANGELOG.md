@@ -11,6 +11,10 @@ V2 foundation on branch `feature/v2-foundation`; not published to npm. Design:
 [docs/v2](docs/v2/README.md). Upgrade steps: [Migrating from V1](docs/guides/migrating-from-v1.md).
 
 ### Added
+- `update [dir]` (docs/v2/07 §4.4): updates a V2 installation to this version's catalog with the
+  adapters and profile recorded in the manifest, after showing whether the catalog changed. Migration
+  paths A to D are now verified on fixtures (B, C, D in `tests/e2e/migration-paths.test.ts`). `update`
+  is reserved as a first argument.
 - Benchmark task suite (W2.2-03): 36 tasks in `benchmarks/suite/` in the distribution of docs/v2/09 §5.3,
   over four dependency-free fixtures (Node API and web UI, mobile data layer, Python ETL, product
   documents), with hidden checks (mutants for testing tasks; structural checks plus a rubric for
