@@ -4,7 +4,7 @@ import type { Adapter, GenerationResult } from '../adapters/adapter';
 import { claudeCodeAdapter } from '../adapters/claude-code';
 import { codexAdapter } from '../adapters/codex';
 import type { HostConfigDetection, ProjectProfile } from '../core/contracts';
-import { detectProject } from '../core/project-detection';
+import { detectProject, projectStacks } from '../core/project-detection';
 import {
   applyPlan,
   planInstall,
@@ -117,6 +117,7 @@ export function runSetup(options: SetupOptions): SetupOutcome {
       hookFiles,
       toolkitVersion,
       enabledTools: options.enabledTools ?? [],
+      projectStacks: projectStacks(project),
     }),
   );
   const diagnostics = [...generation.flatMap((result) => result.diagnostics), ...permissionWarnings(options.root, hosts)];

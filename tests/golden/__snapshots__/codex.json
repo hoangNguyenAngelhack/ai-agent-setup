@@ -1,15 +1,51 @@
 [
   {
+    "path": ".agents/skills/android-patterns/SKILL.md",
+    "sha256": "1ba0225dd0fc2b23dae1d5b5fa0bd73326b20c9e9ebfc7349a6d94871b3ef79f"
+  },
+  {
     "path": ".agents/skills/api-conventions/SKILL.md",
     "sha256": "391eb886390437b76246457513280234583e558a4f15fcf3463a78a7cd0e8b4a"
+  },
+  {
+    "path": ".agents/skills/build-resolve-android/SKILL.md",
+    "sha256": "2f7483ddb36d929fffb059ae92be499074634f3b967f8b1b17f74fc7aef07fd5"
+  },
+  {
+    "path": ".agents/skills/build-resolve-cpp/SKILL.md",
+    "sha256": "227dcbf98ba80d5d6054edd1e9dcde9bd908d3b25f9ff786ae6a37e17d903bb1"
+  },
+  {
+    "path": ".agents/skills/build-resolve-dotnet/SKILL.md",
+    "sha256": "9365dd7e3192c9d96b1aef2b1f16738a72d6db0814cfa2aaeea560aa2fe3d6c9"
+  },
+  {
+    "path": ".agents/skills/build-resolve-flutter/SKILL.md",
+    "sha256": "8c3f3408d41d56cd1ac0d3840f9b4bdd1b12b629efa1d577ba62514dc256dd2d"
+  },
+  {
+    "path": ".agents/skills/build-resolve-go/SKILL.md",
+    "sha256": "725bf8063a4c02ec7c2801f39181e539233e38cdcc7ba0f025675929864e8d04"
+  },
+  {
+    "path": ".agents/skills/build-resolve-jvm/SKILL.md",
+    "sha256": "6463b22c3bf270df3656b1b14cdbcc8891999cabe4450058f27a4f8f0b5881ca"
   },
   {
     "path": ".agents/skills/build-resolve-node/SKILL.md",
     "sha256": "c6827c12532940b80ea0a554e55bfb347a321849f1b908a98f91e9b223b72667"
   },
   {
+    "path": ".agents/skills/build-resolve-php/SKILL.md",
+    "sha256": "9f1fbc29ba62fa93ee461199ef88efb7525787c634d70240b0367f64a5776830"
+  },
+  {
     "path": ".agents/skills/build-resolve-prisma/SKILL.md",
     "sha256": "4c900197597505a18720c2521e1792afd0d0356b7e0eb4058535e0151c679174"
+  },
+  {
+    "path": ".agents/skills/build-resolve-python/SKILL.md",
+    "sha256": "5b4ca190306c3b7cea048316ceefac6651ea7c922cd23efacbbe31e046afe8da"
   },
   {
     "path": ".agents/skills/build-resolve-react-native/SKILL.md",
@@ -20,8 +56,24 @@
     "sha256": "cb26fc073d94da95a3127444f85dbaafa42c8a0665d7e73cc0c7d478a8735a36"
   },
   {
+    "path": ".agents/skills/build-resolve-ruby/SKILL.md",
+    "sha256": "104e13b64fbb912d08536ec8fc6c35dd6a309b6ee4d1b28801fb9fe51b5f3347"
+  },
+  {
+    "path": ".agents/skills/build-resolve-rust/SKILL.md",
+    "sha256": "901d96b17ba499dba1f464c0ea85ddb484339340d3bcbea4bea0d8382ce660f3"
+  },
+  {
+    "path": ".agents/skills/build-resolve-swift/SKILL.md",
+    "sha256": "1df21834f58f168897dcee47f65f29342a6c53e4273e7886c4366bb636a06448"
+  },
+  {
     "path": ".agents/skills/build/SKILL.md",
     "sha256": "35f01e0aef55c97dcd6346c9d886680ca419eac568ac9d0f5496f3fe4989b7ac"
+  },
+  {
+    "path": ".agents/skills/c-patterns/SKILL.md",
+    "sha256": "da0b60e820098325bd5aab9b37a549fcf11f2496cf0bef6c72c33d8ed0b3fef2"
   },
   {
     "path": ".agents/skills/code-review/references/agent-skills-variant.md",
@@ -30,6 +82,18 @@
   {
     "path": ".agents/skills/code-review/SKILL.md",
     "sha256": "944af983a751c2cfcb4c3cf9b1ad4e3a4afae4ff5b7e66443ba073ce930a171a"
+  },
+  {
+    "path": ".agents/skills/cpp-patterns/SKILL.md",
+    "sha256": "f9c9067312ba01d3bff0a9d019b483de249f0da6cae1b31d14083e3c377d4347"
+  },
+  {
+    "path": ".agents/skills/csharp-patterns/SKILL.md",
+    "sha256": "0ed7a13b71d423b749654bcfa9d89d2daa619ec1c97f63f99e8e4fcbcbc16800"
+  },
+  {
+    "path": ".agents/skills/dart-patterns/SKILL.md",
+    "sha256": "2683603e9c157dc872ae5f493049ee7f3540bfbf9b867b721b407d7702bd08a9"
   },
   {
     "path": ".agents/skills/data-transform/SKILL.md",
@@ -60,8 +124,20 @@
     "sha256": "660c88b952c9bd328c43fe10e19cd96f4a400eddbd8b927bf28493cb1c662aa6"
   },
   {
+    "path": ".agents/skills/go-patterns/SKILL.md",
+    "sha256": "772ffd7d948c65de6c13a02bfa11ceb275a0976d08700396ffb1c9055e6a9c87"
+  },
+  {
     "path": ".agents/skills/incremental-implementation/SKILL.md",
     "sha256": "081addd07d89a2f959dd912940dc8da88ccb4c8b97e99ce376a647e4054f0fea"
+  },
+  {
+    "path": ".agents/skills/java-patterns/SKILL.md",
+    "sha256": "424e6040db850c87a3a63aad91e2b56cf91229c8f2c466636ededb3c7aef548f"
+  },
+  {
+    "path": ".agents/skills/kotlin-patterns/SKILL.md",
+    "sha256": "81b2fa0ef1eabdff70c1c2d0e5c538622a582b17e78e110f24ba39b59f558dea"
   },
   {
     "path": ".agents/skills/monitoring/SKILL.md",
@@ -78,6 +154,10 @@
   {
     "path": ".agents/skills/nodejs-backend/SKILL.md",
     "sha256": "f9b2b7bf48b9ac51ecc10c2f0374fdbe493ba8e13241766034e5f5cb6fc7d029"
+  },
+  {
+    "path": ".agents/skills/php-patterns/SKILL.md",
+    "sha256": "aaf2a0c8e783d084935875e7e6c466a530460a7bd6786fe95ce295b6ee051001"
   },
   {
     "path": ".agents/skills/plan/SKILL.md",
@@ -120,6 +200,14 @@
     "sha256": "51bb8aadfbc91d3423c31f732f96e5c6f8e08818f89ae13d0a19f2e47dbd8ca1"
   },
   {
+    "path": ".agents/skills/ruby-patterns/SKILL.md",
+    "sha256": "fe653dd5afcfd54c1914160039372d9a1d2071b48af7771910d4361a23fc2080"
+  },
+  {
+    "path": ".agents/skills/rust-patterns/SKILL.md",
+    "sha256": "a99883ba317c69fa65134f9e5ca46d102cec54e41294f6802f1b4acc9d7f0553"
+  },
+  {
     "path": ".agents/skills/security-review/references/security-checklist.md",
     "sha256": "36c4726128b66d7d3646c3487344b7855bd181e1fa3c6a5d729debdee7fe6c4c"
   },
@@ -138,6 +226,10 @@
   {
     "path": ".agents/skills/sql-patterns/SKILL.md",
     "sha256": "36095163c5755020a80b2adc203381ea6c0c5f814a67fdba07adc6515784bf28"
+  },
+  {
+    "path": ".agents/skills/swift-patterns/SKILL.md",
+    "sha256": "7974b315b0f0840ae40d9d8fcaf2b8a89d4033da4e2c5cf721afd4e91f0063ef"
   },
   {
     "path": ".agents/skills/system-design/SKILL.md",

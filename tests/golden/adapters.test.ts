@@ -110,6 +110,39 @@ describe.each([
     );
   });
 
+  it('should install the language packs a project uses, and only those (docs/v2/16)', () => {
+    const entries = (projectStacks?: string[]) => new Set(adapter.generate(input(projectStacks ? { projectStacks } : {})).items.map((item) => item.entryId));
+    const go = entries(['go']);
+    const typescript = entries(['typescript']);
+    const unknown = entries();
+
+    expect([...go].filter((id) => /^(rule|skill)\..*(go|golang)/.test(id)).sort()).toEqual(['rule.go-patterns', 'skill.build-resolve-go']);
+    expect(go.has('skill.build-resolve-node')).toBe(false);
+    expect(go.has('rule.rust-patterns')).toBe(false);
+    expect(typescript.has('skill.build-resolve-node')).toBe(true);
+    expect(typescript.has('rule.go-patterns')).toBe(false);
+    expect(typescript.has('rule.typescript-patterns')).toBe(true);
+    // Nothing detected (an empty directory): everything, as before.
+    for (const id of ['rule.go-patterns', 'rule.rust-patterns', 'skill.build-resolve-node', 'skill.build-resolve-go']) expect(unknown.has(id), id).toBe(true);
+  });
+
+  it('should install the mobile and systems packs only for their platform (docs/v2/16, wave 2)', () => {
+    const entries = (projectStacks: string[]) => new Set(adapter.generate(input({ projectStacks })).items.map((item) => item.entryId));
+    const androidApp = entries(['kotlin', 'android']);
+    const kotlinService = entries(['kotlin']);
+    const flutterApp = entries(['dart', 'flutter', 'ios', 'android']);
+    const iosApp = entries(['swift', 'ios']);
+    const engine = entries(['cpp']);
+
+    for (const id of ['rule.kotlin-patterns', 'rule.android-patterns', 'skill.build-resolve-android']) expect(androidApp.has(id), id).toBe(true);
+    for (const id of ['rule.android-patterns', 'skill.build-resolve-android']) expect(kotlinService.has(id), id).toBe(false);
+    for (const id of ['rule.dart-patterns', 'skill.build-resolve-flutter']) expect(flutterApp.has(id), id).toBe(true);
+    expect(flutterApp.has('rule.swift-patterns')).toBe(false);
+    for (const id of ['rule.swift-patterns', 'skill.build-resolve-swift']) expect(iosApp.has(id), id).toBe(true);
+    for (const id of ['rule.cpp-patterns', 'skill.build-resolve-cpp']) expect(engine.has(id), id).toBe(true);
+    expect(engine.has('rule.c-patterns')).toBe(false);
+  });
+
   it('should not install MCP servers unless they are enabled', () => {
     expect(files.has('.mcp.json')).toBe(false);
     expect(files.get('.codex/config.toml') ?? '').not.toContain('mcp_servers');

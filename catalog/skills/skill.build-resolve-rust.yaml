@@ -1,0 +1,27 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.build-resolve-rust
+name: Rust build resolution
+description: "Use when a Rust crate fails with cargo: borrow checker and lifetime errors, trait bounds, feature flags, dependency versions, clippy warnings."
+version: 2.0.0
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - rust
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.build-resolve-rust.md
+triggers: "Use when a Rust crate fails with cargo: borrow checker and lifetime errors, trait bounds, feature flags, dependency versions, clippy warnings."
+resources: []
+disableImplicit: false

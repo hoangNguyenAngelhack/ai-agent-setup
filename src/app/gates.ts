@@ -1,5 +1,6 @@
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { ProjectProfile } from '../core/contracts';
 import { detectProject } from '../core/project-detection';
 import { readManifest, MANIFEST_PATH } from '../installer';
 import { GATES, gateReportErrors, resolveCommand, runGates, renderGateReport, validateGateConfig, type Ecosystem, type GateConfig, type GateReport, type ProjectFacts } from '../quality';
@@ -18,16 +19,32 @@ const LOCKFILES: Array<[file: string, manager: string]> = [
   ['package-lock.json', 'npm'],
 ];
 
-/** Reads what the gate engine needs from the project (scripts, package manager, stacks). */
-export function projectFacts(root: string): ProjectFacts {
-  const profile = detectProject(root);
+/** Test runners and linters with default commands: used only when the project declares them. */
+const DECLARED_TOOLS: Ecosystem[] = ['rspec', 'minitest', 'rubocop', 'phpunit', 'pest', 'phpstan', 'ruff', 'mypy', 'swiftlint', 'ktlint', 'detekt', 'ctest'];
+
+/** The stacks a project's gates can use, in priority order (the first with a default command wins). */
+function stackEcosystems(profile: ProjectProfile): Set<Ecosystem> {
   const ecosystems = new Set<Ecosystem>();
   if (profile.languages.includes('go')) ecosystems.add('go');
   if (profile.languages.includes('python')) ecosystems.add('python');
-  if (profile.languages.includes('csharp')) ecosystems.add('dotnet');
+  if (profile.buildTools.includes('dotnet')) ecosystems.add('dotnet');
   if (profile.languages.includes('rust')) ecosystems.add('rust');
   if (profile.buildTools.includes('maven')) ecosystems.add('maven');
   if (profile.buildTools.includes('gradle')) ecosystems.add('gradle');
+  if (profile.buildTools.includes('swiftpm')) ecosystems.add('swiftpm');
+  if (profile.buildTools.includes('cmake')) ecosystems.add('cmake');
+  // Flutter before plain Dart: a Flutter app is tested and analysed with the flutter tool.
+  if (profile.frameworks.includes('flutter')) ecosystems.add('flutter');
+  else if (profile.languages.includes('dart')) ecosystems.add('dart');
+  for (const tool of DECLARED_TOOLS) if (profile.testRunners.includes(tool) || profile.linters.includes(tool)) ecosystems.add(tool);
+  // Android Lint after the declared linters, so ktlint or detekt win when the project uses them.
+  if (profile.frameworks.includes('android') && profile.buildTools.includes('gradle')) ecosystems.add('android');
+  return ecosystems;
+}
+
+/** Reads what the gate engine needs from the project (scripts, package manager, stacks). */
+export function projectFacts(root: string): ProjectFacts {
+  const ecosystems = stackEcosystems(detectProject(root));
   let scripts: Record<string, string> = {};
   const hasPackageJson = existsSync(join(root, 'package.json'));
   if (hasPackageJson) {

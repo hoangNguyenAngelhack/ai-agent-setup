@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.ruby-patterns
+name: Ruby patterns
+description: "Idiomatic Ruby and Rails: small objects, blocks and enumerables, exceptions, ActiveRecord safety, RSpec or Minitest and RuboCop."
+version: 2.0.0
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - ruby
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.ruby-patterns.md
+scope:
+  paths:
+    - "**/*.rb"
+    - "**/*.rake"
+    - "**/Gemfile"
+enforcement: advisory

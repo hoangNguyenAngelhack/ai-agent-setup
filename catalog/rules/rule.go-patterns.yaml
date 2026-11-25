@@ -1,0 +1,26 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.go-patterns
+name: Go patterns
+description: "Idiomatic Go: errors as values, context, goroutines without leaks, table tests, gofmt and go vet."
+version: 2.0.0
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - go
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.go-patterns.md
+scope:
+  paths:
+    - "**/*.go"
+enforcement: advisory

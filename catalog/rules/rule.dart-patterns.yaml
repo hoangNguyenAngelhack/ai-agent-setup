@@ -1,0 +1,26 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.dart-patterns
+name: Dart and Flutter patterns
+description: "Dart and Flutter: sound null safety, immutable widgets and state, async and streams, BuildContext rules, widget and unit tests, dart analyze."
+version: 2.0.0
+category: mobile
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - dart
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.dart-patterns.md
+scope:
+  paths:
+    - "**/*.dart"
+enforcement: advisory

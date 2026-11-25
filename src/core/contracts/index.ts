@@ -52,6 +52,8 @@ export interface ProjectProfile {
   buildTools: string[];
   testRunners: string[];
   ci: string[];
+  /** Linters and type checkers the project declares, for example ruff, rubocop or phpstan. */
+  linters: string[];
   /** Coarse traits matched against capability `requiredContext.projectSignals`. */
   signals: string[];
   /** Relative paths of detected sub-projects (apps/*, packages/*, services/*, libs/*). */

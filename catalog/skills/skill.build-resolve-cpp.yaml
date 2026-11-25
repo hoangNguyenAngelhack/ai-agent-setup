@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.build-resolve-cpp
+name: C and C++ build resolution
+description: "Use when a C or C++ project fails to configure, compile, link or test with CMake: missing packages, compiler standards, undefined references, warnings as errors, sanitizer reports."
+version: 2.0.0
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - c
+    - cpp
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.build-resolve-cpp.md
+triggers: "Use when a C or C++ project fails to configure, compile, link or test with CMake: missing packages, compiler standards, undefined references, warnings as errors, sanitizer reports."
+resources: []
+disableImplicit: false

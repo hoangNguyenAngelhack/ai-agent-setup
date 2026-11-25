@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import type { ProjectProfile } from '../contracts';
 import type { Detection, Detector } from './detection';
-import { detectDotnet, detectGo, detectJvm, detectOtherLanguages, detectPython } from './detectors/backend-languages';
+import { detectDotnet, detectGo, detectJvm, detectPhp, detectPython, detectRuby, detectRust } from './detectors/backend-languages';
 import { detectJavaScript } from './detectors/javascript';
-import { detectDelivery, detectMobileNative } from './detectors/platform';
+import { detectCmake, detectDelivery, detectMobileNative, detectSwift } from './detectors/platform';
 import { ProjectDir } from './project-dir';
 
 const DETECTORS: readonly Detector[] = [
@@ -12,8 +12,12 @@ const DETECTORS: readonly Detector[] = [
   detectJvm,
   detectGo,
   detectDotnet,
-  detectOtherLanguages,
+  detectRust,
+  detectRuby,
+  detectPhp,
   detectMobileNative,
+  detectSwift,
+  detectCmake,
   detectDelivery,
 ];
 
@@ -54,7 +58,7 @@ const FRAMEWORK_SIGNALS: Record<string, string> = {
   sqlalchemy: 'orm',
 };
 
-const LIST_FIELDS = ['languages', 'frameworks', 'packageManagers', 'buildTools', 'testRunners', 'ci', 'signals'] as const;
+const LIST_FIELDS = ['languages', 'frameworks', 'packageManagers', 'buildTools', 'testRunners', 'ci', 'linters', 'signals'] as const;
 
 function detectDirectory(dir: ProjectDir): Detection[] {
   return DETECTORS.map((detector) => detector(dir));

@@ -1,0 +1,31 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.cpp-patterns
+name: C++ patterns
+description: "Modern C++ (17/20): RAII, smart pointers, value semantics, no raw new/delete, const-correctness, sanitizers, CMake targets and tests."
+version: 2.0.0
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - cpp
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.cpp-patterns.md
+scope:
+  paths:
+    - "**/*.cpp"
+    - "**/*.cc"
+    - "**/*.cxx"
+    - "**/*.hpp"
+    - "**/*.hh"
+    - "**/*.h"
+enforcement: advisory

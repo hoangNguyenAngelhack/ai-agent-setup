@@ -1,0 +1,26 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.java-patterns
+name: Java patterns
+description: "Modern Java (17+): records, Optional, exceptions, resources, concurrency, JUnit 5 and dependency hygiene."
+version: 2.0.0
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - java
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.java-patterns.md
+scope:
+  paths:
+    - "**/*.java"
+enforcement: advisory

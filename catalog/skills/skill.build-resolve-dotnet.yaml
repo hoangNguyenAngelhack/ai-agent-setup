@@ -1,0 +1,28 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Skill
+id: skill.build-resolve-dotnet
+name: .NET build resolution
+description: "Use when a C# or F# project fails to restore, build or test with the dotnet CLI: NuGet restore, target framework, nullable warnings as errors, analyzers."
+version: 2.0.0
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - csharp
+    - fsharp
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+  - fs.write
+  - cmd:project-scripts
+inputSchema: null
+outputSchema: null
+validation: null
+body: skill.build-resolve-dotnet.md
+triggers: "Use when a C# or F# project fails to restore, build or test with the dotnet CLI: NuGet restore, target framework, nullable warnings as errors, analyzers."
+resources: []
+disableImplicit: false

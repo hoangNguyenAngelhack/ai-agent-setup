@@ -1,0 +1,26 @@
+apiVersion: catalog.ai-agent-setup/v1
+kind: Rule
+id: rule.rust-patterns
+name: Rust patterns
+description: "Idiomatic Rust: ownership and borrowing, Result and the ? operator, no unwrap in libraries, traits, clippy and tests."
+version: 2.0.0
+category: backend
+status: experimental
+dependencies: []
+requiredContext:
+  projectSignals:
+    - rust
+  files: []
+supportedAdapters:
+  claude-code: native
+  codex: native
+requiredPermissions:
+  - fs.read
+inputSchema: null
+outputSchema: null
+validation: null
+body: rule.rust-patterns.md
+scope:
+  paths:
+    - "**/*.rs"
+enforcement: advisory

@@ -8,6 +8,8 @@ export interface Detection {
   buildTools?: string[];
   testRunners?: string[];
   ci?: string[];
+  /** Linters and type checkers the project declares (they decide the lint and typecheck gates). */
+  linters?: string[];
   signals?: string[];
 }
 
