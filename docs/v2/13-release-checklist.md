@@ -42,14 +42,22 @@ agent. The script reads the list below as written: keep each item on one line in
 - [ ] **S10** Package and directory names decided (OQ-02) — owner: Maintainer
 - [ ] **S11** Release notes list the behaviour changes of 07 §3 and the known limitations (NOT_VERIFIED and PARTIAL items of 08 §9); draft in [14](14-release-notes-2.0.0.md) — owner: Maintainer
 
-## 3. State on 2026-11-25
+## 3. State on 2026-11-25 (branch `release/v2.0.0-alpha.0`)
 
-`npm run release:check` on branch `feature/w2.2-08-release-readiness`: **NOT_READY**.
+Gates: run `npm run release:check` on the release commit; the result of this branch is in its pull
+request. Sign-off: no item is ticked here. Each row says what the evidence shows, so the owner only
+has to confirm and tick it.
 
-- Gates: 13 of 13 PASS. `engines` failed (`>=18.0.0` declared, CI tests 20, 22 and 24) until the
-  maintainer decided OQ-07 on 2026-11-25: Node ≥ 20, so `engines.node` is now `>=20.0.0`. Ticking S2
-  is still the maintainer's step.
-- Fixed for this release: the package no longer ships `templates/.claude` and `templates/.agents`
-  (unused by V2, removed in 2.0 by 07 §5): 76 fewer published files. The
-  folders stay in the repository for the V1 scripts that are deprecated until 2.1.
-- Sign-off: S1 to S11 open.
+| Item | Evidence state | What the owner still does |
+|---|---|---|
+| S1 | Prepared: `package.json` 2.0.0-alpha.0 with `publishConfig.tag` `next` (a guard against publishing to `latest`), CHANGELOG heading `[2.0.0-alpha.0]`. npm today: `latest` = 1.6.1, no `next` tag | Confirm the version and tag; tick |
+| S2 | VERIFIED: `engines.node` `>=20.0.0`, CI matrix 20/22/24, gate `engines` PASS | Tick |
+| S3 | NOT_VERIFIED until CI runs on the release commit (the commit that is published, after merge) | Check CI on that commit; tick |
+| S4 | Release notes state ADR-017 is proposed and `restricted` is a preview: condition met. ADR-017 has a recommended acceptance text ([10](10-architecture-decisions.md#adr-017-runtime-isolation-w22-09)) | Product Owner: accept ADR-017 with the stated limits, or leave the release-notes wording; tick |
+| S5 | Claude Code: VERIFIED on 2.1.332 (delivery, events, usage, tool calls, cost, permissions). Codex: PARTIAL on 0.172.0 without an account (start, failure, timeout, Ctrl-C, transcript, integrity); release notes state what is not verified: condition met | Optionally run `codex login`, then `npm run smoke:host -- --host codex`; tick |
+| S6 | VERIFIED: paths A–D in `tests/e2e/setup.test.ts` and `tests/e2e/migration-paths.test.ts` | Tick |
+| S7 | Not run (it uses model quota). Release notes state every V1-vs-V2 hypothesis is unverified: condition met. Plan: `npm run bench -- --dry-run` (324 trials, 72 h worst case) | Product Owner: tick on the release-notes condition, or approve a calibration run and then the full run |
+| S8 | No human second reviewer yet; an AI first review is in [15](15-eval-benchmark-review.md). Release notes call the routing figures development-set figures: condition met | Maintainer and reviewer: tick on the release-notes condition; the full review stays open for the benchmark |
+| S9 | Proposed answer in [10 §5 OQ-08](10-architecture-decisions.md#5-open-questions) | Maintainer: approve or change; tick |
+| S10 | Proposed answer in [10 §5 OQ-02](10-architecture-decisions.md#5-open-questions): keep both names | Maintainer: approve or change; tick |
+| S11 | Release notes checked against 07 §3 (all behaviour changes listed) and the PARTIAL items of 08 §9 (Codex, isolation, benchmark, KPIs, routing set, costs, V1 adoption, Codex trust, database switches) | Maintainer: read [14](14-release-notes-2.0.0.md) against the release commit; tick |

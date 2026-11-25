@@ -348,8 +348,8 @@ None of these reopens an approved decision. Each one has a proposed resolution.
 
 ### ADR-017: Runtime Isolation (W2.2-09)
 
-- **Status:** Proposed and implemented for review on branch `feature/w2.2-09-runtime-isolation`,
-  2026-11-24. **Not yet accepted by the Product Owner.** Threat model: [11 §6](11-runtime-threat-model.md#6-runtime-isolation-w22-09-adr-017);
+- **Status:** Proposed; implemented and merged to `main` (PR #7, 2026-11-24). **Not yet accepted by the
+  Product Owner**; ready for that decision (see *Readiness for acceptance* below). Threat model: [11 §6](11-runtime-threat-model.md#6-runtime-isolation-w22-09-adr-017);
   test report: [12](12-runtime-isolation-security-report.md); usage: [guide](../guides/runtime-isolation.md).
 - **Context:** ADR-016 detects tampering but is not a boundary against code the agent runs under the
   user's OS account: such code can read the integrity key and sign anything. W2.2-09 needs a boundary
@@ -369,7 +369,7 @@ None of these reopens an approved decision. Each one has a proposed resolution.
   | Option | Boundary | Why chosen or not |
   |---|---|---|
   | Hooks / policy / prompt rules in the host | None (same process, same user) | Rejected as a boundary; kept as a guard against mistakes |
-  | Host's own sandbox (Claude Code sandbox, Codex `workspace-write`) | Host-defined | Not controllable or verifiable by the toolkit; real CLIs not installed here (NOT_VERIFIED) |
+  | Host's own sandbox (Claude Code sandbox, Codex `workspace-write`) | Host-defined | Not controllable or verifiable by the toolkit; Codex's own sandbox is `sandbox-exec`, which cannot be nested inside `restricted` |
   | Separate OS user | Real (OS identity) | The only option that meets AC1; needs an administrator to create the user and set permissions. Not done without the user's permission: profile `isolated` refuses with that reason |
   | Container or VM | Real (namespaces / hypervisor) | Needs a runtime; Docker must not be a default dependency or installed by the toolkit |
   | OS sandbox around the host process: macOS Seatbelt (`/usr/bin/sandbox-exec`, built in) | Real (kernel), same OS user | **Chosen for `restricted` on macOS**: no installation, no admin rights, enforced on every child |
@@ -427,9 +427,24 @@ None of these reopens an approved decision. Each one has a proposed resolution.
   - A process that double-forks faster than the 100 ms scan and clears its environment can outlive
     the run (test 12, adversarial: FAIL). It stays inside the sandbox (verified: it cannot read the key).
   - A kernel or Seatbelt bug.
-  - Real Claude Code and Codex under the sandbox: NOT_VERIFIED (not installed). Codex's own sandbox
-    uses `sandbox-exec`, which cannot be nested (tested: `sandbox_apply: Operation not permitted`), so
-    Codex sandboxed commands may fail inside `restricted`.
+  - Real hosts under the sandbox, PARTIAL (2026-11-25): `claude` 2.1.332 and `codex` 0.172.0 start
+    inside `restricted` (after making the host's npm `node_modules` install readable and executable,
+    found when Codex could not read its own `package.json`); a Codex delivery under `restricted` reached
+    its API and ended in RUN_FAILED (401, not signed in) with integrity VERIFIED. A full agent session
+    with tool calls under `restricted` is NOT_VERIFIED (it uses the account's model quota). Codex's own
+    sandbox uses `sandbox-exec`, which cannot be nested (tested: `sandbox_apply: Operation not
+    permitted`), so Codex sandboxed commands may fail inside `restricted`.
+- **Readiness for acceptance (2026-11-25):** the decision as written matches the code and the tests:
+  every control in item 2 has a kernel-level test (12 §1, scenarios 1–12 PASS); the boundaries in the
+  table are kept apart (ADR-015 event semantics and ADR-016 signing unchanged: runs under `restricted`
+  end with integrity VERIFIED; the inbox only adds `source: host` step reports); fail-closed refusals
+  are tested (`isolated`, Linux, Windows, domain allowlist). What acceptance would **not** claim: OS
+  identity separation (AC1 UNSUPPORTED), protection against a fast double fork (12b FAIL, confined),
+  Linux and Windows, a full real-host session under the sandbox. Recommended wording for the Product
+  Owner: *"ADR-017 accepted for `restricted` on macOS as a preview boundary, with the limits listed
+  under What remains unprotected; `isolated` stays designed, not available."* Accepting does not
+  lower any control; it only records the decision. Until then the release notes call `restricted` a
+  preview (sign-off S4).
 - **Consequences:** (+) on macOS, code the agent runs can no longer read the key, credentials, other
   projects or the toolkit's runtime state, cannot forge approvals or verdicts, and cannot leave
   processes behind in the tested cases; each claim has a kernel-level test. (−) Not an OS identity
@@ -441,13 +456,13 @@ None of these reopens an approved decision. Each one has a proposed resolution.
 | ID | Question | Impact | Owner |
 |---|---|---|---|
 | OQ-01 | ~~How do hosts receive and follow a plan?~~ **Resolved 2026-11-24 by ADR-009 (accepted).** | — | Product Owner |
-| OQ-02 | Keep the package name `create-ai-agent-setup` and the manifest directory `.ai-agent-setup/`, or rename to reflect the "OS" positioning? A rename affects npm discoverability and V1 users. | CLI and migration | Maintainer |
+| OQ-02 | Keep the package name `create-ai-agent-setup` and the manifest directory `.ai-agent-setup/`, or rename to reflect the "OS" positioning? A rename affects npm discoverability and V1 users. **Proposed answer (2026-11-25, for the maintainer): keep both.** The package has 19 published versions and V1 users invoke `npx create-ai-agent-setup`; migration paths A–D, the manifest, the run store, the integrity key location (`ai-agent-setup` configuration directory) and every generated `.gitignore` entry use these names, so a rename is a breaking change for every installed project and needs a deprecation package on npm. The positioning belongs in the description and README, which can change in any release. Trade-off: the name says *create* while V2 also runs `setup`, `update` and `run`. A shorter second command name (`bin` alias) can be added later without breaking anything. | CLI and migration | Maintainer |
 | OQ-03 | Which actual token and cost data does each host expose locally (Claude Code transcripts or status data; Codex `PostModelRequest` hook payload)? Needs verification before W2.2-04. **Answered for Claude Code 2026-11-25** (installed CLI 2.1.332, `-p --output-format stream-json`): `assistant` lines carry `message.usage` and `message.model`, repeated unchanged on every line of a message id, but with the output count from the start of the message; the `result` message carries the session totals: `usage` (main loop), `modelUsage` (every model call, per model) and `total_cost_usd`. Totals are read from `modelUsage`. **Codex not verified:** installed, not signed in. | Cost KPIs | Implementer |
 | OQ-04 | Is the 9-agent canonical set ([05 §6.6](05-architecture-specification.md#66-canonical-agent-set-proposed)) right, for example whether to split `implementer` by platform? | Routing, migration aliases | Maintainer + review |
 | OQ-05 | Who authors new content for D02, D06, D07, D11 and D12 to reach L2, and what review standard applies? | Depth targets ([08 §6](08-implementation-roadmap.md#6-domain-depth-by-phase)) | Maintainer |
 | OQ-06 | Should V2 also be distributed as a Claude Code or Codex plugin (host packaging, not a marketplace)? Is this in or out of scope for V2? | Distribution | Maintainer |
 | OQ-07 | ~~Minimum Node.js version (V1 says ≥ 18, which is past upstream end of life; check current LTS dates at implementation)~~ **Resolved 2026-11-25 by the maintainer: Node ≥ 20**, the lowest version CI tests; `engines.node` is `>=20.0.0` and `release:check` keeps the two equal. | CI matrix, users | Maintainer |
-| OQ-08 | Support window for 1.x after V2.0 GA, and whether the V1.x patch track ([08 §2](08-implementation-roadmap.md#2-v1x-maintenance-track-proposed)) is approved | Users on 1.x | Maintainer |
+| OQ-08 | Support window for 1.x after V2.0 GA, and whether the V1.x patch track ([08 §2](08-implementation-roadmap.md#2-v1x-maintenance-track-proposed)) is approved. **Proposed answer (2026-11-25, for the maintainer):** while 2.0 is in pre-release on `next`, 1.6.x stays on `latest`. Security fixes only for 1.x, for **6 months after 2.0.0 GA**, published as 1.6.x with `--tag v1` once `latest` moves to 2.0. From the patch track, approve the two items that are security defects for current users, **W0.1** (machine paths and broad allow rules in the shipped `settings.json`) and **W0.3** (hooks never read their input, so the secret scan never blocked), as 1.6.2; leave W0.2 (flags) and W0.4 (pinned config) to 2.0, which already fixes them. Trade-off: 1.x users keep the functional defects until they move to 2.0. | Users on 1.x | Maintainer |
 | OQ-09 | Organization policy file location and format (path flag, environment variable, or managed host settings) | Enterprise | Maintainer |
 | OQ-11 | ~~Should sensitive keywords always add a review step?~~ **Resolved 2026-11-24 by ADR-014 (accepted): no, review follows actual impact.** | — | Product Owner |
 | OQ-10 | Should the default profile for Codex set `sandbox_mode = "workspace-write"` with `approval_policy = "on-request"`? | Security defaults | Security review |

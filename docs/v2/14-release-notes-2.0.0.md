@@ -1,8 +1,9 @@
 # 14. Release notes: create-ai-agent-setup 2.0.0 (draft)
 
-> **Draft for the maintainer (sign-off S11 in [13](13-release-checklist.md)).** The version, the npm
-> dist-tag and the date are set at release time (S1; [07 §6](07-migration-strategy.md#6-rollout-plan)
-> proposes `2.0.0-alpha.N` on `next`). Check every statement against the release commit before you publish.
+> **Draft for the maintainer (sign-off S11 in [13](13-release-checklist.md)).** Proposed release:
+> `2.0.0-alpha.0` on the npm dist-tag `next` (S1; [07 §6](07-migration-strategy.md#6-rollout-plan));
+> `latest` stays on 1.6.1. The date is set at release time. Check every statement against the
+> release commit before you publish.
 
 ## Highlights
 
@@ -52,9 +53,11 @@ These are not verified, or only partly done, in this release:
   delivery, stream events, token usage, tool calls and cost were checked on a real run. Delivery allows
   the agent to run only that run's `run event` command, so step progress reaches the run in Claude
   Code's default permission mode; editing files and other commands still need your own permission
-  settings, and your `deny` rules still win. Codex is
-  not verified: it follows the published documentation and is tested only against a test double
-  (W2.0-15, W2.1-10).
+  settings, and your `deny` rules still win. Codex (0.172.0) is only partly verified, without an
+  account: its start, failure, timeout and Ctrl-C paths were checked on the installed CLI, but no
+  signed-in run has completed a turn, reported a step or reported token usage (W2.0-15, W2.1-10).
+  Codex runs only in a Git repository or a trusted directory, and it may leave a background
+  `git fetch` of its plugin catalog running after it exits.
 - **Runtime isolation is a preview.** ADR-017 is still proposed, not accepted. `--isolation restricted`
   works on macOS only (Seatbelt). `isolated` (a separate OS user) is not available, and Linux and
   Windows are unsupported. A fast double fork can outlive the run, but it stays inside the sandbox
@@ -62,6 +65,9 @@ These are not verified, or only partly done, in this release:
 - **No V1-vs-V2 claim is verified.** The benchmark harness and the 36-task suite are included, but no
   benchmark has been run on real hosts. Every hypothesis in 09 §6 (acceptance, test pass rate,
   tokens, time) is unverified.
+- **Some KPIs are not measured yet.** `report --kpi` reports test pass rate, security findings and
+  the benchmark-based regression rate as NOT_VERIFIED until a benchmark runs on real hosts (09 §6;
+  W2.2-06, W2.2-07).
 - **Routing figures come from a development set.** The same author wrote the 140 routing tasks and
   the classifier, so the published precision and recall are optimistic. A second reviewer and a
   held-out split are still pending (09 §4).
