@@ -2,7 +2,7 @@
 
 # AI Agent Setup
 
-### Universal AI engineering configuration for Claude Code and Codex
+### One catalog of engineering rules, skills and agents, installed natively for Claude Code and Codex
 
 [![npm version](https://img.shields.io/npm/v/create-ai-agent-setup?style=for-the-badge&logo=npm&logoColor=white&color=cb3837)](https://www.npmjs.com/package/create-ai-agent-setup)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
@@ -10,104 +10,108 @@
 
 **English** | **[Tiếng Việt](README.vi.md)**
 
+```bash
+npx create-ai-agent-setup setup
+```
+
 </div>
 
-> **Status: 2.1.0.** `npx create-ai-agent-setup` installs V2, with language packs for TypeScript/JavaScript, Python, Go, Java, Kotlin, C#, Rust, PHP, Ruby, Swift, Android, Dart/Flutter, C and C++. Known limitations are listed in the
-> [release notes](docs/v2/14-release-notes-2.0.0.md). V1 users: read
-> [Migrating from V1](docs/guides/migrating-from-v1.md) before running V2 in a V1 project; 1.x gets
-> security fixes until 2027-05-25 (`npx create-ai-agent-setup@1`).
+AI Agent Setup gives your coding agent the rules, skills, agents and workflows of an experienced
+engineering team, for the languages your project uses, and puts guard rails around what the agent
+may do. It writes the native configuration of each host (`.claude/` for Claude Code; `AGENTS.md`,
+`.agents/` and `.codex/` for Codex) and manages it like a dependency: reviewable, updatable and
+reversible.
 
-## What it does
+## Why use it
 
-- **Creates projects** from seven templates (Express, NestJS, Next.js, Vite, fullstack Next.js,
-  Expo, React Native CLI) and gives them an AI engineering configuration.
-- **Sets up existing projects** safely: dry-run, unified diff, backup, conflict handling, rollback
-  and an integrity check. Files you changed are never overwritten silently.
-- **Generates native configuration for each host** from one versioned catalog: Claude Code
-  (`.claude/`) and Codex (`AGENTS.md`, `.agents/skills`, `.codex/`).
-- **Enforces a safety policy** with a hook that runs before every shell command and file write.
-  Destructive commands (`rm -rf`, `git push --force`, `DROP TABLE`, `npm publish`, …) need explicit
-  approval. Writing a credential in a known token format is blocked.
+- **Native for both hosts.** One versioned catalog becomes Claude Code rules, skills, agents and
+  slash commands, and Codex `AGENTS.md`, skills, agents and configuration.
+- **Only what your project needs.** It detects your stack and installs the language packs you use:
+  a Go service gets Go guidance, not React's. Language rules load only when the agent touches those
+  files, so the always-loaded context stays small.
+- **Safe to install.** Every change is shown as a diff first, backed up, and undone with `rollback`.
+  Files you edited are never overwritten: the new version is written next to yours.
+- **Guard rails.** A policy hook checks every shell command and file write. Destructive commands
+  (`rm -rf`, `git push --force`, `DROP TABLE`) and publishing in any ecosystem (`npm publish`,
+  `cargo publish`, `docker push`, …) need your approval; writing a known credential format is blocked.
+- **Verification, not claims.** Quality gates run your project's own build, tests, linters, coverage
+  and dependency audit, and record evidence. Anything they cannot check is reported as
+  NOT_VERIFIED, never as a pass.
 
 ## Quick start
 
-```bash
-# Create a new project (V1 flags work)
-npx create-ai-agent-setup my-api -t backend -f nestjs -y
+Requires Node.js 20 or later.
 
-# Add the configuration to an existing project: review first, then apply
-npx create-ai-agent-setup diff ../my-project
-npx create-ai-agent-setup setup ../my-project --yes
-npx create-ai-agent-setup doctor ../my-project
-npx create-ai-agent-setup rollback ../my-project      # undo the last install
+```bash
+# In an existing project: review, then apply
+npx create-ai-agent-setup diff
+npx create-ai-agent-setup setup --yes
+
+# Add Codex as well (or only Codex)
+npx create-ai-agent-setup setup --adapter claude-code,codex --yes
+
+# Start a new project from a template
+npx create-ai-agent-setup my-api -t backend -f nestjs -y
 ```
 
-From source: `git clone https://github.com/nguyenduyhoang35/ai-agent-setup.git`, then
-`npm ci && npm run build` and `node bin/cli.js …` with the same arguments.
+Then open the project in Claude Code or Codex. For Codex, trust the project and approve its hooks
+with `/hooks`: Codex loads project configuration only in trusted projects.
 
-## Commands
+## Supported languages
+
+| Stack | Guidance installed | Gates it can run |
+|---|---|---|
+| TypeScript / JavaScript | TypeScript rules; Node, React, React Native and Prisma skills | `package.json` scripts, coverage (Istanbul), `npm audit` |
+| Python | Python rules, build skill | pytest, Ruff, mypy, coverage (pytest-cov), pip-audit |
+| Go | Go rules, build skill | `go build`, `go test`, `go vet`, coverage, govulncheck |
+| Java, Kotlin | Java and Kotlin rules, JVM build skill | Maven or Gradle build and tests, ktlint or detekt, JaCoCo |
+| Android | Android rules, build skill | Gradle, Android Lint |
+| C# / .NET | C# rules, .NET build skill | `dotnet build`/`test`/`format`, coverlet, vulnerable packages |
+| Rust | Rust rules, build skill | `cargo build`/`test`/`clippy`/`check`, cargo-llvm-cov, cargo-audit |
+| PHP | PHP rules, build skill | PHPUnit or Pest, PHPStan, coverage, `composer audit` |
+| Ruby | Ruby rules, build skill | RSpec or Minitest, RuboCop, SimpleCov, bundler-audit |
+| Swift | Swift rules, build skill | `swift build`/`test`, SwiftLint, coverage |
+| Dart / Flutter | Dart and Flutter rules, build skill | `flutter test`/`analyze` (or `dart`), coverage |
+| C / C++ | C and C++ rules, build skill | CMake and CTest |
+
+Gates run only tools your project declares: no RuboCop gate unless the project uses RuboCop. Every
+project also gets the shared guidance: architecture, API design, testing, security, Git workflow,
+code review, and agents for planning, implementation, review and security.
+
+## Everyday commands
 
 | Command | What it does |
 |---|---|
-| `[name] [options]` or `create <name>` | Create a project from a template and install the AI configuration |
-| `setup [dir]` | Add the configuration to an existing project; asks before writing (`--yes` to skip, `--dry-run` to only plan) |
-| `diff [dir]` | Show the plan and a unified diff of every change; writes nothing |
-| `update [dir]` | Update a V2 installation to this version's catalog, keeping its adapters and profile; files you changed are kept and the new version is written next to them |
-| `doctor [dir]` | Check managed files and sections against `.ai-agent-setup/manifest.json` |
-| `rollback [dir] [--force]` | Restore the state before the latest install, byte for byte |
-| `catalog validate [dir]` | Validate a catalog (schemas, references, policies, context budget) |
-| `plan "<task>"` *(V2.1 preview)* | Propose a plan: domains, agents, skills, gates and estimated cost, with an explanation; `--mode`, `--domain`, `--agent`, `--exclude-agent`, `--allow-tools`, `--budget`, `--approve-at`, `--json` |
-| `explain <plan-id>` | Show a saved plan with its explanation |
-| `impact [files...]` *(V2.1 preview)* | What changed files touch: modules, areas, risk, related tests, CODEOWNERS owners; without files it reads uncommitted git changes, `--since <ref>` diffs against a ref. `plan --files`, `--changed` and `--since` use the same analysis |
-| `gates list\|run\|history [dir]` *(V2.2 preview)* | Quality gates with evidence: `list` shows every gate, its support status and the command it would run; `run` executes the required gates (profile + `.ai-agent-setup/gates.json`) and writes redacted, checksummed evidence; exit 0 PASS, 1 FAIL, 2 NOT_VERIFIED. `--gate`, `--skip`, `--run`, `--profile`, `--json` |
-| `run <action>` *(V2.1 preview)* | Execution runs (ADR-009): `create <plan-id>`, `approve` and `approve-step` (interactive terminal, id typed back), `deliver --host claude-code\|codex [--dry-run] [--timeout s]`, `event`, `verify <run-id> <step>`, `cancel`, `status`. A run SUCCEEDS only when every step was reported executed and passed its gates; gates passing without execution reports give OUTCOME_VERIFIED (exit 2). Runs are signed with a local key (ADR-016). `deliver --isolation restricted [--network deny] [--pass-env a,b]` runs the host in a macOS kernel sandbox ([guide](docs/guides/runtime-isolation.md)) |
-| `isolation check` *(V2.2 preview)* | Runtime Isolation (ADR-017, proposed): platform matrix and, per control, what a profile (`none`, `restricted`, `isolated`) enforces here; exit 2 when the profile cannot be enforced |
-| `report [dir]` *(V2.2 preview)* | Execution report across runs: runs by status and integrity, gate pass rate (verified runs only), durations, mixed results on one commit, tokens per host and per accepted outcome (signed usage only); `--since <date>`, `--json`; `--kpi` reports every KPI of docs/v2/09 §6, measured or NOT_VERIFIED with the reason. Read-only; tokens measured, money only as the host's own estimate |
+| `setup [dir]` | Install the configuration (asks first; `--yes` to apply, `--dry-run` to only plan) |
+| `diff [dir]` | Show every change as a diff; writes nothing |
+| `update [dir]` | Move to the catalog of the installed version; your edits are kept |
+| `doctor [dir]` | Check the installation against its manifest |
+| `rollback [dir]` | Restore the state before the last install, byte for byte |
+| `gates run [dir]` | Run the required quality gates and record evidence |
+| `create <name>` | Create a project from a template (Express, NestJS, Next.js, Vite, fullstack, Expo, React Native) |
 
-### Create options (same as V1)
-
-| Option | Values |
-|---|---|
-| `-t, --type` | `backend`, `frontend`, `fullstack`, `mobile` |
-| `-f, --framework` | backend: `express`, `nestjs` · frontend: `nextjs`, `vite` · mobile: `expo`, `cli` |
-| `-u, --ui` | frontend only: `shadcn`, `antd`, `chakra`, `semantic` |
-| `-T, --tier` | `starter`, `standard`, `strict` (selects the profile) |
-| `-d, --db` | `postgresql`, `mysql`, `sqlite`, `none` |
-| `-H, --honesty` | include the honesty rule |
-| `-c, --codegraph` | run the third-party CodeGraph installer (needs network) |
-| `-y, --yes` | use defaults, no prompts |
-
-### Setup options
-
-| Option | Meaning |
-|---|---|
-| `-a, --adapter claude-code,codex` | hosts to generate for (default: the hosts already configured, otherwise Claude Code) |
-| `--profile <id>` | `profile.starter`, `profile.standard` (default), `profile.strict` |
-| `--strategy <s>` | conflicts: `write-new` (default: writes `<file>.ai-agent-setup.new` next to yours), `skip`, `backup-overwrite` |
-| `--enable-tool <id>` | opt in to an MCP server, e.g. `tool.mcp-github` |
+Planning, impact analysis, execution runs, reports and runtime isolation are in the
+[CLI reference](docs/guides/cli-reference.md), with every option.
 
 ## What gets installed
 
 | | Claude Code | Codex |
 |---|---|---|
 | Instructions | managed section in `.claude/CLAUDE.md` | managed section in `AGENTS.md` (kept under a 24 KiB budget) |
-| Rules | `.claude/rules/` (path-scoped rules use `paths:`) | in `AGENTS.md`; scoped rules become skills |
+| Rules | `.claude/rules/` (language rules are path-scoped) | in `AGENTS.md`; scoped rules become skills |
 | Skills | `.claude/skills/` | `.agents/skills/` |
-| Agents | `.claude/agents/` (V1 agent names kept) | `.codex/agents/*.toml` |
-| Workflows | `/spec`, `/plan`, `/build`, `/test`, `/review`, … in `.claude/commands/` | skills invoked with `$spec`, `$plan`, … |
-| Safety | `ask`/`deny` permissions + policy hook in `.claude/settings.json` | policy hook in `.codex/hooks.json`; `workspace-write` sandbox with `on-request` approvals |
-| MCP servers | `.mcp.json`, only the ones you enable | `[mcp_servers]` in `.codex/config.toml`, only the ones you enable |
+| Agents | `.claude/agents/` | `.codex/agents/*.toml` |
+| Workflows | `/spec`, `/plan`, `/build`, `/test`, `/review`, … | skills invoked as `$spec`, `$plan`, … |
+| Safety | `ask`/`deny` permissions and the policy hook in `.claude/settings.json` | policy hook in `.codex/hooks.json`; `workspace-write` sandbox with `on-request` approvals |
+| MCP servers | `.mcp.json`, only those you enable | `[mcp_servers]` in `.codex/config.toml`, only those you enable |
 
-Everything the installer writes is recorded in `.ai-agent-setup/manifest.json` (commit it). Backups
-and transaction journals stay local in `.ai-agent-setup/backups/` and `.ai-agent-setup/transactions/`.
+Everything written is recorded in `.ai-agent-setup/manifest.json` (commit it). Backups and
+transaction journals stay local in `.ai-agent-setup/`.
 
 ## Catalog
 
-All configuration comes from `catalog/`: YAML entries validated by JSON Schemas, organised into 12
-capability domains (product, design, frontend, backend, mobile, data and AI, DevOps, quality,
-security, architecture, docs and developer experience, integration). Every domain and capability is
-defined; most guidance still comes from the V1 rules, skills and agents, and deeper domain content
-is on the roadmap.
+All configuration comes from `catalog/`: YAML entries checked against JSON Schemas, organised into
+12 capability domains, from product and design to security, DevOps and data.
 
 <!-- catalog-summary:begin (generated by `npm run docs:summary`; do not edit) -->
 | Catalog | Count |
@@ -124,36 +128,40 @@ is on the roadmap.
 | Adapters | claude-code, codex |
 <!-- catalog-summary:end -->
 
-## Known limitations
+## Status and known limitations
 
-- **Not tested inside real hosts yet:** generated files follow the Claude Code and Codex docs
-  (checked 2026-11-24) and are covered by golden tests, but they have not been loaded into running
-  `claude` or `codex` binaries.
-- **Codex** loads project `.codex/` config, agents and hooks only in trusted projects, and runs hooks
-  only after you approve them with `/hooks`.
-- **V1 projects** keep their existing `.claude/settings.json` allow rules, including `Bash(rm *)`;
-  `setup` warns about them but does not delete your configuration.
-- **Node.js:** 20 or later (`engines.node >=20`), the versions CI tests (20, 22 and 24).
-- `--db mysql` / `sqlite` switch the Prisma provider; migrating each template's schema on those
-  databases has not been verified.
-- **Runtime state protection** blocks agent writes to `.ai-agent-setup/` through the hosts' tools, and
-  runs are signed with a key kept in your configuration directory (`ai-agent-setup/keys`). Neither is
-  a security boundary against programs the agent runs under your account; see
-  [docs/v2/11](docs/v2/11-runtime-threat-model.md).
-- **Run delivery and quality gates** have been tested with synthetic commands and a fake host
-  process only. Delivering a plan to a real `claude` or `codex` CLI is NOT_VERIFIED; the host message
-  formats come from their published docs. The secret scan is pattern-based and does not prove that
-  a change is free of secrets.
-- **No performance claims:** token, cost and speed effects have not been measured yet. The benchmark
-  plan is in [docs/v2/09](docs/v2/09-testing-and-benchmark-strategy.md). CodeGraph's own published
-  figures are the vendor's claims and were not measured here.
+The current release is listed on [npm](https://www.npmjs.com/package/create-ai-agent-setup) and in
+the [changelog](CHANGELOG.md). What is verified, and what is not yet:
+
+- **Claude Code:** plan delivery, stream events, token usage and permissions were checked with the
+  installed CLI (2.1.332). **Codex** (0.172.0) is partly verified: start, failure, timeout and
+  cancellation, but not a signed-in run. Codex runs only in a Git repository or trusted directory.
+- **No effectiveness claims yet.** The benchmark that compares agents with and without this
+  configuration is built and reviewed, but has not been run on real hosts.
+- **Gate defaults** follow each tool's documentation and are tested with fixtures, not against every
+  real toolchain. The dependency-audit tools' result messages are unverified; a mismatch gives
+  NOT_VERIFIED, never a false pass.
+- **Runtime isolation** (`run deliver --isolation restricted`) is a macOS-only preview; Linux and
+  Windows are not supported yet ([guide](docs/guides/runtime-isolation.md)).
+- **Guard rails are not a sandbox.** The policy hook and signed runs protect against mistakes, not
+  against programs the agent runs under your account ([threat model](docs/v2/11-runtime-threat-model.md)).
+- **V1 projects** keep their existing `.claude/settings.json` allow rules (including broad ones such
+  as `Bash(rm *)`); `setup` warns about them but does not delete your configuration.
+- `--db mysql` or `sqlite` switches the Prisma provider; each template's schema on those databases
+  is not verified.
+
+## Upgrading from 1.x
+
+Read [Migrating from V1](docs/guides/migrating-from-v1.md), then run `diff` before `setup`. 1.x stays
+available as `npx create-ai-agent-setup@1` and gets security fixes until 2027-05-25.
 
 ## Documentation
 
+- [CLI reference](docs/guides/cli-reference.md)
 - [Migrating from V1](docs/guides/migrating-from-v1.md)
-- [V2 design documents](docs/v2/README.md): audit, product and architecture specifications,
-  roadmap with current status ([08 §9](docs/v2/08-implementation-roadmap.md#9-implementation-status)),
-  testing strategy, architecture decisions.
+- [Runtime isolation](docs/guides/runtime-isolation.md)
+- [Language packs and gates](docs/v2/16-language-packs.md)
+- [Design documents](docs/v2/README.md): architecture, decisions, roadmap and status
 - [Changelog](CHANGELOG.md)
 
 ## Development
@@ -161,20 +169,16 @@ is on the roadmap.
 ```bash
 npm ci
 npm run typecheck
-npm run lint              # ESLint with type-aware rules, zero warnings
-npm test                  # unit, contract, golden, installer and end-to-end tests
-npm run test:coverage     # the same with V8 coverage; fails below 80% on any metric
-npm run catalog:validate  # also prints the measured always-loaded context per profile
+npm run lint              # type-aware ESLint, zero warnings
+npm test                  # unit, contract, golden, installer, security and end-to-end tests
+npm run test:coverage     # fails below 80% on any metric
+npm run catalog:validate  # also prints the always-loaded context per profile
 npm run docs:summary      # refresh the catalog table in both READMEs
 ```
 
-CI runs on Linux, macOS and Windows with Node 20, 22 and 24.
-
-## Contributing
-
-1. Work on a `feature/*` or `fix/*` branch with conventional commits.
-2. Add or update tests; keep `npm test` green.
-3. Catalog changes must pass `npm run catalog:validate`.
+CI runs on Linux, macOS and Windows with Node 20, 22 and 24. To contribute: work on a `feature/*`
+or `fix/*` branch with conventional commits, add tests, and keep `npm test` and
+`npm run catalog:validate` green.
 
 ## License
 
