@@ -30,9 +30,23 @@ export interface Controls {
   seed: number;
   n: number;
   packageCommit: string | null;
+  /** The toolkit had uncommitted changes: the run cannot be reproduced from `packageCommit`. */
+  packageDirty: boolean;
+  toolkitVersion: string;
+  /** Version of the oracle's rules (checks, data loss, regression guard, security checks). */
+  evaluatorVersion: string;
   v1Commit: string;
+  arms: Arm[];
   fixtures: Record<string, string>;
   timeLimits: Record<string, number>;
+  /** Per task: digests of the prompt, the hidden checks and the security checks. */
+  tasks: Record<string, { prompt: string; hiddenChecks: string | null; securityChecks: string | null }>;
+  /** The host command line, with the prompt left out. */
+  invocation: string[];
+  /** sandboxed: the host and the code under test could not read the checks or solutions (Seatbelt). */
+  secrets: 'sandboxed' | 'unprotected';
+  /** Every model the hosts reported in their usage. */
+  modelsObserved: string[];
 }
 
 type Interval = { low: number; high: number } | null;
@@ -176,7 +190,12 @@ const hostFailed = (trial: Trial): boolean => (trial.exitCode !== 0 && !trial.ti
 function validityProblems(trials: Trial[], controls: Controls, arms: readonly Arm[]): string[] {
   const taskCount = new Set(trials.map((trial) => trial.task)).size;
   const failed = trials.filter(hostFailed).length;
+  const requested = controls.model.toLowerCase();
+  const modelSeen = controls.modelsObserved.some((model) => model.toLowerCase().includes(requested));
   return [
+    ...(controls.packageDirty ? ['the toolkit had uncommitted changes, so the run cannot be reproduced from its commit'] : []),
+    ...(controls.secrets === 'unprotected' ? ['the host could read the hidden checks and reference solutions (no sandbox for this host here); run it in a container that does not hold them (09 §5.2)'] : []),
+    ...(trials.length && !modelSeen ? [`no host reported the requested model "${controls.model}" (reported: ${controls.modelsObserved.join(', ') || 'none'})`] : []),
     ...(failed ? [`${failed} trial(s) where the host failed (error exit or no model usage); they measure the host, not the configuration`] : []),
     ...(taskCount < MIN_TASKS ? [`${taskCount} task(s); 09 §5.3 needs at least ${MIN_TASKS}`] : []),
     ...(controls.n < MIN_REPEATS ? [`n = ${controls.n}; 09 §5.2 needs n ≥ ${MIN_REPEATS}`] : []),
@@ -185,10 +204,18 @@ function validityProblems(trials: Trial[], controls: Controls, arms: readonly Ar
 }
 
 /** Paired comparisons for the arms that ran. */
-function comparisons(trials: Trial[], arms: readonly Arm[], random: () => number): Comparison[] {
+/**
+ * A random stream of its own for each statistic, from the seed and a fixed label: a result never
+ * depends on which other statistics were computed, or in what order the arms were given.
+ */
+function streamFor(seed: number, label: string): () => number {
+  return seededRandom(seed + [...label].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 7));
+}
+
+function comparisons(trials: Trial[], arms: readonly Arm[], seed: number): Comparison[] {
   return (['C-B', 'C-A'] as const)
     .filter((pair) => pair.split('-').every((arm) => arms.includes(arm as Arm)))
-    .map((pair) => comparison(trials, pair, random))
+    .map((pair) => comparison(trials, pair, streamFor(seed, `pair:${pair}`)))
     .filter((item): item is Comparison => item !== null);
 }
 
@@ -206,10 +233,9 @@ function categoryAcceptance(trials: Trial[], arms: readonly Arm[]): BenchmarkRep
 }
 
 export function buildBenchmarkReport(trials: Trial[], controls: Controls, arms: readonly Arm[], now: Date): BenchmarkReport {
-  const random = seededRandom(controls.seed + 1);
   const problems = validityProblems(trials, controls, arms);
-  const summaries = arms.map((arm) => armSummary(trials, arm, random));
-  const paired = comparisons(trials, arms, random);
+  const summaries = arms.map((arm) => armSummary(trials, arm, streamFor(controls.seed + 1, `arm:${arm}`)));
+  const paired = comparisons(trials, arms, controls.seed + 1);
   const notVerified = trials.filter((trial) => trial.oracle.verdict === 'NOT_VERIFIED').length;
   return {
     schemaVersion: 'benchmark-report/v1',

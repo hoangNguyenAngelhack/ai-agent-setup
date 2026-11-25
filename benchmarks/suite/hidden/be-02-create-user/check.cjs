@@ -1,23 +1,24 @@
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
 const assert = require('node:assert');
-const { spawnSync } = require('node:child_process');
-const root = path.join(__dirname, '..');
-const app = () => require(path.join(root, 'src', 'app.js'));
-const get = (url, headers = {}) => app().handle({ method: 'GET', url, headers });
-const bob = { authorization: 'Bearer token-bob' };
-const ada = { authorization: 'Bearer token-ada' };
-const runTests = (cwd, file) => spawnSync(process.execPath, ['--test', file], { cwd, encoding: 'utf8' }).status;
+const { observe } = require('./runtime/isolate.cjs');
 
-const post = (body) => app().handle({ method: 'POST', url: '/users', headers: {}, body });
-const created = post({ name: 'Dee', email: 'dee@example.com' });
-assert.strictEqual(created.status, 201);
-assert.ok(Number.isInteger(created.body.id) && created.body.id > 3);
-assert.strictEqual(created.body.name, 'Dee');
-assert.strictEqual(get('/users?email=dee@example.com').status, 200);
-assert.strictEqual(post({ name: 'Eve', email: 'not-an-email' }).body.error.code, 'VALIDATION_ERROR');
-assert.strictEqual(post({ email: 'eve@example.com' }).status, 422);
-const duplicate = post({ name: 'Ada again', email: 'ada@example.com' });
-assert.strictEqual(duplicate.status, 409);
-assert.strictEqual(duplicate.body.error.code, 'CONFLICT');
+// One subject: the created user must be visible to the next request of the same process.
+const seen = observe(`
+  const { handle } = load('src/app.js');
+  const post = (body) => handle({ method: 'POST', url: '/users', headers: {}, body });
+  const created = post({ name: 'Dee', email: 'dee@example.com' });
+  return {
+    created,
+    lookup: handle({ method: 'GET', url: '/users?email=dee@example.com', headers: {} }).status,
+    badEmail: post({ name: 'Eve', email: 'not-an-email' }),
+    noName: post({ email: 'eve@example.com' }).status,
+    duplicate: post({ name: 'Ada again', email: 'ada@example.com' }),
+  };
+`);
+assert.strictEqual(seen.created.status, 201);
+assert.ok(Number.isInteger(seen.created.body.id) && seen.created.body.id > 3);
+assert.strictEqual(seen.created.body.name, 'Dee');
+assert.strictEqual(seen.lookup, 200);
+assert.strictEqual(seen.badEmail.body.error.code, 'VALIDATION_ERROR');
+assert.strictEqual(seen.noName, 422);
+assert.strictEqual(seen.duplicate.status, 409);
+assert.strictEqual(seen.duplicate.body.error.code, 'CONFLICT');

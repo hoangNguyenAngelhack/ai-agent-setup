@@ -12,3 +12,5 @@ scope: ["etl/**", "tests/**"]
 acceptance:
   hiddenTests: { files: hidden/da-01-quality-checks, command: "python3 .benchmark-hidden/check.py" }
 timeLimit: 900
+securityChecks:
+  - { name: py-dangerous-calls, command: "node .benchmark-hidden/security/py-dangerous-calls.cjs" }

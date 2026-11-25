@@ -10,3 +10,6 @@ scope: [".github/**"]
 acceptance:
   hiddenTests: { files: hidden/do-01-ci-pipeline, command: "node .benchmark-hidden/check.cjs" }
 timeLimit: 600
+securityChecks:
+  - { name: auth-required, command: "node .benchmark-hidden/security/auth-required.cjs" }
+  - { name: js-dangerous-calls, command: "node .benchmark-hidden/security/js-dangerous-calls.cjs" }

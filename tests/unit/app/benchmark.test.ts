@@ -73,8 +73,8 @@ describe('benchmark oracle (W2.2-02)', () => {
     writeFileSync(join(workspace, 'src/a.js'), '2');
     writeFileSync(join(workspace, 'notes.md'), 'new file outside the scope is not data loss');
     expect(judge(task, suite, workspace, before)).toMatchObject({ verdict: 'ACCEPTED', dataLoss: { status: 'PASS', files: [] }, hiddenTests: { status: 'PASS' } });
-    // The hidden tests were copied in after the changes were read.
-    expect(existsSync(join(workspace, '.benchmark-hidden', 'ok.cjs'))).toBe(true);
+    // The hidden checks ran from a directory outside the workspace and never entered it.
+    expect(existsSync(join(workspace, '.benchmark-hidden'))).toBe(false);
 
     const lossy = writeTree({ 'src/a.js': '1', 'README.md': 'x', 'docs/b.md': 'y' });
     const lossyBefore = snapshotTree(lossy);
@@ -153,7 +153,25 @@ function trial(task: string, arm: Trial['arm'], verdict: Trial['oracle']['verdic
   };
 }
 
-const controls: Controls = { host: 'claude-code', hostVersion: 'x', model: 'm', seed: 1, n: 3, packageCommit: null, v1Commit: '51bfc3a', fixtures: {}, timeLimits: {} };
+const controls: Controls = {
+  host: 'claude-code',
+  hostVersion: 'x',
+  model: 'm',
+  seed: 1,
+  n: 3,
+  packageCommit: null,
+  packageDirty: false,
+  toolkitVersion: '2.0.0-alpha.0',
+  evaluatorVersion: 'oracle/2',
+  v1Commit: '51bfc3a',
+  arms: ['B', 'C'],
+  fixtures: {},
+  timeLimits: {},
+  tasks: {},
+  invocation: [],
+  secrets: 'sandboxed',
+  modelsObserved: ['m-1'],
+};
 
 describe('benchmark statistics (W2.2-02)', () => {
   it('should shuffle reproducibly by seed', () => {
@@ -182,6 +200,32 @@ describe('benchmark statistics (W2.2-02)', () => {
     expect(buildBenchmarkReport(run(0), controls, ['B', 'C'], new Date()).hypothesis.status).toBe('NOT_SUPPORTED');
     expect(buildBenchmarkReport(run(3), controls, ['B', 'C'], new Date()).hypothesis.status).toBe('INCONCLUSIVE');
     expect(buildBenchmarkReport(run(30), controls, ['C'], new Date())).toMatchObject({ validity: { valid: false, problems: ['arms B and C are both needed for the V1-vs-V2 comparison'] }, comparisons: [] });
+  });
+
+  it('should give the same intervals whatever the order of --arms (finding 12)', () => {
+    const trials = Array.from({ length: 12 }, (_, index) => `t${index}`).flatMap((task, index) =>
+      // Per-task acceptance varies (0, 1/3, 2/3, 1), so the bootstrap intervals depend on the random stream.
+      (['A', 'B', 'C'] as const).flatMap((arm) => Array.from({ length: 3 }, (_, rep) => trial(task, arm, rep < (index + arm.charCodeAt(0)) % 4 ? 'ACCEPTED' : 'REJECTED'))),
+    );
+    const report = (arms: Trial['arm'][]) => buildBenchmarkReport(trials, { ...controls, arms }, arms, new Date());
+    const byArm = (arms: Trial['arm'][]) => Object.fromEntries(report(arms).arms.map((summary) => [summary.arm, summary]));
+    const byPair = (arms: Trial['arm'][]) => Object.fromEntries(report(arms).comparisons.map((item) => [item.pair, item]));
+
+    expect(byArm(['C', 'A', 'B'])).toEqual(byArm(['A', 'B', 'C']));
+    expect(byPair(['C', 'A', 'B'])).toEqual(byPair(['A', 'B', 'C']));
+    const interval = report(['A', 'B', 'C']).arms.find((summary) => summary.arm === 'C')!.acceptanceRate.ci95!;
+    expect(interval.high).toBeGreaterThan(interval.low);
+  });
+
+  it('should not support a claim from an unreproducible run, unprotected checks or an unseen model (finding 8)', () => {
+    const trials = Array.from({ length: 30 }, (_, index) => `t${index}`).flatMap((task) => Array.from({ length: 3 }, () => [trial(task, 'B', 'REJECTED'), trial(task, 'C', 'ACCEPTED')]).flat());
+    const problems = (changes: Partial<Controls>) => buildBenchmarkReport(trials, { ...controls, ...changes }, ['B', 'C'], new Date()).validity.problems;
+
+    expect(problems({})).toEqual([]);
+    expect(problems({ packageDirty: true })).toEqual(['the toolkit had uncommitted changes, so the run cannot be reproduced from its commit']);
+    expect(problems({ secrets: 'unprotected' })[0]).toMatch(/^the host could read the hidden checks/);
+    expect(problems({ model: 'model-a', modelsObserved: ['model-a-2026'] })).toEqual([]);
+    expect(problems({ model: 'model-a', modelsObserved: ['model-b'] })).toEqual(['no host reported the requested model "model-a" (reported: model-b)']);
   });
 
   it('should not let trials where the host itself failed count as the configuration\'s result', () => {

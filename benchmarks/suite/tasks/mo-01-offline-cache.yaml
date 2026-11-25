@@ -12,3 +12,5 @@ scope: ["src/**", "test/**"]
 acceptance:
   hiddenTests: { files: hidden/mo-01-offline-cache, command: "node .benchmark-hidden/check.cjs" }
 timeLimit: 900
+securityChecks:
+  - { name: js-dangerous-calls, command: "node .benchmark-hidden/security/js-dangerous-calls.cjs" }

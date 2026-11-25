@@ -2,8 +2,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const assert = require('node:assert');
-const { spawnSync } = require('node:child_process');
-const root = path.join(__dirname, '..');
+const { runTests } = require('./runtime/isolate.cjs');
+const root = process.cwd();
 const [source, testFile] = process.argv.slice(2);
 assert.ok(fs.existsSync(path.join(root, testFile)), `no ${testFile}`);
 const run = (implementation) => {
@@ -12,7 +12,7 @@ const run = (implementation) => {
   fs.mkdirSync(path.join(dir, path.dirname(testFile)), { recursive: true });
   fs.writeFileSync(path.join(dir, source), implementation);
   fs.copyFileSync(path.join(root, testFile), path.join(dir, testFile));
-  return spawnSync(process.execPath, ['--test', testFile], { cwd: dir, encoding: 'utf8' }).status;
+  return runTests(dir, testFile);
 };
 assert.strictEqual(run(fs.readFileSync(path.join(root, source), 'utf8')), 0, 'the tests fail on the real implementation');
 const mutants = fs.readdirSync(path.join(__dirname, 'mutants')).sort();

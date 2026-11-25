@@ -1,17 +1,12 @@
-const path = require('node:path');
 const assert = require('node:assert');
-const root = path.join(__dirname, '..');
-const { createItemListController } = require(path.join(root, 'src', 'itemListController.js'));
-const memoryStorage = () => {
-  const data = new Map();
-  return { data, get: async (key) => (data.has(key) ? data.get(key) : null), set: async (key, value) => void data.set(key, value) };
-};
-const fail = (error) => {
-  console.error(error.message);
-  process.exit(1);
-};
+const { observe } = require('./runtime/isolate.cjs');
 
-(async () => {
+const seen = observe(`
+  const { createItemListController } = load('src/itemListController.js');
+  const memoryStorage = () => {
+    const data = new Map();
+    return { data, get: async (key) => (data.has(key) ? data.get(key) : null), set: async (key, value) => void data.set(key, value) };
+  };
   const items = [{ id: 'a' }, { id: 'b' }];
   const storage = memoryStorage();
   let online = true;
@@ -21,10 +16,21 @@ const fail = (error) => {
     return { items, nextCursor: null };
   } };
   const controller = createItemListController({ api, storage });
-  assert.deepStrictEqual(await controller.load(), { items, stale: false });
-  assert.deepStrictEqual(JSON.parse(storage.data.get('items-cache')), items);
+  const fresh = await controller.load();
+  const cached = JSON.parse(storage.data.get('items-cache'));
   online = false;
-  assert.deepStrictEqual(await controller.load(), { items, stale: true });
+  const stale = await controller.load();
   const empty = createItemListController({ api, storage: memoryStorage() });
-  await assert.rejects(empty.load(), (error) => error === offlineError);
-})().catch(fail);
+  let rejection = 'resolved';
+  try {
+    await empty.load();
+  } catch (error) {
+    rejection = error === offlineError ? 'the offline error' : 'another error';
+  }
+  return { fresh, cached, stale, rejection };
+`);
+const items = [{ id: 'a' }, { id: 'b' }];
+assert.deepStrictEqual(seen.fresh, { items, stale: false });
+assert.deepStrictEqual(seen.cached, items);
+assert.deepStrictEqual(seen.stale, { items, stale: true });
+assert.strictEqual(seen.rejection, 'the offline error');

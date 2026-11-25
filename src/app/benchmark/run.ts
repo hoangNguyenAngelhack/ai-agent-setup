@@ -1,6 +1,6 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { claudeCodeDelivery } from '../../adapters/claude-code';
@@ -12,8 +12,9 @@ import { SchemaValidator } from '../../registry';
 import { projectIdentity } from '../run-files';
 import { hostAvailable } from '../runs';
 import { ARMS, prepareArms, prepareWorkspace, V1_BASELINE_COMMIT, type Arm, type BenchmarkHost } from './arms';
-import { judge, snapshotTree, treeDigest } from './oracle';
-import { buildBenchmarkReport, renderBenchmarkReport, seededRandom, shuffle, type BenchmarkReport, type Trial } from './report';
+import { CHECK_ROOMS, EVALUATOR_VERSION, judge, snapshotTree, treeDigest } from './oracle';
+import { buildBenchmarkReport, renderBenchmarkReport, seededRandom, shuffle, type BenchmarkReport, type Controls, type Trial } from './report';
+import { benchmarkSecrets, subjectPrefix } from './subject';
 import { loadSuite, type BenchmarkTask } from './tasks';
 
 /**
@@ -39,6 +40,29 @@ export interface BenchmarkOptions {
   /** Run only these tasks (a calibration run); the report then fails the ≥ 30 tasks validity rule. */
   taskIds?: string[];
   now?: () => Date;
+}
+
+const digest = (text: string): string => createHash('sha256').update(text).digest('hex').slice(0, 16);
+
+/** What a task's result depends on besides its fixture: its prompt, hidden checks and security checks. */
+function taskDigests(task: BenchmarkTask, suiteDir: string): Controls['tasks'][string] {
+  const hidden = task.acceptance.hiddenTests;
+  const security = task.securityChecks;
+  return {
+    prompt: digest(task.prompt),
+    hiddenChecks: hidden ? digest(`${hidden.command}\n${treeDigest(join(suiteDir, hidden.files))}`) : null,
+    securityChecks: security?.length ? digest(`${JSON.stringify(security)}\n${treeDigest(join(suiteDir, 'security'))}`) : null,
+  };
+}
+
+/**
+ * Keeps the host out of the checks, the reference solutions and the results while it works. Claude
+ * Code runs under a Seatbelt profile that denies only those paths. Codex is not wrapped: its own
+ * sandbox uses `sandbox-exec`, which cannot be nested (tested on macOS), so its runs stay unprotected
+ * and are not valid for claims outside a container (09 §5.2).
+ */
+function hostSecretsPrefix(host: BenchmarkHost, suiteDir: string, outDir: string): ReturnType<typeof subjectPrefix> {
+  return host === 'claude-code' ? subjectPrefix(benchmarkSecrets(suiteDir, CHECK_ROOMS, outDir)) : { prefix: [], isolation: 'process' };
 }
 
 export interface PlannedTrial {
@@ -103,7 +127,7 @@ async function runHostProcess(executable: string, args: string[], cwd: string, t
 }
 
 async function runTrial(
-  options: { suiteDir: string; delivery: HostDelivery; model: string; keep: boolean },
+  options: { suiteDir: string; delivery: HostDelivery; model: string; keep: boolean; hostPrefix: string[] },
   task: BenchmarkTask,
   arm: Arm,
   armDir: string,
@@ -113,7 +137,8 @@ async function runTrial(
     const before = snapshotTree(workspace);
     const meter = new UsageMeter(options.delivery.host);
     const { executable, args } = options.delivery.promptInvocation(task.prompt, options.model);
-    const run = await runHostProcess(executable, args, workspace, task.timeLimit * 1000, (line) => {
+    const [command, ...rest] = [...options.hostPrefix, executable, ...args];
+    const run = await runHostProcess(command!, rest, workspace, task.timeLimit * 1000, (line) => {
       const usage = options.delivery.parseUsage(line);
       if (usage) meter.add(usage);
     });
@@ -133,12 +158,14 @@ export async function runBenchmark(options: BenchmarkOptions): Promise<Benchmark
   const tasks = selectTasks(loadSuite(options.suiteDir), options.taskIds);
   const hostVersion = spawnSync(delivery.executable, ['--version'], { encoding: 'utf8' }).stdout?.trim() || 'unknown';
   const armDirs = prepareArms(packageRoot, options.host);
+  mkdirSync(CHECK_ROOMS, { recursive: true });
+  mkdirSync(options.outDir, { recursive: true });
+  const secrets = hostSecretsPrefix(options.host, options.suiteDir, options.outDir);
   const plan = planTrials(tasks, arms, n, seed);
   const trials: Trial[] = [];
-  mkdirSync(options.outDir, { recursive: true });
   try {
     for (const [index, { task, arm, rep }] of plan.entries()) {
-      const trial: Trial = { order: index + 1, rep, ...(await runTrial({ suiteDir: options.suiteDir, delivery, model: options.model, keep: options.keepWorkspaces ?? false }, task, arm, armDirs[arm])) };
+      const trial: Trial = { order: index + 1, rep, ...(await runTrial({ suiteDir: options.suiteDir, delivery, model: options.model, keep: options.keepWorkspaces ?? false, hostPrefix: secrets.prefix }, task, arm, armDirs[arm])) };
       trials.push(trial);
       // Written after every trial, so an interrupted run keeps what it measured.
       writeFileSync(join(options.outDir, 'trials.jsonl'), trials.map((item) => JSON.stringify(item)).join('\n') + '\n');
@@ -146,16 +173,25 @@ export async function runBenchmark(options: BenchmarkOptions): Promise<Benchmark
   } finally {
     rmSync(dirname(armDirs.A), { recursive: true, force: true });
   }
-  const controls = {
+  const identity = projectIdentity(packageRoot);
+  const controls: Controls = {
     host: options.host,
     hostVersion,
     model: options.model,
     seed,
     n,
-    packageCommit: projectIdentity(packageRoot).commit,
+    packageCommit: identity.commit,
+    packageDirty: identity.dirty,
+    toolkitVersion: (JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8')) as { version: string }).version,
+    evaluatorVersion: EVALUATOR_VERSION,
     v1Commit: V1_BASELINE_COMMIT,
+    arms: [...arms],
     fixtures: Object.fromEntries(tasks.map((task) => [task.id, treeDigest(join(options.suiteDir, task.fixture))])),
     timeLimits: Object.fromEntries(tasks.map((task) => [task.id, task.timeLimit])),
+    tasks: Object.fromEntries(tasks.map((task) => [task.id, taskDigests(task, options.suiteDir)])),
+    invocation: delivery.promptInvocation('<prompt>', options.model).args,
+    secrets: secrets.isolation === 'process-and-sandbox' ? 'sandboxed' : 'unprotected',
+    modelsObserved: [...new Set(trials.flatMap((trial) => Object.keys(trial.usage.byModel)))].sort(),
   };
   const report = buildBenchmarkReport(trials, controls, arms, (options.now ?? (() => new Date()))());
   const check = new SchemaValidator(join(PACKAGE_ROOT, 'catalog', 'schemas')).validate(BENCHMARK_REPORT_SCHEMA, report);
