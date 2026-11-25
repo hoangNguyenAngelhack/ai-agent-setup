@@ -13,7 +13,8 @@
 - **Claude Code and Codex.** `--adapter claude-code` reproduces the V1 layout. `--adapter codex`
   writes `AGENTS.md`, `.agents/skills/` and `.codex/`.
 - **Existing projects.** `setup` adds the configuration to a project. `diff` shows every change
-  first, and `doctor` checks an installation.
+  first, and `doctor` checks an installation. `update` brings an installation to a newer
+  catalog and keeps its adapters and profile.
 - **Planning and execution.** `plan`, `explain` and `impact` route a task to capabilities and agents,
   and say why. `run` delivers an approved plan to a host and verifies each step with quality gates.
   Approvals and events are signed per project.
@@ -33,7 +34,7 @@
 - A failed git commit only warns, so a created project is never left half done.
 - Interactive mode asks one new question: the AI host (Claude Code, Codex or both).
 - Unknown options are now an error. 1.6.1 ignored them silently.
-- `create`, `setup`, `diff`, `doctor`, `rollback` and `catalog` are reserved first arguments, so a
+- `create`, `setup`, `update`, `diff`, `doctor`, `rollback` and `catalog` are reserved first arguments, so a
   project can no longer be named after one of them positionally. Use `create <name>`.
 - `.claude/CLAUDE.md` holds a generated managed section instead of the V1 document. The V1
   "Maintainer" line is gone; author details still fill `package.json` and the README.
