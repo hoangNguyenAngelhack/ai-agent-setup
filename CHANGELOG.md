@@ -159,6 +159,12 @@ Release notes: [docs/v2/14](docs/v2/14-release-notes-2.0.0.md).
   configuration's result (the run is now invalid for claims); processes left by the agent kept
   running while the workspace was judged; the user's own host configuration and different permission
   states leaked into the arms.
+- Benchmark checks could be defeated by the code they judge (it ran inside the check process: an
+  exit at load passed). Checks now run from a directory outside the workspace, the code under test
+  runs in its own process, and on macOS neither the host nor that process can read the checks or
+  the reference solutions (Seatbelt). Security regression checks (`auth-required`, dangerous calls)
+  now feed the security veto; three checks no longer reject correct work written another way; the
+  report records what a run needs to be reproduced; intervals no longer depend on `--arms` order.
 - Claude Code token usage was undercounted: per-message usage in its stream carries the output
   count from the start of each message (found with the installed CLI 2.1.332: 23 output tokens per
   message against 321 in the session total). Usage now comes from the result message's

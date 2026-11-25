@@ -12,7 +12,9 @@ run by `npm run bench` (W2.2-02).
 |---|---|
 | `tasks/` | One `benchmark-task/v1` YAML per task: category, domains, fixture, prompt, scope, acceptance, time limit |
 | `fixtures/` | The projects agents work in, without dependencies: `shop` (Node API and web UI), `mobile` (list screen data layer), `etl` (Python 3, standard library), `product` (planning documents) |
-| `hidden/<task>/` | Checks copied into the workspace only after the agent stops; testing tasks also hold mutants the agent's tests must catch |
+| `hidden/<task>/` | Checks, run after the agent stops from a directory outside the workspace, with the workspace as the working directory; testing tasks also hold mutants the agent's tests must catch |
+| `runtime/` | `isolate.cjs` and `isolate.py`: checks run the code under test in its own process (`observe`, `runTests`, `spawnSubject`) and keep every assertion |
+| `security/` | Security regression checks shared by tasks (`auth-required`, `js-dangerous-calls`, `py-dangerous-calls`); they pass on the untouched fixtures |
 | `solutions/<task>/` | A reference solution, never shown to agents; it proves each task can be solved |
 
 ## Distribution
@@ -44,6 +46,13 @@ scores them (09 §5.4).
 - the hidden checks reject every untouched fixture;
 - every reference solution is accepted (NOT_VERIFIED for rubric tasks) without data loss or secrets;
 - every solution stays inside its task's scope;
-- every mutant differs from the code it mutates.
+- every mutant differs from the code it mutates;
+- the security checks pass on every untouched fixture.
 
-To add a task, add its YAML, hidden checks and solution, then run that test.
+`tests/security/benchmark-checks.test.ts` attacks the checks from the code under test (exit at load,
+checker detection, patched built-ins, reading or writing the checks, ending the fixture's tests
+early), and `tests/benchmark/false-negatives.test.ts` keeps equivalent correct work accepted.
+
+To add a task, add its YAML, hidden checks and solution, then run those tests. A check that runs the
+agent's code must do it through `runtime/isolate.cjs` (or `isolate.py`), never with `require` or
+`import` in the check process.
