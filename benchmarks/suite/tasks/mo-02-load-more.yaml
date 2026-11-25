@@ -1,0 +1,15 @@
+schema: benchmark-task/v1
+id: mo-02-load-more
+category: mobile
+domains: [mobile]
+fixture: fixtures/mobile
+prompt: |
+  Add infinite scrolling to src/itemListController.js. load() fetches the first page and resets the list;
+  loadMore() fetches the next page with { cursor: nextCursor }, appends items whose id is not in the list yet,
+  and resolves to all items. The controller exposes hasMore, which is false once nextCursor is null; then
+  loadMore() resolves to the current items without calling the api. Calls to loadMore() made while one is in
+  flight share that request. load() resolves to { items }.
+scope: ["src/**", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/mo-02-load-more, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

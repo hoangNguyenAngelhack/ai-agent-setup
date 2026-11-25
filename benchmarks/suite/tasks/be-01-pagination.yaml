@@ -1,0 +1,14 @@
+schema: benchmark-task/v1
+id: be-01-pagination
+category: backend
+domains: [backend]
+fixture: fixtures/shop
+prompt: |
+  Paginate GET /orders in src/app.js. It accepts page (default 1) and limit (default 20, at most 100: larger
+  values are capped) query parameters and returns { data, pagination: { page, limit, total, totalPages } } for
+  the signed-in user's orders, ordered by id. A page or limit that is not a positive integer gets 400. The
+  endpoint still needs a token (401 without).
+scope: ["src/**", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/be-01-pagination, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

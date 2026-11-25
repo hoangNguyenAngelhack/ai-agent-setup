@@ -1,0 +1,19 @@
+schema: benchmark-task/v1
+id: ar-03-context-diagram
+category: architecture
+domains: [architecture-leadership]
+fixture: fixtures/shop
+prompt: |
+  Write docs/architecture.md with a C4 system context diagram of the shop as a Mermaid code block. Show the
+  customer, the shop API, the web UI in public/, and an email provider the shop will use. Under the diagram,
+  describe each element in one paragraph.
+scope: ["docs/**"]
+acceptance:
+  hiddenTests: { files: hidden/ar-03-context-diagram, command: "node .benchmark-hidden/check.cjs" }
+  rubric:
+    threshold: 3
+    criteria:
+      - the diagram matches the code
+      - relationships are labelled
+      - descriptions are accurate
+timeLimit: 600

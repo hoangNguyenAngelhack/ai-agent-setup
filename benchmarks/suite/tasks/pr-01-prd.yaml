@@ -1,0 +1,20 @@
+schema: benchmark-task/v1
+id: pr-01-prd
+category: product-requirements
+domains: [product-business]
+fixture: fixtures/product
+prompt: |
+  Read docs/brief.md and write a product requirements document in docs/prd-referral.md.
+  Use these level-2 headings, in this order: Goals, Non-goals, Users, Requirements, Acceptance criteria, Success metrics.
+  Write at least three testable acceptance criteria as a list, and say how fraud such as self-referrals is limited.
+scope: ["docs/prd-referral.md"]
+acceptance:
+  hiddenTests: { files: hidden/pr-01-prd, command: "node .benchmark-hidden/check.cjs" }
+  rubric:
+    threshold: 3
+    criteria:
+      - goals and non-goals are specific to the brief
+      - acceptance criteria are testable
+      - success metrics are measurable
+      - fraud limits are concrete
+timeLimit: 600

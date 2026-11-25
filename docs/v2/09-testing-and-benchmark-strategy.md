@@ -264,4 +264,4 @@ installer matrix is NOT_VERIFIED with the reason, and no other figure is reporte
 - [x] V1 characterization precedes refactoring.
 - [x] The benchmark defines arms, controls, at least 30 tasks, an oracle, statistics and a veto rule.
 - [x] All targets are labelled as hypotheses.
-- [ ] Task suite authored and reviewed. **V2.2 deliverable.**
+- [ ] Task suite authored and reviewed. **V2.2 deliverable.** Authored 2026-11-25 (`benchmarks/suite/`, 36 tasks, checked by `tests/benchmark/suite.test.ts`); second review and held-out tasks pending.

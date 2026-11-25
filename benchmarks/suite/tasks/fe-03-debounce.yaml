@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: fe-03-debounce
+category: frontend
+domains: [frontend]
+fixture: fixtures/shop
+prompt: |
+  Create src/debounce.js exporting debounce(fn, waitMs) for the product search box. The returned function calls
+  fn once, with the arguments of the last call, after waitMs have passed without another call. It also has a
+  cancel() method that drops a pending call.
+scope: ["src/debounce.js", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/fe-03-debounce, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

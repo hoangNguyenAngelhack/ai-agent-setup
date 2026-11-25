@@ -1,0 +1,10 @@
+{
+  "name": "bench-shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Benchmark fixture: a small shop API without dependencies (Node 20+).",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  }
+}

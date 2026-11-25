@@ -1,0 +1,16 @@
+schema: benchmark-task/v1
+id: cx-01-status-filter
+category: cross-domain
+domains: [backend, frontend, quality, docs-devex]
+fixture: fixtures/shop
+prompt: |
+  Let customers filter their orders by status, end to end:
+  - API: GET /orders accepts ?status=pending or ?status=shipped and returns only those orders; any other status
+    value gets 400 with error code INVALID_STATUS.
+  - UI: public/orders.html gets a <select id="status-filter"> with the options all, pending and shipped.
+  - Tests: add test/orders-status.test.js (node:test) covering the filter.
+  - Docs: describe the status filter in README.md.
+scope: ["src/**", "test/**", "public/**", "README.md"]
+acceptance:
+  hiddenTests: { files: hidden/cx-01-status-filter, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

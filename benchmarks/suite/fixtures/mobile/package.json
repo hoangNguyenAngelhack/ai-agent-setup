@@ -1,0 +1,6 @@
+{
+  "name": "bench-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Benchmark fixture: the data layer of a mobile list screen (no dependencies)."
+}

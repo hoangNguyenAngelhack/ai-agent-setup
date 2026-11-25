@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: be-04-etag
+category: backend
+domains: [backend]
+fixture: fixtures/shop
+prompt: |
+  Add conditional requests to GET /users/:id: send an ETag header that changes when the user's data changes,
+  and answer 304 with no body when the request's If-None-Match header equals the current ETag. Headers are
+  read from request.headers in lower case (if-none-match) and returned in response.headers (etag).
+scope: ["src/**", "test/**"]
+acceptance:
+  hiddenTests: { files: hidden/be-04-etag, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 900

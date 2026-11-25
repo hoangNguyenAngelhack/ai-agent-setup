@@ -1,0 +1,20 @@
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const assert = require('node:assert');
+const { spawnSync } = require('node:child_process');
+const root = path.join(__dirname, '..');
+const app = () => require(path.join(root, 'src', 'app.js'));
+const get = (url, headers = {}) => app().handle({ method: 'GET', url, headers });
+const bob = { authorization: 'Bearer token-bob' };
+const ada = { authorization: 'Bearer token-ada' };
+const runTests = (cwd, file) => spawnSync(process.execPath, ['--test', file], { cwd, encoding: 'utf8' }).status;
+
+const sources = fs.readdirSync(path.join(root, 'src')).filter((name) => name.endsWith('.js'));
+for (const name of sources) assert.doesNotMatch(fs.readFileSync(path.join(root, 'src', name), 'utf8'), /dev-signing-secret/, `secret still in src/${name}`);
+const load = (env) => spawnSync(process.execPath, ['-e', "console.log(require('./src/config.js').SIGNING_SECRET)"], { cwd: root, encoding: 'utf8', env });
+const withSecret = load({ ...process.env, SIGNING_SECRET: 'from-the-environment' });
+assert.strictEqual(withSecret.stdout.trim(), 'from-the-environment');
+const env = { ...process.env };
+delete env.SIGNING_SECRET;
+assert.notStrictEqual(load(env).status, 0, 'loads without SIGNING_SECRET');

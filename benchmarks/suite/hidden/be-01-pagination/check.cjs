@@ -1,0 +1,24 @@
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const assert = require('node:assert');
+const { spawnSync } = require('node:child_process');
+const root = path.join(__dirname, '..');
+const app = () => require(path.join(root, 'src', 'app.js'));
+const get = (url, headers = {}) => app().handle({ method: 'GET', url, headers });
+const bob = { authorization: 'Bearer token-bob' };
+const ada = { authorization: 'Bearer token-ada' };
+const runTests = (cwd, file) => spawnSync(process.execPath, ['--test', file], { cwd, encoding: 'utf8' }).status;
+
+const first = get('/orders?page=1&limit=10', bob);
+assert.strictEqual(first.status, 200);
+assert.deepStrictEqual(first.body.pagination, { page: 1, limit: 10, total: 15, totalPages: 2 });
+assert.strictEqual(first.body.data.length, 10);
+assert.ok(first.body.data.every((order) => order.userId === 2));
+assert.deepStrictEqual(first.body.data.map((order) => order.id), [...first.body.data.map((order) => order.id)].sort((a, b) => a - b));
+assert.strictEqual(get('/orders?page=2&limit=10', bob).body.data.length, 5);
+assert.deepStrictEqual(get('/orders', bob).body.pagination, { page: 1, limit: 20, total: 15, totalPages: 1 });
+assert.strictEqual(get('/orders?limit=500', bob).body.pagination.limit, 100);
+assert.strictEqual(get('/orders?page=0', bob).status, 400);
+assert.strictEqual(get('/orders?limit=abc', bob).status, 400);
+assert.strictEqual(get('/orders?page=1').status, 401);

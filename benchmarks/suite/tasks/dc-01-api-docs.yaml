@@ -1,0 +1,18 @@
+schema: benchmark-task/v1
+id: dc-01-api-docs
+category: documentation
+domains: [docs-devex]
+fixture: fixtures/shop
+prompt: |
+  Write docs/api.md documenting every HTTP route that src/app.js serves: method and path, parameters,
+  authentication (Authorization: Bearer <token>), the response body and the error codes.
+scope: ["docs/**"]
+acceptance:
+  hiddenTests: { files: hidden/dc-01-api-docs, command: "node .benchmark-hidden/check.cjs" }
+  rubric:
+    threshold: 3
+    criteria:
+      - every route is documented accurately
+      - error codes match the code
+      - examples are correct
+timeLimit: 600

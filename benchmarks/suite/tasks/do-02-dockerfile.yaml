@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: do-02-dockerfile
+category: devops
+domains: [devops-sre, security-compliance]
+fixture: fixtures/shop
+prompt: |
+  Harden the Dockerfile: pin the base image to a specific Node 20 tag instead of latest, run the app as a
+  non-root user, do not bake SIGNING_SECRET (or any secret) into the image, and add a HEALTHCHECK that calls
+  GET /health.
+scope: ["Dockerfile"]
+acceptance:
+  hiddenTests: { files: hidden/do-02-dockerfile, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 600

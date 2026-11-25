@@ -1,0 +1,14 @@
+schema: benchmark-task/v1
+id: da-01-quality-checks
+category: data
+domains: [data-ai]
+fixture: fixtures/etl
+prompt: |
+  Add data-quality checks for the orders ETL step: create etl/quality.py with validate_rows(rows), where rows are
+  the dictionaries returned by read_rows. Return a list of (row_index, problem) tuples, row_index counting from 0,
+  for every problem found: "missing_id", "duplicate_id" (every later row reusing an id), "invalid_date" (not a
+  real YYYY-MM-DD date), "invalid_amount" (not a number) and "negative_amount".
+scope: ["etl/**", "tests/**"]
+acceptance:
+  hiddenTests: { files: hidden/da-01-quality-checks, command: "python3 .benchmark-hidden/check.py" }
+timeLimit: 900

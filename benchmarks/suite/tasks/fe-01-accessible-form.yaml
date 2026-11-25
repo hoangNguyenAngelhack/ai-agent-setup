@@ -1,0 +1,13 @@
+schema: benchmark-task/v1
+id: fe-01-accessible-form
+category: frontend
+domains: [frontend, design-ux]
+fixture: fixtures/shop
+prompt: |
+  Make the sign-up form in public/signup.html accessible. Each input (email, password, confirm) needs an id and
+  a visible <label for>, the right type (email or password) and the required attribute. Errors must be announced
+  to screen readers (aria-live or role="alert"), and the submit control must be a real <button type="submit">.
+scope: ["public/signup.html"]
+acceptance:
+  hiddenTests: { files: hidden/fe-01-accessible-form, command: "node .benchmark-hidden/check.cjs" }
+timeLimit: 600

@@ -1,0 +1,19 @@
+schema: benchmark-task/v1
+id: dc-02-release-notes
+category: documentation
+domains: [docs-devex]
+fixture: fixtures/shop
+prompt: |
+  Write release notes in docs/release-notes.md from the commits listed in CHANGES.log. Group the user-visible
+  changes under the level-2 headings Features and Fixes, written for users rather than developers, and leave out
+  chores.
+scope: ["docs/**"]
+acceptance:
+  hiddenTests: { files: hidden/dc-02-release-notes, command: "node .benchmark-hidden/check.cjs" }
+  rubric:
+    threshold: 3
+    criteria:
+      - written for users
+      - every user-visible change is covered
+      - nothing invented
+timeLimit: 600

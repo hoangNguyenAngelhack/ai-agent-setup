@@ -1,0 +1,27 @@
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const assert = require('node:assert');
+const { spawnSync } = require('node:child_process');
+const root = path.join(__dirname, '..');
+const app = () => require(path.join(root, 'src', 'app.js'));
+const get = (url, headers = {}) => app().handle({ method: 'GET', url, headers });
+const bob = { authorization: 'Bearer token-bob' };
+const ada = { authorization: 'Bearer token-ada' };
+const runTests = (cwd, file) => spawnSync(process.execPath, ['--test', file], { cwd, encoding: 'utf8' }).status;
+
+const shipped = get('/orders?status=shipped', bob);
+assert.strictEqual(shipped.status, 200);
+const rows = shipped.body.data || shipped.body;
+assert.ok(rows.length > 0 && rows.every((order) => order.status === 'shipped' && order.userId === 2));
+const invalid = get('/orders?status=lost', bob);
+assert.strictEqual(invalid.status, 400);
+assert.strictEqual(invalid.body.error.code, 'INVALID_STATUS');
+assert.strictEqual(((get('/orders', bob).body.data) || []).length, 15);
+const html = fs.readFileSync(path.join(root, 'public', 'orders.html'), 'utf8');
+const select = (/<select[^>]*id="status-filter"[^>]*>([\s\S]*?)<\/select>/.exec(html) || [])[1];
+assert.ok(select, 'no select#status-filter');
+for (const value of ['all', 'pending', 'shipped']) assert.match(select, new RegExp(`<option[^>]*>\\s*${value}\\s*<`, 'i'));
+assert.ok(fs.existsSync(path.join(root, 'test', 'orders-status.test.js')), 'no test/orders-status.test.js');
+assert.strictEqual(runTests(root, 'test/orders-status.test.js'), 0, 'test/orders-status.test.js fails');
+assert.match(fs.readFileSync(path.join(root, 'README.md'), 'utf8'), /status/i);
