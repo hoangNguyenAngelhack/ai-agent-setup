@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2026-11-26
+
+Re-release. 2.0.0-alpha.0, 2.0.0 and 2.1.0 were removed from npm on 2026-11-25 (21:44 UTC), and npm
+never allows a removed version number again; 2.1.1 carries the content of 2.1.0 and the changes
+below.
+
+### Changed
+- The README is rewritten around what users need (quick start, supported languages, everyday
+  commands, current limitations); the full command reference moves to
+  [docs/guides/cli-reference.md](docs/guides/cli-reference.md).
+- The repository moved to `nguyenduyhoang35/ai-agent-setup`; `package.json` links point there.
+- The CLI help no longer calls V2 a preview.
+
 ## [2.1.0] - 2026-11-25
 
 Language packs and gates for every common stack ([docs/v2/16](docs/v2/16-language-packs.md)). No
