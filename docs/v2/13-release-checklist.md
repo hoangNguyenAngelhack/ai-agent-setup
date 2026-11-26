@@ -67,6 +67,12 @@ stated in the release notes: a signed-in Codex run, a benchmark run, ADR-017 acc
 reviewer, and the decisions D-1b, D-6 and D-9 of [15](15-eval-benchmark-review.md). The 1.x support
 window of OQ-08 starts with this release: security fixes until 2027-05-25.
 
+### 2.1.1 on `latest` (2026-11-26)
+
+2.0.0-alpha.0, 2.0.0 and 2.1.0 were removed from npm on 2026-11-25 at 21:44 UTC, and their numbers
+cannot be reused. The maintainer asked for the release again ("lại"): **2.1.1** carries the content of
+2.1.0 with the README rewrite and the new repository links. The items stand as signed for 2.0.0.
+
 ### 2.1.0 on `latest` (2026-11-25)
 
 The maintainer instructed the release of **2.1.0** ("phát hành 2.1.0"): language packs (#26) and gates
